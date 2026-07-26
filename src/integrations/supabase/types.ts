@@ -29,6 +29,7 @@ export type Database = {
           service_id: string
           start_at: string
           status: string
+          time_range: unknown
           updated_at: string
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           service_id: string
           start_at: string
           status?: string
+          time_range?: unknown
           updated_at?: string
         }
         Update: {
@@ -61,6 +63,7 @@ export type Database = {
           service_id?: string
           start_at?: string
           status?: string
+          time_range?: unknown
           updated_at?: string
         }
         Relationships: [
