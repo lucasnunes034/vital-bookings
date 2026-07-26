@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { zonedDayRangeUTC } from "@/lib/timezone";
+import { zonedDayRangeUTC, formatInTZ } from "@/lib/timezone";
+import { WhatsappMenu } from "@/components/whatsapp-actions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -27,7 +28,7 @@ function DashboardPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("companies")
-        .select("id, name, slug, segment, timezone")
+        .select("id, name, slug, segment, timezone, address")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data;
@@ -60,7 +61,7 @@ function DashboardPage() {
   return <DashboardContent company={company} signOut={signOut} />;
 }
 
-function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null }; signOut: () => void }) {
+function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
   const { start: startOfDay, end: endOfDay } = zonedDayRangeUTC(new Date(), tz);
 
@@ -126,6 +127,8 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
           <Stat icon={Calendar} label="Confirmados para hoje" value={String(statsQ.data?.today ?? 0)} />
           <Stat icon={BarChart3} label="Faturamento do mês" value="R$ 0" />
         </div>
+
+        <RemindersCard company={company} />
 
         <div className="surface-card p-8 text-center">
           <Clock className="size-8 mx-auto text-muted-foreground" />
