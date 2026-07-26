@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, Loader2, CalendarDays, CalendarRange,
-  Plus, X, User, Phone, Mail, StickyNote,
+  Plus, X, User, Phone, Mail, StickyNote, History, AlertTriangle, Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 
