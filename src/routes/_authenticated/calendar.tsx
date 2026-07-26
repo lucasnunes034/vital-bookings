@@ -1086,5 +1086,194 @@ function CreateBookingDialog({
   );
 }
 
+/* ---------------- Conflict dialog ---------------- */
+
+type ConflictState = {
+  bookingId: string;
+  durationMin: number;
+  attemptedStart: Date;
+  attemptedEnd: Date;
+  conflicts: Array<{ id: string; start: Date; end: Date; customer: string; service: string }>;
+  suggestions: Array<{ start: Date; end: Date }>;
+  customer: string;
+  service: string;
+};
+
+function ConflictDialog({
+  state, tz, onClose, onPick, onShowHistory,
+}: {
+  state: ConflictState | null;
+  tz: string;
+  onClose: () => void;
+  onPick: (s: { start: Date; end: Date }) => void;
+  onShowHistory: () => void;
+}) {
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="inline-flex items-center gap-2">
+            <AlertTriangle className="size-4 text-amber-500" /> Conflito de horário
+          </DialogTitle>
+          <DialogDescription>
+            {state && (
+              <>
+                Não foi possível mover <strong>{state.customer}</strong> para{" "}
+                <strong>
+                  {formatInTZ(state.attemptedStart, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </strong>
+                . Esse intervalo já está ocupado.
+              </>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        {state && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                Agendamento(s) que ocupam esse horário
+              </p>
+              <div className="space-y-2">
+                {state.conflicts.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    O banco de dados bloqueou o horário, mas não retornamos detalhes. Atualize a página.
+                  </p>
+                )}
+                {state.conflicts.map((c) => (
+                  <div key={c.id} className="rounded-md border border-border p-3 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{c.customer}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatInTZ(c.start, tz, { hour: "2-digit", minute: "2-digit" })}
+                        {" – "}
+                        {formatInTZ(c.end, tz, { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    {c.service && <p className="text-xs text-muted-foreground mt-0.5">{c.service}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                Horários alternativos próximos ({state.durationMin} min)
+              </p>
+              {state.suggestions.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Sem alternativas livres neste dia. Escolha outra data no calendário.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {state.suggestions.map((s) => (
+                    <button
+                      key={s.start.toISOString()}
+                      onClick={() => onPick(s)}
+                      className="h-9 rounded-md border border-border hover:border-foreground/40 hover:bg-muted/40 text-sm font-medium"
+                    >
+                      {formatInTZ(s.start, tz, { hour: "2-digit", minute: "2-digit" })}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <button onClick={onShowHistory} className="btn-ghost h-9 !px-3 text-xs">
+            <History className="size-3.5" /> Histórico
+          </button>
+          <button onClick={onClose} className="btn-primary h-9 !px-3 text-xs">Fechar</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- History dialog ---------------- */
+
+function HistoryDialog({
+  state, tz, onClose,
+}: {
+  state: { id: string; customer: string } | null;
+  tz: string;
+  onClose: () => void;
+}) {
+  const q = useQuery({
+    enabled: !!state?.id,
+    queryKey: ["reschedule-history", state?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("booking_reschedule_history")
+        .select("id, previous_start_at, previous_end_at, new_start_at, new_end_at, source, changed_by, created_at")
+        .eq("booking_id", state!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="inline-flex items-center gap-2">
+            <History className="size-4" /> Histórico de remarcações
+          </DialogTitle>
+          <DialogDescription>
+            {state && <>Todas as alterações de horário de <strong>{state.customer}</strong>.</>}
+          </DialogDescription>
+        </DialogHeader>
+
+        {q.isLoading && (
+          <div className="py-6 flex justify-center">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {!q.isLoading && (q.data?.length ?? 0) === 0 && (
+          <p className="text-sm text-muted-foreground py-4">
+            Este agendamento ainda não foi remarcado.
+          </p>
+        )}
+        {!q.isLoading && (q.data?.length ?? 0) > 0 && (
+          <ul className="space-y-2 max-h-[60vh] overflow-auto">
+            {q.data!.map((h: any) => (
+              <li key={h.id} className="rounded-md border border-border p-3 text-sm">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs text-muted-foreground">
+                    {formatInTZ(new Date(h.created_at), tz, {
+                      day: "2-digit", month: "2-digit", year: "numeric",
+                      hour: "2-digit", minute: "2-digit",
+                    })}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {h.source === "customer" ? "Cliente" : h.source === "system" ? "Sistema" : "Estabelecimento"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground line-through">
+                    {formatInTZ(new Date(h.previous_start_at), tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <Undo2 className="size-3 rotate-180 text-muted-foreground" />
+                  <span className="font-medium">
+                    {formatInTZ(new Date(h.new_start_at), tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <DialogFooter>
+          <button onClick={onClose} className="btn-primary h-9 !px-3 text-xs">Fechar</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 const _icons = { X, User, Phone, Mail, StickyNote };
