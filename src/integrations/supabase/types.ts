@@ -84,6 +84,8 @@ export type Database = {
           manage_token: string
           notes: string | null
           professional_id: string
+          reminder_1h_sent_at: string | null
+          reminder_24h_sent_at: string | null
           service_id: string
           start_at: string
           status: string
@@ -102,6 +104,8 @@ export type Database = {
           manage_token?: string
           notes?: string | null
           professional_id: string
+          reminder_1h_sent_at?: string | null
+          reminder_24h_sent_at?: string | null
           service_id: string
           start_at: string
           status?: string
@@ -120,6 +124,8 @@ export type Database = {
           manage_token?: string
           notes?: string | null
           professional_id?: string
+          reminder_1h_sent_at?: string | null
+          reminder_24h_sent_at?: string | null
           service_id?: string
           start_at?: string
           status?: string
@@ -297,6 +303,44 @@ export type Database = {
             columns: ["professional_id"]
             isOneToOne: false
             referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_templates: {
+        Row: {
+          body: string
+          company_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          company_id: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          company_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -539,6 +583,10 @@ export type Database = {
         Args: { _reason?: string; _token: string }
         Returns: undefined
       }
+      default_message_body: {
+        Args: { _kind: Database["public"]["Enums"]["message_kind"] }
+        Returns: string
+      }
       get_booking_by_token: {
         Args: { _token: string }
         Returns: {
@@ -599,7 +647,12 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      message_kind:
+        | "confirmation"
+        | "reschedule"
+        | "cancellation"
+        | "reminder_24h"
+        | "reminder_1h"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -726,6 +779,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      message_kind: [
+        "confirmation",
+        "reschedule",
+        "cancellation",
+        "reminder_24h",
+        "reminder_1h",
+      ],
+    },
   },
 } as const
