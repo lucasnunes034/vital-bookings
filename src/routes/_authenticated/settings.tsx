@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Loader2, Plus, Trash2, Pencil, ArrowLeft, Users, Sparkles, Clock, Coffee, Copy, Check,
-  Palette, Images,
+  Palette, Images, MessageCircle, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -25,13 +25,20 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { MediaUploader } from "@/components/media-uploader";
+import {
+  DEFAULT_TEMPLATES,
+  MESSAGE_KIND_HINT,
+  MESSAGE_KIND_LABEL,
+  MESSAGE_VARIABLES,
+  type MessageKind,
+} from "@/lib/whatsapp";
 
-type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks";
+type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): { tab?: TabKey } => {
     const t = s.tab;
-    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks"].includes(t)
+    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages"].includes(t)
       ? { tab: t as TabKey }
       : {};
   },
@@ -117,13 +124,14 @@ function SettingsPage() {
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-7 w-full sm:w-auto">
             <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
             <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
             <TabsTrigger value="services"><Sparkles className="size-4 mr-1.5" /> Serviços</TabsTrigger>
             <TabsTrigger value="professionals"><Users className="size-4 mr-1.5" /> Equipe</TabsTrigger>
             <TabsTrigger value="availability"><Clock className="size-4 mr-1.5" /> Horários</TabsTrigger>
             <TabsTrigger value="breaks"><Coffee className="size-4 mr-1.5" /> Pausas</TabsTrigger>
+            <TabsTrigger value="messages"><MessageCircle className="size-4 mr-1.5" /> Mensagens</TabsTrigger>
           </TabsList>
 
           <TabsContent value="brand"><BrandTab companyId={company.id} /></TabsContent>
@@ -132,6 +140,7 @@ function SettingsPage() {
           <TabsContent value="professionals"><ProfessionalsTab companyId={company.id} /></TabsContent>
           <TabsContent value="availability"><ScheduleTab companyId={company.id} kind="availability" /></TabsContent>
           <TabsContent value="breaks"><ScheduleTab companyId={company.id} kind="breaks" /></TabsContent>
+          <TabsContent value="messages"><MessagesTab companyId={company.id} /></TabsContent>
         </Tabs>
       </main>
     </div>
@@ -1036,6 +1045,126 @@ function GalleryTab({ companyId }: { companyId: string }) {
             />
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ============ Mensagens (WhatsApp) ============
+
+const MSG_ORDER: MessageKind[] = ["confirmation", "reschedule", "cancellation", "reminder_24h", "reminder_1h"];
+
+function MessagesTab({ companyId }: { companyId: string }) {
+  const qc = useQueryClient();
+  const templatesQ = useQuery({
+    queryKey: ["message-templates", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("message_templates")
+        .select("id, kind, body, enabled")
+        .eq("company_id", companyId);
+      if (error) throw error;
+      return data as Array<{ id: string; kind: MessageKind; body: string; enabled: boolean }>;
+    },
+  });
+
+  const upsert = useMutation({
+    mutationFn: async (payload: { kind: MessageKind; body: string; enabled: boolean }) => {
+      const { error } = await supabase
+        .from("message_templates")
+        .upsert({ company_id: companyId, ...payload }, { onConflict: "company_id,kind" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Mensagem salva");
+      qc.invalidateQueries({ queryKey: ["message-templates", companyId] });
+    },
+    onError: (e: any) => toast.error(e.message ?? "Erro ao salvar"),
+  });
+
+  if (templatesQ.isLoading) {
+    return <div className="py-8 flex justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
+  }
+
+  const byKind = new Map(templatesQ.data?.map((t) => [t.kind, t]) ?? []);
+
+  return (
+    <div className="space-y-4">
+      <div className="surface-card p-4 space-y-1.5">
+        <p className="text-sm font-medium">Mensagens automáticas por WhatsApp</p>
+        <p className="text-xs text-muted-foreground">
+          Personalize os textos que você envia para os clientes. Use as variáveis abaixo entre chaves — elas são substituídas automaticamente pelos dados do agendamento.
+        </p>
+        <div className="flex flex-wrap gap-1.5 pt-2">
+          {MESSAGE_VARIABLES.map((v) => (
+            <span key={v.key} className="text-[11px] px-2 py-0.5 rounded-md border border-border/60 bg-muted/50 font-mono">
+              {"{" + v.key + "} "}
+              <span className="font-sans text-muted-foreground">— {v.label}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {MSG_ORDER.map((k) => (
+          <TemplateEditor
+            key={k}
+            kind={k}
+            initial={byKind.get(k) ?? { body: DEFAULT_TEMPLATES[k], enabled: true }}
+            onSave={(body, enabled) => upsert.mutate({ kind: k, body, enabled })}
+            saving={upsert.isPending}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TemplateEditor({
+  kind,
+  initial,
+  onSave,
+  saving,
+}: {
+  kind: MessageKind;
+  initial: { body: string; enabled: boolean };
+  onSave: (body: string, enabled: boolean) => void;
+  saving: boolean;
+}) {
+  const [body, setBody] = useState(initial.body);
+  const [enabled, setEnabled] = useState(initial.enabled);
+  const dirty = body !== initial.body || enabled !== initial.enabled;
+
+  useEffect(() => { setBody(initial.body); setEnabled(initial.enabled); }, [initial.body, initial.enabled]);
+
+  return (
+    <div className="surface-card p-5 space-y-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-medium text-sm">{MESSAGE_KIND_LABEL[kind]}</p>
+          <p className="text-xs text-muted-foreground">{MESSAGE_KIND_HINT[kind]}</p>
+        </div>
+        <label className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <Switch checked={enabled} onCheckedChange={setEnabled} /> Ativo
+        </label>
+      </div>
+      <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={7} className="font-mono text-sm" />
+      <div className="flex flex-wrap gap-2 justify-end">
+        <button
+          type="button"
+          onClick={() => { setBody(DEFAULT_TEMPLATES[kind]); }}
+          className="btn-ghost h-9 !px-3 text-xs"
+          title="Restaurar texto padrão"
+        >
+          <RotateCcw className="size-3.5" /> Restaurar padrão
+        </button>
+        <button
+          onClick={() => onSave(body, enabled)}
+          disabled={!dirty || saving}
+          className="btn-primary h-9 !px-3 text-xs"
+        >
+          {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} Salvar
+        </button>
       </div>
     </div>
   );

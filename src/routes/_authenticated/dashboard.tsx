@@ -1,11 +1,12 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { zonedDayRangeUTC } from "@/lib/timezone";
+import { zonedDayRangeUTC, formatInTZ } from "@/lib/timezone";
+import { WhatsappMenu } from "@/components/whatsapp-actions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -27,7 +28,7 @@ function DashboardPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("companies")
-        .select("id, name, slug, segment, timezone")
+        .select("id, name, slug, segment, timezone, address")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data;
@@ -60,7 +61,7 @@ function DashboardPage() {
   return <DashboardContent company={company} signOut={signOut} />;
 }
 
-function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null }; signOut: () => void }) {
+function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
   const { start: startOfDay, end: endOfDay } = zonedDayRangeUTC(new Date(), tz);
 
@@ -127,6 +128,8 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
           <Stat icon={BarChart3} label="Faturamento do mês" value="R$ 0" />
         </div>
 
+        <RemindersCard company={company} />
+
         <div className="surface-card p-8 text-center">
           <Clock className="size-8 mx-auto text-muted-foreground" />
           <h2 className="mt-4 font-display text-xl font-semibold">Compartilhe seu link e receba agendamentos</h2>
@@ -156,6 +159,82 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Calendar; label: stri
         <Icon className="size-4 text-muted-foreground" />
       </div>
       <p className="mt-3 font-display text-2xl font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function RemindersCard({ company }: { company: { id: string; name: string; timezone?: string | null; address?: string | null; slug?: string | null } }) {
+  const tz = company.timezone || "America/Sao_Paulo";
+  const now = new Date();
+  // Janela: próximos 26 horas (pega tanto 24h quanto 1h)
+  const fromISO = now.toISOString();
+  const toISO = new Date(now.getTime() + 26 * 60 * 60 * 1000).toISOString();
+
+  const q = useQuery({
+    queryKey: ["reminders-queue", company.id, Math.floor(now.getTime() / (5 * 60 * 1000))],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, status, start_at, customer_name, customer_phone, manage_token, reminder_24h_sent_at, reminder_1h_sent_at, service:services(name, duration_minutes, price_cents), professional:professionals(name)")
+        .eq("company_id", company.id)
+        .in("status", ["pending", "confirmed"])
+        .gte("start_at", fromISO)
+        .lte("start_at", toISO)
+        .order("start_at", { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  const rows = (q.data ?? []).map((b: any) => {
+    const startMs = new Date(b.start_at).getTime();
+    const diffMin = (startMs - Date.now()) / 60000;
+    // 1h window: 30–90 min antes; 24h window: 22–26h antes
+    const due1h = diffMin > 30 && diffMin < 90 && !b.reminder_1h_sent_at;
+    const due24h = diffMin > 22 * 60 && diffMin < 26 * 60 && !b.reminder_24h_sent_at;
+    return { b, due1h, due24h };
+  }).filter((r) => r.due1h || r.due24h);
+
+  return (
+    <div className="surface-card p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Bell className="size-4 text-muted-foreground" />
+          <h2 className="font-medium">Lembretes pendentes</h2>
+          <span className="text-xs text-muted-foreground">— envie por WhatsApp em 1 clique</span>
+        </div>
+        <Link to="/settings" search={{ tab: "messages" }} className="text-xs text-muted-foreground hover:text-foreground">
+          Personalizar mensagens
+        </Link>
+      </div>
+      {q.isLoading ? (
+        <div className="py-6 flex justify-center"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhum lembrete pendente agora. Vamos avisar você quando um agendamento se aproximar.</p>
+      ) : (
+        <div className="divide-y divide-border/60">
+          {rows.map(({ b, due1h, due24h }) => (
+            <div key={b.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {formatInTZ(b.start_at, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })} · {b.customer_name}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {b.service?.name} · {b.professional?.name}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border ${due1h ? "bg-primary/10 border-primary/40" : "bg-muted border-border"}`}>
+                  {due1h ? "1h antes" : "24h antes"}
+                </span>
+                <WhatsappMenu booking={b} company={company} markReminder />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
