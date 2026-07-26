@@ -5,6 +5,7 @@ import { Calendar, ArrowLeft, Check, X, Loader2, Clock, Phone, Mail, User, Stick
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { formatInTZ } from "@/lib/timezone";
 
 type Status = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -34,7 +35,7 @@ function BookingsPage() {
   const companyQ = useQuery({
     queryKey: ["my-company-min"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("companies").select("id, name, slug").order("created_at").limit(1).maybeSingle();
+      const { data, error } = await supabase.from("companies").select("id, name, slug, timezone").order("created_at").limit(1).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -120,7 +121,7 @@ function BookingsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Clock className="size-4 text-muted-foreground" />
-                      <p className="font-medium">{formatDT(b.start_at)}</p>
+                      <p className="font-medium">{formatDT(b.start_at, companyQ.data?.timezone)}</p>
                       <span className="text-xs text-muted-foreground">· {b.service?.duration_minutes} min</span>
                     </div>
                     <p className="text-sm">
@@ -190,7 +191,8 @@ function BookingsPage() {
   );
 }
 
-function formatDT(iso: string) {
-  const d = new Date(iso);
-  return d.toLocaleString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+function formatDT(iso: string, timeZone?: string | null) {
+  return formatInTZ(iso, timeZone || "America/Sao_Paulo", {
+    day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+  });
 }
