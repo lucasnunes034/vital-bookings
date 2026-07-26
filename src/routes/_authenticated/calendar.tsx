@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { zodValidator } from "@tanstack/zod-adapter";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, Loader2, CalendarDays, CalendarRange,
   Plus, X, User, Phone, Mail, StickyNote,
@@ -37,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/calendar")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (s: Record<string, unknown>) => searchSchema.parse(s),
   component: CalendarPage,
 });
 
@@ -47,6 +46,7 @@ const ROW_PX = 28;   // px per 30 min row
 function CalendarPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
+  type S = z.infer<typeof searchSchema>;
   const qc = useQueryClient();
 
   const companyQ = useQuery({
@@ -108,7 +108,7 @@ function CalendarPage() {
     if (!proId && prosQ.data && prosQ.data.length > 0) {
       navigate({
         to: "/calendar",
-        search: (prev) => ({ ...prev, pro: prosQ.data![0].id }),
+        search: (prev: S) => ({ ...prev, pro: prosQ.data![0].id }),
         replace: true,
       });
     }
@@ -226,21 +226,21 @@ function CalendarPage() {
     const next = zonedWallToUTC(p.year, p.month, p.day + delta * dir, 12, 0, tz);
     navigate({
       to: "/calendar",
-      search: (prev) => ({ ...prev, date: toZonedISODate(next, tz) }),
+      search: (prev: S) => ({ ...prev, date: toZonedISODate(next, tz) }),
       replace: true,
     });
   };
   const goToday = () => navigate({
-    to: "/calendar", search: (prev) => ({ ...prev, date: undefined }), replace: true,
+    to: "/calendar", search: (prev: S) => ({ ...prev, date: undefined }), replace: true,
   });
   const setView = (v: ViewMode) => navigate({
-    to: "/calendar", search: (prev) => ({ ...prev, view: v }), replace: true,
+    to: "/calendar", search: (prev: S) => ({ ...prev, view: v }), replace: true,
   });
   const setPro = (v: string) => navigate({
-    to: "/calendar", search: (prev) => ({ ...prev, pro: v || undefined }), replace: true,
+    to: "/calendar", search: (prev: S) => ({ ...prev, pro: v || undefined }), replace: true,
   });
   const setSvc = (v: string) => navigate({
-    to: "/calendar", search: (prev) => ({ ...prev, svc: v || undefined }), replace: true,
+    to: "/calendar", search: (prev: S) => ({ ...prev, svc: v || undefined }), replace: true,
   });
 
   // Mutations

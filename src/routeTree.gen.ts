@@ -20,6 +20,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -76,6 +77,11 @@ const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({
   path: '/customers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/calendar',
+  path: '/calendar',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/bookings': typeof AuthenticatedBookingsRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/bookings': typeof AuthenticatedBookingsRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/bookings'
+    | '/calendar'
     | '/customers'
     | '/dashboard'
     | '/onboarding'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/bookings'
+    | '/calendar'
     | '/customers'
     | '/dashboard'
     | '/onboarding'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/_authenticated/bookings'
+    | '/_authenticated/calendar'
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
@@ -254,6 +266,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bookings': {
       id: '/_authenticated/bookings'
       path: '/bookings'
@@ -266,6 +285,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
@@ -274,6 +294,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
