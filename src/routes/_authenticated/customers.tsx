@@ -127,7 +127,8 @@ function CustomersPage() {
           "id, status, start_at, end_at, customer_name, customer_phone, customer_email, notes, cancellation_reason, service:services(name, duration_minutes, price_cents), professional:professionals(name)"
         )
         .eq("company_id", companyQ.data!.id)
-        .order("start_at", { ascending: false });
+        .order("start_at", { ascending: false })
+        .limit(2000);
       if (error) throw error;
       return (data ?? []) as unknown as BookingRow[];
     },
