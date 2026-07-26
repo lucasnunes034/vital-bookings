@@ -62,6 +62,7 @@ function PublicBookingPage() {
   const [date, setDate] = useState<Date | undefined>();
   const [slot, setSlot] = useState<string | null>(null); // "HH:mm"
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", customer_email: "", notes: "" });
+  const [manageToken, setManageToken] = useState<string | null>(null);
 
   const servicesQ = useQuery({
     queryKey: ["public-services", company.id],
@@ -142,7 +143,7 @@ function PublicBookingPage() {
       const p = getZonedParts(date!, tz);
       const start = zonedWallToUTC(p.year, p.month, p.day, h, m, tz);
       const end = new Date(start.getTime() + service!.duration_minutes * 60000);
-      const { error } = await supabase.from("bookings").insert({
+      const { data, error } = await supabase.from("bookings").insert({
         company_id: company.id,
         professional_id: professionalId!,
         service_id: serviceId!,
@@ -153,10 +154,14 @@ function PublicBookingPage() {
         start_at: start.toISOString(),
         end_at: end.toISOString(),
         status: "pending",
-      });
+      }).select("manage_token").single();
       if (error) throw error;
+      return data?.manage_token as string | undefined;
     },
-    onSuccess: () => setStep("done"),
+    onSuccess: (token) => {
+      setManageToken(token ?? null);
+      setStep("done");
+    },
     onError: (err: any) => {
       // 23P01 = exclusion_violation (bookings_no_overlap): outra pessoa reservou o mesmo horário.
       const code = err?.code ?? err?.details?.code;
@@ -333,6 +338,15 @@ function PublicBookingPage() {
               {company.name} recebeu sua solicitação de <strong className="text-foreground">{service.name}</strong> em{" "}
               <strong className="text-foreground">{formatDate(date, tz)} às {slot}</strong> com {professional.name}. Você receberá a confirmação em breve.
             </p>
+            {manageToken && (
+              <div className="mt-8 surface-card p-5 text-left">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Seu link de gerenciamento</p>
+                <p className="text-sm mt-2">
+                  Salve este link para <strong>cancelar</strong> ou <strong>remarcar</strong> seu agendamento a qualquer momento — sem precisar criar conta.
+                </p>
+                <ManageLink token={manageToken} />
+              </div>
+            )}
           </section>
         )}
       </main>
@@ -375,6 +389,40 @@ function BackButton({ onClick }: { onClick: () => void }) {
 
 function Spinner() { return <div className="py-10 flex justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>; }
 function EmptyMsg({ children }: { children: React.ReactNode }) { return <p className="text-sm text-muted-foreground">{children}</p>; }
+
+function ManageLink({ token }: { token: string }) {
+  const [copied, setCopied] = useState(false);
+  const href = typeof window !== "undefined" ? `${window.location.origin}/manage/${token}` : `/manage/${token}`;
+  return (
+    <div className="mt-3 flex gap-2">
+      <input
+        readOnly
+        value={href}
+        onFocus={(e) => e.currentTarget.select()}
+        className="flex-1 min-w-0 h-10 px-3 rounded-md border border-border bg-muted/30 text-xs font-mono"
+      />
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(href);
+            setCopied(true);
+            toast.success("Link copiado");
+            setTimeout(() => setCopied(false), 1500);
+          } catch {
+            toast.error("Não foi possível copiar");
+          }
+        }}
+        className="btn-ghost h-10 shrink-0"
+      >
+        {copied ? "Copiado" : "Copiar"}
+      </button>
+      <a href={href} className="btn-ghost h-10 shrink-0" target="_blank" rel="noreferrer">
+        Abrir
+      </a>
+    </div>
+  );
+}
 
 function NotAvailable() {
   return (
