@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Users, Clock, BarChart3, ExternalLink, Inbox } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -105,9 +105,14 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
               </a>
             </p>
           </div>
-          <Link to="/bookings" className="btn-primary">
-            <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
-          </Link>
+          <div className="flex gap-2">
+            <Link to="/settings" className="btn-ghost h-11 text-sm">
+              <Settings className="size-4" /> Configurações
+            </Link>
+            <Link to="/bookings" className="btn-primary">
+              <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -127,7 +132,10 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/bookings" className="btn-primary h-9 text-sm">Abrir agendamentos</Link>
           </div>
         </div>
-        <div className="pt-2"><Link to="/onboarding" className="text-xs text-muted-foreground hover:text-foreground">Reabrir onboarding · Editar serviços, profissionais e disponibilidade</Link></div>
+        <div className="pt-2 flex gap-4">
+          <Link to="/settings" className="text-xs text-muted-foreground hover:text-foreground">Editar serviços, profissionais e horários</Link>
+          <Link to="/onboarding" className="text-xs text-muted-foreground hover:text-foreground">Reabrir onboarding</Link>
+        </div>
       </main>
     </div>
   );
