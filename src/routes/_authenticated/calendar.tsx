@@ -839,7 +839,7 @@ function RowFragment({
 }
 
 function BookingsOverlay({
-  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd,
+  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd, onOpenHistory,
 }: {
   tz: string;
   days: Date[];
@@ -849,6 +849,7 @@ function BookingsOverlay({
   svcFilter: string;
   onDragStart: (id: string, durationMin: number) => void;
   onDragEnd: () => void;
+  onOpenHistory: (id: string, customer: string) => void;
 }) {
   // Total grid width uses same template as parent — for overlay we compute
   // percent-based left/top over a mirrored grid below the visible one.
@@ -898,7 +899,7 @@ function BookingsOverlay({
                   }}
                   onDragEnd={onDragEnd}
                   className={[
-                    "absolute left-1 right-1 rounded-md border px-2 py-1 text-[11px] leading-tight pointer-events-auto cursor-grab active:cursor-grabbing shadow-sm overflow-hidden",
+                    "group absolute left-1 right-1 rounded-md border px-2 py-1 text-[11px] leading-tight pointer-events-auto cursor-grab active:cursor-grabbing shadow-sm overflow-hidden",
                     tone,
                     dim ? "opacity-30" : "opacity-100",
                   ].join(" ")}
@@ -911,6 +912,19 @@ function BookingsOverlay({
                   {height > 24 && (
                     <div className="truncate opacity-80">{b.service?.name}</div>
                   )}
+                  <button
+                    type="button"
+                    onMouseDown={(ev) => ev.stopPropagation()}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      onOpenHistory(b.id, b.customer_name);
+                    }}
+                    className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm p-0.5 hover:bg-background/40"
+                    aria-label="Ver histórico de remarcações"
+                    title="Histórico"
+                  >
+                    <History className="size-3" />
+                  </button>
                 </div>
               );
             })}
