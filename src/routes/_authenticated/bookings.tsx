@@ -33,6 +33,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { WhatsappMenu } from "@/components/whatsapp-actions";
 
 type Status = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -71,7 +72,7 @@ function BookingsPage() {
   const companyQ = useQuery({
     queryKey: ["my-company-min"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("companies").select("id, name, slug, timezone").order("created_at").limit(1).maybeSingle();
+      const { data, error } = await supabase.from("companies").select("id, name, slug, timezone, address").order("created_at").limit(1).maybeSingle();
       if (error) throw error;
       return data;
     },
@@ -264,6 +265,9 @@ function BookingsPage() {
                     <button onClick={() => setDetailId(b.id)} className="btn-ghost h-9 !px-3 text-xs">
                       <Eye className="size-3.5" /> Detalhes
                     </button>
+                    {companyQ.data && (
+                      <WhatsappMenu booking={b} company={companyQ.data} />
+                    )}
                     {(tab === "pending" || tab === "confirmed") && (
                       <button onClick={() => setRescheduleId(b.id)} className="btn-ghost h-9 !px-3 text-xs">
                         <RefreshCw className="size-3.5" /> Remarcar
@@ -313,7 +317,7 @@ function BookingsPage() {
         )}
       </main>
 
-      <DetailsDialog booking={detail} tz={tz} onClose={() => setDetailId(null)} />
+      <DetailsDialog booking={detail} tz={tz} company={companyQ.data ?? null} onClose={() => setDetailId(null)} />
       <RescheduleDialog booking={rescheduling} tz={tz} onClose={() => setRescheduleId(null)} onDone={() => { setRescheduleId(null); qc.invalidateQueries({ queryKey: ["bookings"] }); }} />
 
       <Dialog open={!!cancelId} onOpenChange={(o) => { if (!o) { setCancelId(null); setCancelReason(""); } }}>
@@ -349,7 +353,7 @@ function formatBRL(cents?: number | null) {
   return ((cents ?? 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
-function DetailsDialog({ booking, tz, onClose }: { booking: any; tz: string; onClose: () => void }) {
+function DetailsDialog({ booking, tz, company, onClose }: { booking: any; tz: string; company: any; onClose: () => void }) {
   const open = !!booking;
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -398,6 +402,9 @@ function DetailsDialog({ booking, tz, onClose }: { booking: any; tz: string; onC
           </div>
         )}
         <DialogFooter>
+          {booking && company && (
+            <WhatsappMenu booking={booking} company={company} />
+          )}
           <button onClick={onClose} className="btn-ghost h-9 !px-3 text-xs">Fechar</button>
         </DialogFooter>
       </DialogContent>
