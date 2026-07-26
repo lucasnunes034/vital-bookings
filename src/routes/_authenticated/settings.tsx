@@ -3,6 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Loader2, Plus, Trash2, Pencil, ArrowLeft, Users, Sparkles, Clock, Coffee, Copy, Check,
+  Palette, Images,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -22,13 +23,15 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { MediaUploader } from "@/components/media-uploader";
 
-type TabKey = "services" | "professionals" | "availability" | "breaks";
+type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): { tab?: TabKey } => {
     const t = s.tab;
-    return typeof t === "string" && ["services", "professionals", "availability", "breaks"].includes(t)
+    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks"].includes(t)
       ? { tab: t as TabKey }
       : {};
   },
@@ -45,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function SettingsPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const tab = (search.tab ?? "services") as TabKey;
+  const tab = (search.tab ?? "brand") as TabKey;
 
   const companyQ = useQuery({
     queryKey: ["my-company-first"],
@@ -114,13 +117,17 @@ function SettingsPage() {
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full sm:w-auto">
+            <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
+            <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
             <TabsTrigger value="services"><Sparkles className="size-4 mr-1.5" /> Serviços</TabsTrigger>
-            <TabsTrigger value="professionals"><Users className="size-4 mr-1.5" /> Profissionais</TabsTrigger>
-            <TabsTrigger value="availability"><Clock className="size-4 mr-1.5" /> Disponibilidade</TabsTrigger>
+            <TabsTrigger value="professionals"><Users className="size-4 mr-1.5" /> Equipe</TabsTrigger>
+            <TabsTrigger value="availability"><Clock className="size-4 mr-1.5" /> Horários</TabsTrigger>
             <TabsTrigger value="breaks"><Coffee className="size-4 mr-1.5" /> Pausas</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="brand"><BrandTab companyId={company.id} /></TabsContent>
+          <TabsContent value="gallery"><GalleryTab companyId={company.id} /></TabsContent>
           <TabsContent value="services"><ServicesTab companyId={company.id} /></TabsContent>
           <TabsContent value="professionals"><ProfessionalsTab companyId={company.id} /></TabsContent>
           <TabsContent value="availability"><ScheduleTab companyId={company.id} kind="availability" /></TabsContent>
@@ -139,7 +146,7 @@ const serviceSchema = z.object({
   price_cents: z.number().int().min(0, "Preço inválido").max(100000000),
   status: z.enum(["active", "inactive"]),
 });
-type ServiceForm = z.infer<typeof serviceSchema>;
+type ServiceForm = z.infer<typeof serviceSchema> & { description?: string | null; photo_url?: string | null };
 type ServiceRow = ServiceForm & { id: string };
 
 function ServicesTab({ companyId }: { companyId: string }) {
@@ -153,7 +160,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, name, duration_minutes, price_cents, status")
+        .select("id, name, duration_minutes, price_cents, status, description, photo_url")
         .eq("company_id", companyId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -239,7 +246,7 @@ function ServiceDialog({
 }: { open: boolean; onClose: () => void; companyId: string; initial: ServiceRow | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ServiceForm>({
-    name: "", duration_minutes: 30, price_cents: 0, status: "active",
+    name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null,
   });
   const [priceStr, setPriceStr] = useState("0,00");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -247,8 +254,8 @@ function ServiceDialog({
   useEffect(() => {
     if (open) {
       const base: ServiceForm = initial
-        ? { name: initial.name, duration_minutes: initial.duration_minutes, price_cents: initial.price_cents, status: initial.status }
-        : { name: "", duration_minutes: 30, price_cents: 0, status: "active" };
+        ? { name: initial.name, duration_minutes: initial.duration_minutes, price_cents: initial.price_cents, status: initial.status, description: initial.description ?? "", photo_url: initial.photo_url ?? null }
+        : { name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null };
       setForm(base);
       setPriceStr((base.price_cents / 100).toFixed(2).replace(".", ","));
       setErrors({});
@@ -264,11 +271,12 @@ function ServiceDialog({
         setErrors(map);
         throw new Error("Verifique os campos");
       }
+      const payload = { ...parsed.data, description: form.description || null, photo_url: form.photo_url || null };
       if (initial) {
-        const { error } = await supabase.from("services").update(parsed.data).eq("id", initial.id);
+        const { error } = await supabase.from("services").update(payload).eq("id", initial.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("services").insert({ ...parsed.data, company_id: companyId });
+        const { error } = await supabase.from("services").insert({ ...payload, company_id: companyId });
         if (error) throw error;
       }
     },
@@ -288,8 +296,12 @@ function ServiceDialog({
           <DialogDescription>Nome, duração e preço aparecem no link público.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <MediaUploader companyId={companyId} kind="service" value={form.photo_url ?? null} onChange={(u) => setForm({ ...form, photo_url: u })} aspect="cover" label="Foto do serviço (opcional)" />
           <Field label="Nome" error={errors.name}>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Corte + barba" />
+          </Field>
+          <Field label="Descrição (opcional)">
+            <Textarea rows={3} maxLength={500} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalhes sobre este serviço" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Duração (min)" error={errors.duration_minutes}>
@@ -341,7 +353,7 @@ const professionalSchema = z.object({
   skill_level: z.enum(SKILL_LEVELS),
   status: z.enum(["active", "inactive"]),
 });
-type ProfessionalForm = z.infer<typeof professionalSchema>;
+type ProfessionalForm = z.infer<typeof professionalSchema> & { bio?: string | null; photo_url?: string | null };
 type ProfessionalRow = ProfessionalForm & { id: string };
 
 function ProfessionalsTab({ companyId }: { companyId: string }) {
@@ -355,7 +367,7 @@ function ProfessionalsTab({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("professionals")
-        .select("id, name, specialties, skill_level, status")
+        .select("id, name, specialties, skill_level, status, bio, photo_url")
         .eq("company_id", companyId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -440,7 +452,7 @@ function ProfessionalDialog({
 }: { open: boolean; onClose: () => void; companyId: string; initial: ProfessionalRow | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ProfessionalForm>({
-    name: "", specialties: [], skill_level: "intermediario", status: "active",
+    name: "", specialties: [], skill_level: "intermediario", status: "active", bio: "", photo_url: null,
   });
   const [specialtiesStr, setSpecialtiesStr] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -448,8 +460,8 @@ function ProfessionalDialog({
   useEffect(() => {
     if (open) {
       const base: ProfessionalForm = initial
-        ? { name: initial.name, specialties: initial.specialties, skill_level: initial.skill_level, status: initial.status }
-        : { name: "", specialties: [], skill_level: "intermediario", status: "active" };
+        ? { name: initial.name, specialties: initial.specialties, skill_level: initial.skill_level, status: initial.status, bio: initial.bio ?? "", photo_url: initial.photo_url ?? null }
+        : { name: "", specialties: [], skill_level: "intermediario", status: "active", bio: "", photo_url: null };
       setForm(base);
       setSpecialtiesStr(base.specialties.join(", "));
       setErrors({});
@@ -466,11 +478,12 @@ function ProfessionalDialog({
         setErrors(map);
         throw new Error("Verifique os campos");
       }
+      const payload = { ...parsed.data, bio: form.bio || null, photo_url: form.photo_url || null };
       if (initial) {
-        const { error } = await supabase.from("professionals").update(parsed.data).eq("id", initial.id);
+        const { error } = await supabase.from("professionals").update(payload).eq("id", initial.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("professionals").insert({ ...parsed.data, company_id: companyId });
+        const { error } = await supabase.from("professionals").insert({ ...payload, company_id: companyId });
         if (error) throw error;
       }
     },
@@ -491,11 +504,21 @@ function ProfessionalDialog({
           <DialogDescription>Defina o nome, especialidades e nível.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <div className="flex gap-4 items-start">
+            <div className="w-32 shrink-0">
+              <MediaUploader companyId={companyId} kind="professional" value={form.photo_url ?? null} onChange={(u) => setForm({ ...form, photo_url: u })} aspect="square" label="Foto" />
+            </div>
+            <div className="flex-1 space-y-4">
           <Field label="Nome" error={errors.name}>
             <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: João Silva" />
           </Field>
           <Field label="Especialidades (separadas por vírgula)">
             <Input value={specialtiesStr} onChange={(e) => setSpecialtiesStr(e.target.value)} placeholder="Corte masculino, Barba" />
+          </Field>
+            </div>
+          </div>
+          <Field label="Bio (opcional)">
+            <Textarea rows={3} maxLength={500} value={form.bio ?? ""} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Formação, experiência, etc." />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Nível">
@@ -802,4 +825,218 @@ function ConfirmDelete({
 
 function formatBRL(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+/* ================================================================
+   Brand + Gallery tabs
+   ================================================================ */
+
+const DAY_KEYS = ["0", "1", "2", "3", "4", "5", "6"] as const;
+type BusinessHours = Record<string, { open: string; close: string }[]>;
+type BrandRow = {
+  logo_url: string | null;
+  cover_url: string | null;
+  tagline: string | null;
+  description: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  whatsapp_phone: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  website_url: string | null;
+  business_hours: BusinessHours | null;
+};
+
+function BrandTab({ companyId }: { companyId: string }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["settings-brand", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("logo_url, cover_url, tagline, description, address, city, state, postal_code, whatsapp_phone, instagram_url, facebook_url, website_url, business_hours")
+        .eq("id", companyId).single();
+      if (error) throw error;
+      return data as unknown as BrandRow;
+    },
+  });
+
+  const [form, setForm] = useState<BrandRow | null>(null);
+  useEffect(() => { if (q.data) setForm(q.data); }, [q.data]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!form) return;
+      const { error } = await supabase.from("companies").update({
+        logo_url: form.logo_url,
+        cover_url: form.cover_url,
+        tagline: form.tagline?.slice(0, 160) || null,
+        description: form.description?.slice(0, 4000) || null,
+        address: form.address || null,
+        city: form.city || null,
+        state: form.state || null,
+        postal_code: form.postal_code || null,
+        whatsapp_phone: form.whatsapp_phone || null,
+        instagram_url: form.instagram_url || null,
+        facebook_url: form.facebook_url || null,
+        website_url: form.website_url || null,
+        business_hours: form.business_hours ?? {},
+      }).eq("id", companyId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Marca atualizada");
+      qc.invalidateQueries({ queryKey: ["settings-brand", companyId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao salvar"),
+  });
+
+  if (q.isLoading || !form) return <Loader />;
+
+  const set = (patch: Partial<BrandRow>) => setForm({ ...form, ...patch });
+  const hours = form.business_hours || {};
+  const setDayHours = (day: string, slots: { open: string; close: string }[]) =>
+    set({ business_hours: { ...hours, [day]: slots } });
+
+  return (
+    <div className="space-y-8">
+      <section className="grid gap-6 md:grid-cols-[220px_1fr]">
+        <MediaUploader companyId={companyId} kind="logo" value={form.logo_url} onChange={(u) => set({ logo_url: u })} aspect="square" label="Logo" hint="Formato quadrado, PNG/JPG até 8 MB." />
+        <MediaUploader companyId={companyId} kind="cover" value={form.cover_url} onChange={(u) => set({ cover_url: u })} aspect="cover" label="Capa" hint="Aparece no topo da página pública (16:6)." />
+      </section>
+
+      <section className="surface-card p-5 space-y-4">
+        <h3 className="font-medium">Identidade</h3>
+        <Field label="Slogan (aparece abaixo do nome)">
+          <Input value={form.tagline ?? ""} maxLength={160} onChange={(e) => set({ tagline: e.target.value })} placeholder="Ex.: Onde seu estilo acontece." />
+        </Field>
+        <Field label="Descrição">
+          <Textarea value={form.description ?? ""} rows={5} maxLength={4000} onChange={(e) => set({ description: e.target.value })} placeholder="Conte sua história, diferenciais, especialidades..." />
+        </Field>
+      </section>
+
+      <section className="surface-card p-5 space-y-4">
+        <h3 className="font-medium">Contato & Redes</h3>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="WhatsApp (com DDD e país)"><Input value={form.whatsapp_phone ?? ""} onChange={(e) => set({ whatsapp_phone: e.target.value })} placeholder="+55 11 90000-0000" /></Field>
+          <Field label="Site"><Input value={form.website_url ?? ""} onChange={(e) => set({ website_url: e.target.value })} placeholder="https://..." /></Field>
+          <Field label="Instagram (URL)"><Input value={form.instagram_url ?? ""} onChange={(e) => set({ instagram_url: e.target.value })} placeholder="https://instagram.com/..." /></Field>
+          <Field label="Facebook (URL)"><Input value={form.facebook_url ?? ""} onChange={(e) => set({ facebook_url: e.target.value })} placeholder="https://facebook.com/..." /></Field>
+        </div>
+      </section>
+
+      <section className="surface-card p-5 space-y-4">
+        <h3 className="font-medium">Endereço</h3>
+        <div className="grid gap-3 md:grid-cols-2">
+          <Field label="Rua e número"><Input value={form.address ?? ""} onChange={(e) => set({ address: e.target.value })} placeholder="Av. Paulista, 1000" /></Field>
+          <Field label="CEP"><Input value={form.postal_code ?? ""} onChange={(e) => set({ postal_code: e.target.value })} placeholder="01310-100" /></Field>
+          <Field label="Cidade"><Input value={form.city ?? ""} onChange={(e) => set({ city: e.target.value })} /></Field>
+          <Field label="Estado"><Input value={form.state ?? ""} onChange={(e) => set({ state: e.target.value })} placeholder="SP" /></Field>
+        </div>
+        <p className="text-xs text-muted-foreground">O mapa é gerado automaticamente pelo endereço na página pública.</p>
+      </section>
+
+      <section className="surface-card p-5 space-y-4">
+        <h3 className="font-medium">Horário de funcionamento</h3>
+        <p className="text-xs text-muted-foreground">Estes horários são apenas informativos — os slots continuam vindo da disponibilidade de cada profissional.</p>
+        <div className="space-y-2">
+          {DAY_KEYS.map((d, i) => (
+            <BusinessHoursRow key={d} label={DAYS[i]} slots={hours[d] || []} onChange={(slots) => setDayHours(d, slots)} />
+          ))}
+        </div>
+      </section>
+
+      <div className="flex justify-end">
+        <button className="btn-primary h-10 text-sm" disabled={save.isPending} onClick={() => save.mutate()}>
+          {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Salvar alterações
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function BusinessHoursRow({
+  label, slots, onChange,
+}: { label: string; slots: { open: string; close: string }[]; onChange: (s: { open: string; close: string }[]) => void }) {
+  return (
+    <div className="flex items-center gap-3 flex-wrap border border-border rounded-lg p-2.5">
+      <span className="w-20 text-sm text-muted-foreground">{label}</span>
+      {slots.length === 0 && <span className="text-xs text-muted-foreground">Fechado</span>}
+      {slots.map((s, idx) => (
+        <div key={idx} className="flex items-center gap-1.5">
+          <Input type="time" className="w-[110px] h-9" value={s.open} onChange={(e) => onChange(slots.map((x, i) => i === idx ? { ...x, open: e.target.value } : x))} />
+          <span className="text-xs text-muted-foreground">até</span>
+          <Input type="time" className="w-[110px] h-9" value={s.close} onChange={(e) => onChange(slots.map((x, i) => i === idx ? { ...x, close: e.target.value } : x))} />
+          <button className="btn-ghost h-9 !px-2 text-red-400" onClick={() => onChange(slots.filter((_, i) => i !== idx))}><Trash2 className="size-3.5" /></button>
+        </div>
+      ))}
+      <button className="btn-ghost h-8 !px-3 text-xs ml-auto" onClick={() => onChange([...slots, { open: "09:00", close: "18:00" }])}>
+        <Plus className="size-3.5" /> Adicionar
+      </button>
+    </div>
+  );
+}
+
+/* ---------------- Gallery ---------------- */
+
+type GalleryItem = { url: string; caption?: string | null };
+
+function GalleryTab({ companyId }: { companyId: string }) {
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["settings-gallery", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("companies").select("gallery").eq("id", companyId).single();
+      if (error) throw error;
+      return ((data?.gallery ?? []) as unknown as GalleryItem[]) || [];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async (next: GalleryItem[]) => {
+      const { error } = await supabase.from("companies").update({ gallery: next as any }).eq("id", companyId);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["settings-gallery", companyId] }),
+    onError: (e: any) => toast.error(e?.message ?? "Falha ao salvar"),
+  });
+
+  if (q.isLoading) return <Loader />;
+  const items = q.data || [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">{items.length} imagem(ns) na galeria (máx. 24)</p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {items.map((it, i) => (
+          <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+            <img src={it.url} alt={it.caption ?? ""} className="w-full h-full object-cover" />
+            <button
+              onClick={() => save.mutate(items.filter((_, x) => x !== i))}
+              className="absolute top-2 right-2 h-8 px-2 rounded-md bg-background/90 border border-border text-red-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </div>
+        ))}
+        {items.length < 24 && (
+          <div className="aspect-square">
+            <MediaUploader
+              companyId={companyId}
+              kind="gallery"
+              value={null}
+              onChange={(url) => { if (url) save.mutate([...items, { url }]); }}
+              aspect="square"
+              label=""
+              hint=""
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
