@@ -112,6 +112,7 @@ function PublicBookingPage() {
         supabase.rpc("get_busy_slots", {
           _professional_id: professionalId!,
           _date: toZonedISODate(date!, tz),
+          _timezone: tz,
         }),
       ]);
       if (avail.error) throw avail.error;
