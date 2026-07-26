@@ -146,7 +146,20 @@ function PublicBookingPage() {
       if (error) throw error;
     },
     onSuccess: () => setStep("done"),
-    onError: (err: any) => toast.error(err.message ?? "Não foi possível agendar"),
+    onError: (err: any) => {
+      // 23P01 = exclusion_violation (bookings_no_overlap): outra pessoa reservou o mesmo horário.
+      const code = err?.code ?? err?.details?.code;
+      const msg = String(err?.message ?? "");
+      if (code === "23P01" || msg.includes("bookings_no_overlap") || msg.toLowerCase().includes("exclusion")) {
+        toast.error("Este horário acabou de ser reservado. Escolha outro, por favor.");
+        // Volta ao passo de escolha de horário e força refetch dos slots
+        setSlot(null);
+        setStep("datetime");
+        availabilityQ.refetch();
+        return;
+      }
+      toast.error(msg || "Não foi possível agendar");
+    },
   });
 
   return (
