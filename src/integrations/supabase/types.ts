@@ -336,13 +336,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_busy_slots: {
-        Args: { _date: string; _professional_id: string }
-        Returns: {
-          end_at: string
-          start_at: string
-        }[]
-      }
+      get_busy_slots:
+        | {
+            Args: { _date: string; _professional_id: string }
+            Returns: {
+              end_at: string
+              start_at: string
+            }[]
+          }
+        | {
+            Args: {
+              _date: string
+              _professional_id: string
+              _timezone?: string
+            }
+            Returns: {
+              end_at: string
+              start_at: string
+            }[]
+          }
     }
     Enums: {
       [_ in never]: never
