@@ -24,6 +24,7 @@ export type Database = {
           customer_phone: string
           end_at: string
           id: string
+          manage_token: string
           notes: string | null
           professional_id: string
           service_id: string
@@ -41,6 +42,7 @@ export type Database = {
           customer_phone: string
           end_at: string
           id?: string
+          manage_token?: string
           notes?: string | null
           professional_id: string
           service_id: string
@@ -58,6 +60,7 @@ export type Database = {
           customer_phone?: string
           end_at?: string
           id?: string
+          manage_token?: string
           notes?: string | null
           professional_id?: string
           service_id?: string
@@ -336,6 +339,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_booking_by_token: {
+        Args: { _reason?: string; _token: string }
+        Returns: undefined
+      }
+      get_booking_by_token: {
+        Args: { _token: string }
+        Returns: {
+          cancellation_reason: string
+          company_id: string
+          company_name: string
+          company_phone: string
+          company_segment: string
+          company_slug: string
+          company_timezone: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          duration_minutes: number
+          end_at: string
+          id: string
+          notes: string
+          price_cents: number
+          professional_id: string
+          professional_name: string
+          service_id: string
+          service_name: string
+          start_at: string
+          status: string
+        }[]
+      }
       get_busy_slots:
         | {
             Args: { _date: string; _professional_id: string }
@@ -355,6 +388,10 @@ export type Database = {
               start_at: string
             }[]
           }
+      reschedule_booking_by_token: {
+        Args: { _new_end: string; _new_start: string; _token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
