@@ -152,39 +152,154 @@ export type Database = {
       }
       companies: {
         Row: {
+          address: string | null
+          business_hours: Json
+          city: string | null
+          cover_url: string | null
           created_at: string
+          description: string | null
+          facebook_url: string | null
+          gallery: Json
           id: string
+          instagram_url: string | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
           name: string
           owner_id: string
           phone: string | null
+          postal_code: string | null
+          reviews_avg: number
+          reviews_count: number
           segment: string
           slug: string
+          state: string | null
+          tagline: string | null
           timezone: string
           updated_at: string
+          website_url: string | null
+          whatsapp_phone: string | null
         }
         Insert: {
+          address?: string | null
+          business_hours?: Json
+          city?: string | null
+          cover_url?: string | null
           created_at?: string
+          description?: string | null
+          facebook_url?: string | null
+          gallery?: Json
           id?: string
+          instagram_url?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
           name: string
           owner_id: string
           phone?: string | null
+          postal_code?: string | null
+          reviews_avg?: number
+          reviews_count?: number
           segment: string
           slug: string
+          state?: string | null
+          tagline?: string | null
           timezone?: string
           updated_at?: string
+          website_url?: string | null
+          whatsapp_phone?: string | null
         }
         Update: {
+          address?: string | null
+          business_hours?: Json
+          city?: string | null
+          cover_url?: string | null
           created_at?: string
+          description?: string | null
+          facebook_url?: string | null
+          gallery?: Json
           id?: string
+          instagram_url?: string | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
           name?: string
           owner_id?: string
           phone?: string | null
+          postal_code?: string | null
+          reviews_avg?: number
+          reviews_count?: number
           segment?: string
           slug?: string
+          state?: string | null
+          tagline?: string | null
           timezone?: string
           updated_at?: string
+          website_url?: string | null
+          whatsapp_phone?: string | null
         }
         Relationships: []
+      }
+      company_reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          company_id: string
+          created_at: string
+          customer_name: string
+          id: string
+          is_published: boolean
+          professional_id: string | null
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          company_id: string
+          created_at?: string
+          customer_name: string
+          id?: string
+          is_published?: boolean
+          professional_id?: string | null
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          company_id?: string
+          created_at?: string
+          customer_name?: string
+          id?: string
+          is_published?: boolean
+          professional_id?: string | null
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_reviews_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_availability: {
         Row: {
@@ -287,30 +402,42 @@ export type Database = {
       }
       professionals: {
         Row: {
+          bio: string | null
           company_id: string
           created_at: string
+          display_order: number
           id: string
+          is_active: boolean
           name: string
+          photo_url: string | null
           skill_level: string
           specialties: string[]
           status: string
           updated_at: string
         }
         Insert: {
+          bio?: string | null
           company_id: string
           created_at?: string
+          display_order?: number
           id?: string
+          is_active?: boolean
           name: string
+          photo_url?: string | null
           skill_level?: string
           specialties?: string[]
           status?: string
           updated_at?: string
         }
         Update: {
+          bio?: string | null
           company_id?: string
           created_at?: string
+          display_order?: number
           id?: string
+          is_active?: boolean
           name?: string
+          photo_url?: string | null
           skill_level?: string
           specialties?: string[]
           status?: string
@@ -354,9 +481,13 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          description: string | null
+          display_order: number
           duration_minutes: number
           id: string
+          is_active: boolean
           name: string
+          photo_url: string | null
           price_cents: number
           status: string
           updated_at: string
@@ -364,9 +495,13 @@ export type Database = {
         Insert: {
           company_id: string
           created_at?: string
+          description?: string | null
+          display_order?: number
           duration_minutes: number
           id?: string
+          is_active?: boolean
           name: string
+          photo_url?: string | null
           price_cents?: number
           status?: string
           updated_at?: string
@@ -374,9 +509,13 @@ export type Database = {
         Update: {
           company_id?: string
           created_at?: string
+          description?: string | null
+          display_order?: number
           duration_minutes?: number
           id?: string
+          is_active?: boolean
           name?: string
+          photo_url?: string | null
           price_cents?: number
           status?: string
           updated_at?: string
@@ -445,9 +584,18 @@ export type Database = {
               start_at: string
             }[]
           }
+      get_public_company_by_slug: { Args: { _slug: string }; Returns: Json }
+      recompute_company_reviews_stats: {
+        Args: { _company_id: string }
+        Returns: undefined
+      }
       reschedule_booking_by_token: {
         Args: { _new_end: string; _new_start: string; _token: string }
         Returns: undefined
+      }
+      submit_review_by_token: {
+        Args: { _comment?: string; _rating: number; _token: string }
+        Returns: string
       }
     }
     Enums: {

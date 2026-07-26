@@ -12,6 +12,7 @@ import {
   Phone,
   Mail,
   User,
+  Star,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -82,6 +83,11 @@ function ManagePage() {
   const qc = useQueryClient();
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewName, setReviewName] = useState("");
+  const [reviewSent, setReviewSent] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [date, setDate] = useState<Date | undefined>();
   const [slot, setSlot] = useState<string | null>(null);
@@ -200,6 +206,29 @@ function ManagePage() {
     },
   });
 
+  const reviewMut = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc("submit_review_by_token", {
+        _token: token,
+        _rating: rating,
+        _comment: reviewComment.trim() || null,
+        _customer_name: reviewName.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Obrigado pela avaliação!");
+      setReviewOpen(false);
+      setReviewSent(true);
+    },
+    onError: (err: any) => {
+      const msg = String(err?.message ?? "");
+      if (msg.includes("already_reviewed")) { toast.error("Este agendamento já foi avaliado."); setReviewSent(true); setReviewOpen(false); return; }
+      if (msg.includes("not_completed") || msg.includes("too_early")) { toast.error("A avaliação estará disponível após o atendimento."); return; }
+      toast.error(mapRpcError(err));
+    },
+  });
+
   if (bookingQ.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -212,6 +241,7 @@ function ManagePage() {
   const start = new Date(b.start_at);
   const isPast = start < new Date();
   const canManage = (b.status === "pending" || b.status === "confirmed") && !isPast;
+  const canReview = !reviewSent && isPast && (b.status === "confirmed" || b.status === "completed");
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -294,6 +324,15 @@ function ManagePage() {
             </button>
             <button onClick={() => setCancelOpen(true)} className="btn-ghost">
               <XCircle className="size-4" /> Cancelar
+            </button>
+          </div>
+        ) : canReview ? (
+          <div className="mt-6 surface-card p-5 text-center">
+            <Star className="size-8 mx-auto text-amber-400" />
+            <p className="mt-2 font-medium">Como foi seu atendimento?</p>
+            <p className="text-xs text-muted-foreground mt-1">Sua opinião ajuda outros clientes a escolher.</p>
+            <button onClick={() => { setReviewName(b.customer_name); setReviewOpen(true); }} className="btn-primary mt-4 h-10 text-sm">
+              Avaliar agora
             </button>
           </div>
         ) : (
@@ -404,6 +443,39 @@ function ManagePage() {
               className="btn-primary"
             >
               {rescheduleMut.isPending ? <Loader2 className="size-4 animate-spin" /> : "Confirmar novo horário"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Avaliar */}
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Avaliar atendimento</DialogTitle>
+            <DialogDescription>Sua avaliação ficará visível na página pública do estabelecimento.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button key={n} type="button" onClick={() => setRating(n)} className="p-1">
+                  <Star className={`size-8 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+                </button>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm">Seu nome (opcional)</label>
+              <input value={reviewName} onChange={(e) => setReviewName(e.target.value)} className="w-full h-10 px-3 rounded-md border border-border bg-transparent text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm">Comentário (opcional)</label>
+              <Textarea rows={4} maxLength={1000} value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} placeholder="Como foi sua experiência?" />
+            </div>
+          </div>
+          <DialogFooter>
+            <button onClick={() => setReviewOpen(false)} className="btn-ghost">Cancelar</button>
+            <button onClick={() => reviewMut.mutate()} disabled={reviewMut.isPending} className="btn-primary">
+              {reviewMut.isPending ? <Loader2 className="size-4 animate-spin" /> : "Enviar avaliação"}
             </button>
           </DialogFooter>
         </DialogContent>
