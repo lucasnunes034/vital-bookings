@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_reschedule_history: {
+        Row: {
+          booking_id: string
+          changed_by: string | null
+          company_id: string
+          created_at: string
+          id: string
+          new_end_at: string
+          new_start_at: string
+          previous_end_at: string
+          previous_start_at: string
+          reason: string | null
+          source: string
+        }
+        Insert: {
+          booking_id: string
+          changed_by?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          new_end_at: string
+          new_start_at: string
+          previous_end_at: string
+          previous_start_at: string
+          reason?: string | null
+          source?: string
+        }
+        Update: {
+          booking_id?: string
+          changed_by?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          new_end_at?: string
+          new_start_at?: string
+          previous_end_at?: string
+          previous_start_at?: string
+          reason?: string | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_reschedule_history_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_reschedule_history_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           cancellation_reason: string | null

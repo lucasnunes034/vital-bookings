@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import {
   ArrowLeft, ChevronLeft, ChevronRight, Loader2, CalendarDays, CalendarRange,
-  Plus, X, User, Phone, Mail, StickyNote,
+  Plus, X, User, Phone, Mail, StickyNote, History, AlertTriangle, Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -246,11 +246,21 @@ function CalendarPage() {
   // Mutations
   const rescheduleMut = useMutation({
     mutationFn: async (v: { id: string; start: Date; end: Date }) => {
+      // Capture previous times so we can offer Undo on success.
+      let previousStart: string | null = null;
+      let previousEnd: string | null = null;
+      const snaps = qc.getQueriesData<any[]>({ queryKey: ["cal-bookings"] });
+      for (const [, list] of snaps) {
+        if (!Array.isArray(list)) continue;
+        const found = list.find((b: any) => b.id === v.id);
+        if (found) { previousStart = found.start_at; previousEnd = found.end_at; break; }
+      }
       const { error } = await supabase
         .from("bookings")
         .update({ start_at: v.start.toISOString(), end_at: v.end.toISOString() })
         .eq("id", v.id);
       if (error) throw error;
+      return { previousStart, previousEnd };
     },
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: ["cal-bookings"] });
@@ -265,18 +275,43 @@ function CalendarPage() {
       }
       return { snapshots };
     },
-    onSuccess: () => {
-      toast.success("Agendamento remarcado");
+    onSuccess: (data, v) => {
+      const prevStart = data?.previousStart;
+      const prevEnd = data?.previousEnd;
+      if (prevStart && prevEnd) {
+        toast.success("Agendamento remarcado", {
+          duration: 8000,
+          action: {
+            label: "Desfazer",
+            onClick: () => undoMut.mutate({
+              id: v.id,
+              start: new Date(prevStart),
+              end: new Date(prevEnd),
+            }),
+          },
+        });
+      } else {
+        toast.success("Agendamento remarcado");
+      }
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
-    onError: (e: any, _v, ctx) => {
+    onError: (e: any, v, ctx) => {
       // rollback
       if (ctx?.snapshots) {
         for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
       }
       if (e?.code === "23P01" || String(e?.message ?? "").includes("bookings_no_overlap")) {
-        toast.error("Conflito de horário", {
-          description: "Esse horário já está ocupado. O card foi devolvido ao lugar original.",
+        const booking = (bookingsQ.data ?? []).find((x: any) => x.id === v.id);
+        const durationMin =
+          booking?.service?.duration_minutes ??
+          Math.round((v.end.getTime() - v.start.getTime()) / 60000);
+        void handleConflictDetails({
+          bookingId: v.id,
+          durationMin,
+          attemptedStart: v.start,
+          attemptedEnd: v.end,
+          customer: booking?.customer_name ?? "",
+          service: booking?.service?.name ?? "",
         });
       } else if (e?.code === "42501") {
         toast.error("Sem permissão", {
@@ -296,6 +331,31 @@ function CalendarPage() {
     },
   });
 
+  // Undo reschedule: reverses to previous times.
+  const undoMut = useMutation({
+    mutationFn: async (v: { id: string; start: Date; end: Date }) => {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ start_at: v.start.toISOString(), end_at: v.end.toISOString() })
+        .eq("id", v.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Remarcação desfeita");
+      qc.invalidateQueries({ queryKey: ["cal-bookings"] });
+    },
+    onError: (e: any) => {
+      if (e?.code === "23P01") {
+        toast.error("Não foi possível desfazer", {
+          description: "O horário anterior já está ocupado por outro agendamento.",
+        });
+      } else {
+        toast.error("Não foi possível desfazer", { description: e?.message ?? "" });
+      }
+      qc.invalidateQueries({ queryKey: ["cal-bookings"] });
+    },
+  });
+
   // Create booking dialog state
   const [createFor, setCreateFor] = useState<{ start: Date } | null>(null);
 
@@ -305,9 +365,102 @@ function CalendarPage() {
     | null
   >(null);
 
+  // Detailed conflict dialog (when a reschedule attempt collides).
+  const [conflict, setConflict] = useState<
+    | {
+        bookingId: string;
+        durationMin: number;
+        attemptedStart: Date;
+        attemptedEnd: Date;
+        conflicts: Array<{ id: string; start: Date; end: Date; customer: string; service: string }>;
+        suggestions: Array<{ start: Date; end: Date }>;
+        customer: string;
+        service: string;
+      }
+    | null
+  >(null);
+
+  // History viewer state
+  const [historyFor, setHistoryFor] = useState<{ id: string; customer: string } | null>(null);
+
   // Drag state (native HTML5 DnD)
   const dragRef = useRef<{ id: string; durationMin: number } | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+
+  // Suggest nearest available slots for a given target time.
+  function suggestSlots(opts: { target: Date; durationMin: number; excludeBookingId: string }) {
+    const { target, durationMin, excludeBookingId } = opts;
+    const p = getZonedParts(target, tz);
+    const dow = p.dow;
+    const availToday = (availQ.data?.avail ?? []).filter((a) => a.day_of_week === dow);
+    const breakToday = (availQ.data?.breaks ?? []).filter((b) => b.day_of_week === dow);
+    const others = (bookingsQ.data ?? []).filter(
+      (b: any) => b.professional_id === proId && b.id !== excludeBookingId,
+    );
+    const now = new Date();
+    const step = 15;
+    const found: Array<{ start: Date; end: Date; diff: number }> = [];
+    for (const w of availToday) {
+      const [sh, sm] = w.start_time.split(":").map(Number);
+      const [eh, em] = w.end_time.split(":").map(Number);
+      const winS = zonedWallToUTC(p.year, p.month, p.day, sh, sm, tz).getTime();
+      const winE = zonedWallToUTC(p.year, p.month, p.day, eh, em, tz).getTime();
+      for (let t = winS; t + durationMin * 60000 <= winE; t += step * 60000) {
+        const s = new Date(t);
+        const e = new Date(t + durationMin * 60000);
+        if (s < now) continue;
+        const inBreak = breakToday.some((br) => {
+          const [bh, bm] = br.start_time.split(":").map(Number);
+          const [beh, bem] = br.end_time.split(":").map(Number);
+          const bs = zonedWallToUTC(p.year, p.month, p.day, bh, bm, tz);
+          const be = zonedWallToUTC(p.year, p.month, p.day, beh, bem, tz);
+          return s < be && e > bs;
+        });
+        if (inBreak) continue;
+        const clash = others.some((b: any) => {
+          const bs = new Date(b.start_at);
+          const be = new Date(b.end_at);
+          return s < be && e > bs;
+        });
+        if (clash) continue;
+        found.push({ start: s, end: e, diff: Math.abs(s.getTime() - target.getTime()) });
+      }
+    }
+    found.sort((a, b) => a.diff - b.diff);
+    return found.slice(0, 6).map(({ start, end }) => ({ start, end }));
+  }
+
+  async function handleConflictDetails(v: {
+    bookingId: string;
+    durationMin: number;
+    attemptedStart: Date;
+    attemptedEnd: Date;
+    customer: string;
+    service: string;
+  }) {
+    const { data } = await supabase
+      .from("bookings")
+      .select("id, start_at, end_at, customer_name, service:services(name)")
+      .eq("professional_id", proId)
+      .neq("id", v.bookingId)
+      .neq("status", "cancelled")
+      .lt("start_at", v.attemptedEnd.toISOString())
+      .gt("end_at", v.attemptedStart.toISOString())
+      .limit(5);
+    const conflicts = (data ?? []).map((b: any) => ({
+      id: b.id,
+      start: new Date(b.start_at),
+      end: new Date(b.end_at),
+      customer: b.customer_name,
+      service: b.service?.name ?? "",
+    }));
+    const suggestions = suggestSlots({
+      target: v.attemptedStart,
+      durationMin: v.durationMin,
+      excludeBookingId: v.bookingId,
+    });
+    setConflict({ ...v, conflicts, suggestions });
+  }
 
   if (companyQ.isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
@@ -396,6 +549,7 @@ function CalendarPage() {
             onDragEnd={() => { dragRef.current = null; setDragOverKey(null); }}
             dragOverKey={dragOverKey}
             setDragOverKey={setDragOverKey}
+            onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
             onDrop={(start) => {
               const d = dragRef.current;
               dragRef.current = null;
@@ -476,6 +630,15 @@ function CalendarPage() {
             >
               Cancelar
             </button>
+            {pendingMove && (
+              <button
+                type="button"
+                onClick={() => setHistoryFor({ id: pendingMove.id, customer: pendingMove.customer })}
+                className="btn-ghost h-9 !px-3 text-xs"
+              >
+                <History className="size-3.5" /> Histórico
+              </button>
+            )}
             <button
               onClick={() => {
                 if (!pendingMove) return;
@@ -493,6 +656,28 @@ function CalendarPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConflictDialog
+        state={conflict}
+        tz={tz}
+        onClose={() => setConflict(null)}
+        onPick={(s) => {
+          if (!conflict) return;
+          const c = conflict;
+          setConflict(null);
+          rescheduleMut.mutate({ id: c.bookingId, start: s.start, end: s.end });
+        }}
+        onShowHistory={() => {
+          if (!conflict) return;
+          setHistoryFor({ id: conflict.bookingId, customer: conflict.customer });
+        }}
+      />
+
+      <HistoryDialog
+        state={historyFor}
+        tz={tz}
+        onClose={() => setHistoryFor(null)}
+      />
     </div>
   );
 }
@@ -501,7 +686,7 @@ function CalendarPage() {
 
 function CalendarGrid({
   tz, days, startHour, rowsCount, timeLabels, avail, breaks, bookings, svcFilter,
-  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey,
+  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory,
 }: {
   tz: string;
   days: Date[];
@@ -518,6 +703,7 @@ function CalendarGrid({
   onDrop: (start: Date) => void;
   dragOverKey: string | null;
   setDragOverKey: (k: string | null) => void;
+  onOpenHistory: (id: string, customer: string) => void;
 }) {
   const now = new Date();
 
@@ -606,6 +792,7 @@ function CalendarGrid({
         svcFilter={svcFilter}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onOpenHistory={onOpenHistory}
       />
     </div>
   );
@@ -655,7 +842,7 @@ function RowFragment({
 }
 
 function BookingsOverlay({
-  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd,
+  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd, onOpenHistory,
 }: {
   tz: string;
   days: Date[];
@@ -665,6 +852,7 @@ function BookingsOverlay({
   svcFilter: string;
   onDragStart: (id: string, durationMin: number) => void;
   onDragEnd: () => void;
+  onOpenHistory: (id: string, customer: string) => void;
 }) {
   // Total grid width uses same template as parent — for overlay we compute
   // percent-based left/top over a mirrored grid below the visible one.
@@ -714,7 +902,7 @@ function BookingsOverlay({
                   }}
                   onDragEnd={onDragEnd}
                   className={[
-                    "absolute left-1 right-1 rounded-md border px-2 py-1 text-[11px] leading-tight pointer-events-auto cursor-grab active:cursor-grabbing shadow-sm overflow-hidden",
+                    "group absolute left-1 right-1 rounded-md border px-2 py-1 text-[11px] leading-tight pointer-events-auto cursor-grab active:cursor-grabbing shadow-sm overflow-hidden",
                     tone,
                     dim ? "opacity-30" : "opacity-100",
                   ].join(" ")}
@@ -727,6 +915,19 @@ function BookingsOverlay({
                   {height > 24 && (
                     <div className="truncate opacity-80">{b.service?.name}</div>
                   )}
+                  <button
+                    type="button"
+                    onMouseDown={(ev) => ev.stopPropagation()}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      onOpenHistory(b.id, b.customer_name);
+                    }}
+                    className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm p-0.5 hover:bg-background/40"
+                    aria-label="Ver histórico de remarcações"
+                    title="Histórico"
+                  >
+                    <History className="size-3" />
+                  </button>
                 </div>
               );
             })}
@@ -879,6 +1080,195 @@ function CreateBookingDialog({
           <button onClick={() => createMut.mutate()} disabled={createMut.isPending || !serviceId} className="btn-primary h-9 !px-3 text-xs">
             {createMut.isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />} Criar agendamento
           </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- Conflict dialog ---------------- */
+
+type ConflictState = {
+  bookingId: string;
+  durationMin: number;
+  attemptedStart: Date;
+  attemptedEnd: Date;
+  conflicts: Array<{ id: string; start: Date; end: Date; customer: string; service: string }>;
+  suggestions: Array<{ start: Date; end: Date }>;
+  customer: string;
+  service: string;
+};
+
+function ConflictDialog({
+  state, tz, onClose, onPick, onShowHistory,
+}: {
+  state: ConflictState | null;
+  tz: string;
+  onClose: () => void;
+  onPick: (s: { start: Date; end: Date }) => void;
+  onShowHistory: () => void;
+}) {
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="inline-flex items-center gap-2">
+            <AlertTriangle className="size-4 text-amber-500" /> Conflito de horário
+          </DialogTitle>
+          <DialogDescription>
+            {state && (
+              <>
+                Não foi possível mover <strong>{state.customer}</strong> para{" "}
+                <strong>
+                  {formatInTZ(state.attemptedStart, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </strong>
+                . Esse intervalo já está ocupado.
+              </>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        {state && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                Agendamento(s) que ocupam esse horário
+              </p>
+              <div className="space-y-2">
+                {state.conflicts.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    O banco de dados bloqueou o horário, mas não retornamos detalhes. Atualize a página.
+                  </p>
+                )}
+                {state.conflicts.map((c) => (
+                  <div key={c.id} className="rounded-md border border-border p-3 text-sm">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium">{c.customer}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatInTZ(c.start, tz, { hour: "2-digit", minute: "2-digit" })}
+                        {" – "}
+                        {formatInTZ(c.end, tz, { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    {c.service && <p className="text-xs text-muted-foreground mt-0.5">{c.service}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                Horários alternativos próximos ({state.durationMin} min)
+              </p>
+              {state.suggestions.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Sem alternativas livres neste dia. Escolha outra data no calendário.
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {state.suggestions.map((s) => (
+                    <button
+                      key={s.start.toISOString()}
+                      onClick={() => onPick(s)}
+                      className="h-9 rounded-md border border-border hover:border-foreground/40 hover:bg-muted/40 text-sm font-medium"
+                    >
+                      {formatInTZ(s.start, tz, { hour: "2-digit", minute: "2-digit" })}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <button onClick={onShowHistory} className="btn-ghost h-9 !px-3 text-xs">
+            <History className="size-3.5" /> Histórico
+          </button>
+          <button onClick={onClose} className="btn-primary h-9 !px-3 text-xs">Fechar</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- History dialog ---------------- */
+
+function HistoryDialog({
+  state, tz, onClose,
+}: {
+  state: { id: string; customer: string } | null;
+  tz: string;
+  onClose: () => void;
+}) {
+  const q = useQuery({
+    enabled: !!state?.id,
+    queryKey: ["reschedule-history", state?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("booking_reschedule_history")
+        .select("id, previous_start_at, previous_end_at, new_start_at, new_end_at, source, changed_by, created_at")
+        .eq("booking_id", state!.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  return (
+    <Dialog open={!!state} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="inline-flex items-center gap-2">
+            <History className="size-4" /> Histórico de remarcações
+          </DialogTitle>
+          <DialogDescription>
+            {state && <>Todas as alterações de horário de <strong>{state.customer}</strong>.</>}
+          </DialogDescription>
+        </DialogHeader>
+
+        {q.isLoading && (
+          <div className="py-6 flex justify-center">
+            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {!q.isLoading && (q.data?.length ?? 0) === 0 && (
+          <p className="text-sm text-muted-foreground py-4">
+            Este agendamento ainda não foi remarcado.
+          </p>
+        )}
+        {!q.isLoading && (q.data?.length ?? 0) > 0 && (
+          <ul className="space-y-2 max-h-[60vh] overflow-auto">
+            {q.data!.map((h: any) => (
+              <li key={h.id} className="rounded-md border border-border p-3 text-sm">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs text-muted-foreground">
+                    {formatInTZ(new Date(h.created_at), tz, {
+                      day: "2-digit", month: "2-digit", year: "numeric",
+                      hour: "2-digit", minute: "2-digit",
+                    })}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    {h.source === "customer" ? "Cliente" : h.source === "system" ? "Sistema" : "Estabelecimento"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground line-through">
+                    {formatInTZ(new Date(h.previous_start_at), tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <Undo2 className="size-3 rotate-180 text-muted-foreground" />
+                  <span className="font-medium">
+                    {formatInTZ(new Date(h.new_start_at), tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <DialogFooter>
+          <button onClick={onClose} className="btn-primary h-9 !px-3 text-xs">Fechar</button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
