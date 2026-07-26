@@ -5,6 +5,7 @@ import { Calendar, LogOut, Loader2, Users, Clock, BarChart3, ExternalLink, Inbox
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { zonedDayRangeUTC } from "@/lib/timezone";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -26,7 +27,7 @@ function DashboardPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("companies")
-        .select("id, name, slug, segment")
+        .select("id, name, slug, segment, timezone")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data;
@@ -59,9 +60,9 @@ function DashboardPage() {
   return <DashboardContent company={company} signOut={signOut} />;
 }
 
-function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string }; signOut: () => void }) {
-  const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
+function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null }; signOut: () => void }) {
+  const tz = company.timezone || "America/Sao_Paulo";
+  const { start: startOfDay, end: endOfDay } = zonedDayRangeUTC(new Date(), tz);
 
   const statsQ = useQuery({
     queryKey: ["dashboard-stats", company.id],
