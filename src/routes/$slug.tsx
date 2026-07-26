@@ -390,6 +390,40 @@ function BackButton({ onClick }: { onClick: () => void }) {
 function Spinner() { return <div className="py-10 flex justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>; }
 function EmptyMsg({ children }: { children: React.ReactNode }) { return <p className="text-sm text-muted-foreground">{children}</p>; }
 
+function ManageLink({ token }: { token: string }) {
+  const [copied, setCopied] = useState(false);
+  const href = typeof window !== "undefined" ? `${window.location.origin}/manage/${token}` : `/manage/${token}`;
+  return (
+    <div className="mt-3 flex gap-2">
+      <input
+        readOnly
+        value={href}
+        onFocus={(e) => e.currentTarget.select()}
+        className="flex-1 min-w-0 h-10 px-3 rounded-md border border-border bg-muted/30 text-xs font-mono"
+      />
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(href);
+            setCopied(true);
+            toast.success("Link copiado");
+            setTimeout(() => setCopied(false), 1500);
+          } catch {
+            toast.error("Não foi possível copiar");
+          }
+        }}
+        className="btn-ghost h-10 shrink-0"
+      >
+        {copied ? "Copiado" : "Copiar"}
+      </button>
+      <a href={href} className="btn-ghost h-10 shrink-0" target="_blank" rel="noreferrer">
+        Abrir
+      </a>
+    </div>
+  );
+}
+
 function NotAvailable() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
