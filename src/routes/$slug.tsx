@@ -47,10 +47,16 @@ export const Route = createFileRoute("/$slug")({
 type Step = "service" | "professional" | "datetime" | "form" | "done";
 
 const formSchema = z.object({
-  customer_name: z.string().trim().min(2, "Informe seu nome"),
-  customer_phone: z.string().trim().min(8, "Telefone inválido"),
-  customer_email: z.string().trim().email("Email inválido").optional().or(z.literal("")),
-  notes: z.string().trim().max(500).optional(),
+  customer_name: z.string().trim().min(2, "Informe seu nome").max(120, "Nome muito longo"),
+  customer_phone: z.string().trim().min(8, "Telefone inválido").max(30, "Telefone muito longo"),
+  customer_email: z
+    .string()
+    .trim()
+    .email("Email inválido")
+    .max(255, "Email muito longo")
+    .optional()
+    .or(z.literal("")),
+  notes: z.string().trim().max(1000, "Observações muito longas").optional(),
 });
 
 function PublicBookingPage() {
