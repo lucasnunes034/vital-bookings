@@ -211,8 +211,8 @@ function ManagePage() {
       const { error } = await supabase.rpc("submit_review_by_token", {
         _token: token,
         _rating: rating,
-        _comment: reviewComment.trim() || null,
-        _customer_name: reviewName.trim() || null,
+        _comment: reviewComment.trim() || undefined,
+        _customer_name: reviewName.trim() || undefined,
       });
       if (error) throw error;
     },
