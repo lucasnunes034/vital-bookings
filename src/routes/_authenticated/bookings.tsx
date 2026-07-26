@@ -5,6 +5,7 @@ import { Calendar, ArrowLeft, Check, X, Loader2, Clock, Phone, Mail, User, Stick
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
+import { formatInTZ } from "@/lib/timezone";
 
 type Status = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -34,7 +35,7 @@ function BookingsPage() {
   const companyQ = useQuery({
     queryKey: ["my-company-min"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("companies").select("id, name, slug").order("created_at").limit(1).maybeSingle();
+      const { data, error } = await supabase.from("companies").select("id, name, slug, timezone").order("created_at").limit(1).maybeSingle();
       if (error) throw error;
       return data;
     },
