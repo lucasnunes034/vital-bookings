@@ -629,6 +629,15 @@ function CalendarPage() {
             >
               Cancelar
             </button>
+            {pendingMove && (
+              <button
+                type="button"
+                onClick={() => setHistoryFor({ id: pendingMove.id, customer: pendingMove.customer })}
+                className="btn-ghost h-9 !px-3 text-xs"
+              >
+                <History className="size-3.5" /> Histórico
+              </button>
+            )}
             <button
               onClick={() => {
                 if (!pendingMove) return;
@@ -646,6 +655,28 @@ function CalendarPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConflictDialog
+        state={conflict}
+        tz={tz}
+        onClose={() => setConflict(null)}
+        onPick={(s) => {
+          if (!conflict) return;
+          const c = conflict;
+          setConflict(null);
+          rescheduleMut.mutate({ id: c.bookingId, start: s.start, end: s.end });
+        }}
+        onShowHistory={() => {
+          if (!conflict) return;
+          setHistoryFor({ id: conflict.bookingId, customer: conflict.customer });
+        }}
+      />
+
+      <HistoryDialog
+        state={historyFor}
+        tz={tz}
+        onClose={() => setHistoryFor(null)}
+      />
     </div>
   );
 }
