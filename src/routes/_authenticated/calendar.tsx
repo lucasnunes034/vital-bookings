@@ -246,11 +246,21 @@ function CalendarPage() {
   // Mutations
   const rescheduleMut = useMutation({
     mutationFn: async (v: { id: string; start: Date; end: Date }) => {
+      // Capture previous times so we can offer Undo on success.
+      let previousStart: string | null = null;
+      let previousEnd: string | null = null;
+      const snaps = qc.getQueriesData<any[]>({ queryKey: ["cal-bookings"] });
+      for (const [, list] of snaps) {
+        if (!Array.isArray(list)) continue;
+        const found = list.find((b: any) => b.id === v.id);
+        if (found) { previousStart = found.start_at; previousEnd = found.end_at; break; }
+      }
       const { error } = await supabase
         .from("bookings")
         .update({ start_at: v.start.toISOString(), end_at: v.end.toISOString() })
         .eq("id", v.id);
       if (error) throw error;
+      return { previousStart, previousEnd };
     },
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: ["cal-bookings"] });
@@ -265,18 +275,43 @@ function CalendarPage() {
       }
       return { snapshots };
     },
-    onSuccess: () => {
-      toast.success("Agendamento remarcado");
+    onSuccess: (data, v) => {
+      const prevStart = data?.previousStart;
+      const prevEnd = data?.previousEnd;
+      if (prevStart && prevEnd) {
+        toast.success("Agendamento remarcado", {
+          duration: 8000,
+          action: {
+            label: "Desfazer",
+            onClick: () => undoMut.mutate({
+              id: v.id,
+              start: new Date(prevStart),
+              end: new Date(prevEnd),
+            }),
+          },
+        });
+      } else {
+        toast.success("Agendamento remarcado");
+      }
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
-    onError: (e: any, _v, ctx) => {
+    onError: (e: any, v, ctx) => {
       // rollback
       if (ctx?.snapshots) {
         for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
       }
       if (e?.code === "23P01" || String(e?.message ?? "").includes("bookings_no_overlap")) {
-        toast.error("Conflito de horário", {
-          description: "Esse horário já está ocupado. O card foi devolvido ao lugar original.",
+        const booking = (bookingsQ.data ?? []).find((x: any) => x.id === v.id);
+        const durationMin =
+          booking?.service?.duration_minutes ??
+          Math.round((v.end.getTime() - v.start.getTime()) / 60000);
+        void handleConflictDetails({
+          bookingId: v.id,
+          durationMin,
+          attemptedStart: v.start,
+          attemptedEnd: v.end,
+          customer: booking?.customer_name ?? "",
+          service: booking?.service?.name ?? "",
         });
       } else if (e?.code === "42501") {
         toast.error("Sem permissão", {
@@ -296,6 +331,31 @@ function CalendarPage() {
     },
   });
 
+  // Undo reschedule: reverses to previous times.
+  const undoMut = useMutation({
+    mutationFn: async (v: { id: string; start: Date; end: Date }) => {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ start_at: v.start.toISOString(), end_at: v.end.toISOString() })
+        .eq("id", v.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Remarcação desfeita");
+      qc.invalidateQueries({ queryKey: ["cal-bookings"] });
+    },
+    onError: (e: any) => {
+      if (e?.code === "23P01") {
+        toast.error("Não foi possível desfazer", {
+          description: "O horário anterior já está ocupado por outro agendamento.",
+        });
+      } else {
+        toast.error("Não foi possível desfazer", { description: e?.message ?? "" });
+      }
+      qc.invalidateQueries({ queryKey: ["cal-bookings"] });
+    },
+  });
+
   // Create booking dialog state
   const [createFor, setCreateFor] = useState<{ start: Date } | null>(null);
 
@@ -305,9 +365,102 @@ function CalendarPage() {
     | null
   >(null);
 
+  // Detailed conflict dialog (when a reschedule attempt collides).
+  const [conflict, setConflict] = useState<
+    | {
+        bookingId: string;
+        durationMin: number;
+        attemptedStart: Date;
+        attemptedEnd: Date;
+        conflicts: Array<{ id: string; start: Date; end: Date; customer: string; service: string }>;
+        suggestions: Array<{ start: Date; end: Date }>;
+        customer: string;
+        service: string;
+      }
+    | null
+  >(null);
+
+  // History viewer state
+  const [historyFor, setHistoryFor] = useState<{ id: string; customer: string } | null>(null);
+
   // Drag state (native HTML5 DnD)
   const dragRef = useRef<{ id: string; durationMin: number } | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+
+  // Suggest nearest available slots for a given target time.
+  function suggestSlots(opts: { target: Date; durationMin: number; excludeBookingId: string }) {
+    const { target, durationMin, excludeBookingId } = opts;
+    const p = getZonedParts(target, tz);
+    const dow = p.dow;
+    const availToday = (availQ.data?.avail ?? []).filter((a) => a.day_of_week === dow);
+    const breakToday = (availQ.data?.breaks ?? []).filter((b) => b.day_of_week === dow);
+    const others = (bookingsQ.data ?? []).filter(
+      (b: any) => b.professional_id === proId && b.id !== excludeBookingId,
+    );
+    const now = new Date();
+    const step = 15;
+    const found: Array<{ start: Date; end: Date; diff: number }> = [];
+    for (const w of availToday) {
+      const [sh, sm] = w.start_time.split(":").map(Number);
+      const [eh, em] = w.end_time.split(":").map(Number);
+      const winS = zonedWallToUTC(p.year, p.month, p.day, sh, sm, tz).getTime();
+      const winE = zonedWallToUTC(p.year, p.month, p.day, eh, em, tz).getTime();
+      for (let t = winS; t + durationMin * 60000 <= winE; t += step * 60000) {
+        const s = new Date(t);
+        const e = new Date(t + durationMin * 60000);
+        if (s < now) continue;
+        const inBreak = breakToday.some((br) => {
+          const [bh, bm] = br.start_time.split(":").map(Number);
+          const [beh, bem] = br.end_time.split(":").map(Number);
+          const bs = zonedWallToUTC(p.year, p.month, p.day, bh, bm, tz);
+          const be = zonedWallToUTC(p.year, p.month, p.day, beh, bem, tz);
+          return s < be && e > bs;
+        });
+        if (inBreak) continue;
+        const clash = others.some((b: any) => {
+          const bs = new Date(b.start_at);
+          const be = new Date(b.end_at);
+          return s < be && e > bs;
+        });
+        if (clash) continue;
+        found.push({ start: s, end: e, diff: Math.abs(s.getTime() - target.getTime()) });
+      }
+    }
+    found.sort((a, b) => a.diff - b.diff);
+    return found.slice(0, 6).map(({ start, end }) => ({ start, end }));
+  }
+
+  async function handleConflictDetails(v: {
+    bookingId: string;
+    durationMin: number;
+    attemptedStart: Date;
+    attemptedEnd: Date;
+    customer: string;
+    service: string;
+  }) {
+    const { data } = await supabase
+      .from("bookings")
+      .select("id, start_at, end_at, customer_name, service:services(name)")
+      .eq("professional_id", proId)
+      .neq("id", v.bookingId)
+      .neq("status", "cancelled")
+      .lt("start_at", v.attemptedEnd.toISOString())
+      .gt("end_at", v.attemptedStart.toISOString())
+      .limit(5);
+    const conflicts = (data ?? []).map((b: any) => ({
+      id: b.id,
+      start: new Date(b.start_at),
+      end: new Date(b.end_at),
+      customer: b.customer_name,
+      service: b.service?.name ?? "",
+    }));
+    const suggestions = suggestSlots({
+      target: v.attemptedStart,
+      durationMin: v.durationMin,
+      excludeBookingId: v.bookingId,
+    });
+    setConflict({ ...v, conflicts, suggestions });
+  }
 
   if (companyQ.isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
