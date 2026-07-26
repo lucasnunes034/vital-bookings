@@ -115,8 +115,9 @@ export function WhatsappMenu({
   async function markReminderSent(k: MessageKind) {
     if (!markReminder) return;
     if (k !== "reminder_24h" && k !== "reminder_1h") return;
-    const col = k === "reminder_24h" ? "reminder_24h_sent_at" : "reminder_1h_sent_at";
-    const { error } = await supabase.from("bookings").update({ [col]: new Date().toISOString() }).eq("id", booking.id);
+    const now = new Date().toISOString();
+    const patch = k === "reminder_24h" ? { reminder_24h_sent_at: now } : { reminder_1h_sent_at: now };
+    const { error } = await supabase.from("bookings").update(patch).eq("id", booking.id);
     if (error) toast.error("Não consegui marcar o lembrete como enviado");
   }
 
