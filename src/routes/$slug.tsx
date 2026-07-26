@@ -62,6 +62,7 @@ function PublicBookingPage() {
   const [date, setDate] = useState<Date | undefined>();
   const [slot, setSlot] = useState<string | null>(null); // "HH:mm"
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", customer_email: "", notes: "" });
+  const [manageToken, setManageToken] = useState<string | null>(null);
 
   const servicesQ = useQuery({
     queryKey: ["public-services", company.id],
@@ -142,7 +143,7 @@ function PublicBookingPage() {
       const p = getZonedParts(date!, tz);
       const start = zonedWallToUTC(p.year, p.month, p.day, h, m, tz);
       const end = new Date(start.getTime() + service!.duration_minutes * 60000);
-      const { error } = await supabase.from("bookings").insert({
+      const { data, error } = await supabase.from("bookings").insert({
         company_id: company.id,
         professional_id: professionalId!,
         service_id: serviceId!,
@@ -153,10 +154,14 @@ function PublicBookingPage() {
         start_at: start.toISOString(),
         end_at: end.toISOString(),
         status: "pending",
-      });
+      }).select("manage_token").single();
       if (error) throw error;
+      return data?.manage_token as string | undefined;
     },
-    onSuccess: () => setStep("done"),
+    onSuccess: (token) => {
+      setManageToken(token ?? null);
+      setStep("done");
+    },
     onError: (err: any) => {
       // 23P01 = exclusion_violation (bookings_no_overlap): outra pessoa reservou o mesmo horário.
       const code = err?.code ?? err?.details?.code;
