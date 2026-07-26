@@ -685,7 +685,7 @@ function CalendarPage() {
 
 function CalendarGrid({
   tz, days, startHour, rowsCount, timeLabels, avail, breaks, bookings, svcFilter,
-  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey,
+  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory,
 }: {
   tz: string;
   days: Date[];
@@ -702,6 +702,7 @@ function CalendarGrid({
   onDrop: (start: Date) => void;
   dragOverKey: string | null;
   setDragOverKey: (k: string | null) => void;
+  onOpenHistory: (id: string, customer: string) => void;
 }) {
   const now = new Date();
 
@@ -790,6 +791,7 @@ function CalendarGrid({
         svcFilter={svcFilter}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onOpenHistory={onOpenHistory}
       />
     </div>
   );
