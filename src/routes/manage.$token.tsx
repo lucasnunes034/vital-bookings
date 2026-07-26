@@ -153,7 +153,7 @@ function ManagePage() {
     mutationFn: async () => {
       const { error } = await supabase.rpc("cancel_booking_by_token", {
         _token: token,
-        _reason: cancelReason || null,
+        _reason: cancelReason || undefined,
       });
       if (error) throw error;
     },
