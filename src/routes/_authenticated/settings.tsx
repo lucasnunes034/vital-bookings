@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Loader2, Plus, Trash2, Pencil, ArrowLeft, Users, Sparkles, Clock, Coffee, Copy, Check,
-  Palette, Images,
+  Palette, Images, MessageCircle, RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -25,13 +25,20 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { MediaUploader } from "@/components/media-uploader";
+import {
+  DEFAULT_TEMPLATES,
+  MESSAGE_KIND_HINT,
+  MESSAGE_KIND_LABEL,
+  MESSAGE_VARIABLES,
+  type MessageKind,
+} from "@/lib/whatsapp";
 
-type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks";
+type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): { tab?: TabKey } => {
     const t = s.tab;
-    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks"].includes(t)
+    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages"].includes(t)
       ? { tab: t as TabKey }
       : {};
   },
@@ -117,13 +124,14 @@ function SettingsPage() {
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-7 w-full sm:w-auto">
             <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
             <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
             <TabsTrigger value="services"><Sparkles className="size-4 mr-1.5" /> Serviços</TabsTrigger>
             <TabsTrigger value="professionals"><Users className="size-4 mr-1.5" /> Equipe</TabsTrigger>
             <TabsTrigger value="availability"><Clock className="size-4 mr-1.5" /> Horários</TabsTrigger>
             <TabsTrigger value="breaks"><Coffee className="size-4 mr-1.5" /> Pausas</TabsTrigger>
+            <TabsTrigger value="messages"><MessageCircle className="size-4 mr-1.5" /> Mensagens</TabsTrigger>
           </TabsList>
 
           <TabsContent value="brand"><BrandTab companyId={company.id} /></TabsContent>
@@ -132,6 +140,7 @@ function SettingsPage() {
           <TabsContent value="professionals"><ProfessionalsTab companyId={company.id} /></TabsContent>
           <TabsContent value="availability"><ScheduleTab companyId={company.id} kind="availability" /></TabsContent>
           <TabsContent value="breaks"><ScheduleTab companyId={company.id} kind="breaks" /></TabsContent>
+          <TabsContent value="messages"><MessagesTab companyId={company.id} /></TabsContent>
         </Tabs>
       </main>
     </div>
