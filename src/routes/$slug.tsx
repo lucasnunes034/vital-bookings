@@ -180,6 +180,14 @@ function PublicBookingPage() {
         availabilityQ.refetch();
         return;
       }
+      if (code === "42501" || msg.toLowerCase().includes("row-level security")) {
+        toast.error("Não foi possível confirmar: verifique os dados e tente novamente.");
+        return;
+      }
+      if (code === "23514") {
+        toast.error("Dados inválidos. Revise nome, telefone, e-mail e observações.");
+        return;
+      }
       toast.error(msg || "Não foi possível agendar");
     },
   });
