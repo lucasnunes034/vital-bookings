@@ -252,26 +252,58 @@ function CalendarPage() {
         .eq("id", v.id);
       if (error) throw error;
     },
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: ["cal-bookings"] });
+      const snapshots = qc.getQueriesData<any[]>({ queryKey: ["cal-bookings"] });
+      for (const [key, list] of snapshots) {
+        if (!Array.isArray(list)) continue;
+        qc.setQueryData<any[]>(key, list.map((b) =>
+          b.id === v.id
+            ? { ...b, start_at: v.start.toISOString(), end_at: v.end.toISOString() }
+            : b,
+        ));
+      }
+      return { snapshots };
+    },
     onSuccess: () => {
       toast.success("Agendamento remarcado");
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
-    onError: (e: any) => {
-      if (e?.code === "23P01" || String(e?.message ?? "").includes("bookings_no_overlap")) {
-        toast.error("Esse horário conflita com outro agendamento.");
-      } else if (e?.code === "42501") {
-        toast.error("Sem permissão para alterar este agendamento.");
-      } else if (e?.code === "23514") {
-        toast.error("Horário inválido para o serviço.");
-      } else {
-        toast.error(e?.message ?? "Não foi possível remarcar.");
+    onError: (e: any, _v, ctx) => {
+      // rollback
+      if (ctx?.snapshots) {
+        for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
       }
+      if (e?.code === "23P01" || String(e?.message ?? "").includes("bookings_no_overlap")) {
+        toast.error("Conflito de horário", {
+          description: "Esse horário já está ocupado. O card foi devolvido ao lugar original.",
+        });
+      } else if (e?.code === "42501") {
+        toast.error("Sem permissão", {
+          description: "Você não pode alterar este agendamento. Alteração desfeita.",
+        });
+      } else if (e?.code === "23514") {
+        toast.error("Horário inválido", {
+          description: "O novo horário não atende às regras do serviço. Alteração desfeita.",
+        });
+      } else {
+        toast.error("Não foi possível remarcar", {
+          description: e?.message ? String(e.message) : "Tente novamente em instantes.",
+        });
+      }
+      // ensure server truth
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
   });
 
   // Create booking dialog state
   const [createFor, setCreateFor] = useState<{ start: Date } | null>(null);
+
+  // Pending drag-drop move awaiting confirmation
+  const [pendingMove, setPendingMove] = useState<
+    | { id: string; from: Date; to: Date; end: Date; customer: string; service: string }
+    | null
+  >(null);
 
   // Drag state (native HTML5 DnD)
   const dragRef = useRef<{ id: string; durationMin: number } | null>(null);
@@ -374,7 +406,19 @@ function CalendarPage() {
                 toast.error("Não é possível mover para o passado.");
                 return;
               }
-              rescheduleMut.mutate({ id: d.id, start, end });
+              const booking = (bookingsQ.data ?? []).find((x: any) => x.id === d.id);
+              if (!booking) return;
+              const from = new Date(booking.start_at);
+              // No-op guard: dropped on the same slot
+              if (from.getTime() === start.getTime()) return;
+              setPendingMove({
+                id: d.id,
+                from,
+                to: start,
+                end,
+                customer: booking.customer_name,
+                service: booking.service?.name ?? "",
+              });
             }}
           />
         )}
@@ -394,6 +438,61 @@ function CalendarPage() {
           qc.invalidateQueries({ queryKey: ["cal-bookings"] });
         }}
       />
+
+      <Dialog open={!!pendingMove} onOpenChange={(o) => { if (!o && !rescheduleMut.isPending) setPendingMove(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar remarcação</DialogTitle>
+            <DialogDescription>
+              {pendingMove && (
+                <>
+                  Mover <strong>{pendingMove.customer}</strong>
+                  {pendingMove.service ? <> · {pendingMove.service}</> : null} para o novo horário?
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          {pendingMove && (
+            <div className="rounded-md border border-border p-3 text-sm space-y-1">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">De</span>
+                <span className="font-medium">
+                  {formatInTZ(pendingMove.from, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Para</span>
+                <span className="font-medium text-foreground">
+                  {formatInTZ(pendingMove.to, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <button
+              onClick={() => setPendingMove(null)}
+              disabled={rescheduleMut.isPending}
+              className="btn-ghost h-9 !px-3 text-xs"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                if (!pendingMove) return;
+                const m = pendingMove;
+                rescheduleMut.mutate(
+                  { id: m.id, start: m.to, end: m.end },
+                  { onSettled: () => setPendingMove(null) },
+                );
+              }}
+              disabled={rescheduleMut.isPending}
+              className="btn-primary h-9 !px-3 text-xs"
+            >
+              {rescheduleMut.isPending ? <Loader2 className="size-3.5 animate-spin" /> : "Confirmar remarcação"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
