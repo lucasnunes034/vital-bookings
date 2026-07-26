@@ -9,6 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  formatInTZ,
+  toZonedISODate,
+  zonedDayOfWeek,
+  zonedWallToUTC,
+  getZonedParts,
+} from "@/lib/timezone";
 
 export const Route = createFileRoute("/$slug")({
   head: ({ params }) => ({
@@ -24,7 +31,7 @@ export const Route = createFileRoute("/$slug")({
   loader: async ({ params }) => {
     const { data, error } = await supabase
       .from("companies")
-      .select("id, name, slug, segment, phone")
+      .select("id, name, slug, segment, phone, timezone")
       .eq("slug", params.slug)
       .maybeSingle();
     if (error) throw error;
@@ -47,6 +54,7 @@ const formSchema = z.object({
 
 function PublicBookingPage() {
   const { company } = Route.useLoaderData();
+  const tz = company.timezone || "America/Sao_Paulo";
   const [step, setStep] = useState<Step>("service");
   const [serviceId, setServiceId] = useState<string | null>(null);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
@@ -87,9 +95,9 @@ function PublicBookingPage() {
 
   const availabilityQ = useQuery({
     enabled: !!professionalId && !!date,
-    queryKey: ["public-availability", professionalId, date?.toDateString()],
+    queryKey: ["public-availability", professionalId, date ? toZonedISODate(date, tz) : null],
     queryFn: async () => {
-      const dow = date!.getDay();
+      const dow = zonedDayOfWeek(date!, tz);
       const [avail, breaks, busy] = await Promise.all([
         supabase
           .from("professional_availability")
@@ -103,7 +111,7 @@ function PublicBookingPage() {
           .eq("day_of_week", dow),
         supabase.rpc("get_busy_slots", {
           _professional_id: professionalId!,
-          _date: toISODate(date!),
+          _date: toZonedISODate(date!, tz),
         }),
       ]);
       if (avail.error) throw avail.error;
@@ -117,19 +125,20 @@ function PublicBookingPage() {
     if (!availabilityQ.data || !service || !date) return [];
     return computeSlots({
       date,
+      timeZone: tz,
       duration: service.duration_minutes,
       avail: availabilityQ.data.avail,
       breaks: availabilityQ.data.breaks,
       busy: availabilityQ.data.busy.map((b: any) => ({ start: new Date(b.start_at), end: new Date(b.end_at) })),
     });
-  }, [availabilityQ.data, service, date]);
+  }, [availabilityQ.data, service, date, tz]);
 
   const createBooking = useMutation({
     mutationFn: async () => {
       const parsed = formSchema.parse(form);
       const [h, m] = slot!.split(":").map(Number);
-      const start = new Date(date!);
-      start.setHours(h, m, 0, 0);
+      const p = getZonedParts(date!, tz);
+      const start = zonedWallToUTC(p.year, p.month, p.day, h, m, tz);
       const end = new Date(start.getTime() + service!.duration_minutes * 60000);
       const { error } = await supabase.from("bookings").insert({
         company_id: company.id,
@@ -284,7 +293,7 @@ function PublicBookingPage() {
             <BackButton onClick={() => setStep("datetime")} />
             <h2 className="font-display text-2xl font-semibold mt-2">Seus dados</h2>
             <div className="mt-4 surface-card p-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-              <span><CalendarIcon className="size-4 inline mr-1 text-muted-foreground" />{formatDate(date)} às {slot}</span>
+              <span><CalendarIcon className="size-4 inline mr-1 text-muted-foreground" />{formatDate(date, tz)} às {slot}</span>
               <span>{service.name} · {service.duration_minutes} min · {formatBRL(service.price_cents)}</span>
               <span>com {professional.name}</span>
             </div>
@@ -320,7 +329,7 @@ function PublicBookingPage() {
             <h2 className="mt-6 font-display text-2xl font-semibold">Solicitação enviada</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {company.name} recebeu sua solicitação de <strong className="text-foreground">{service.name}</strong> em{" "}
-              <strong className="text-foreground">{formatDate(date)} às {slot}</strong> com {professional.name}. Você receberá a confirmação em breve.
+              <strong className="text-foreground">{formatDate(date, tz)} às {slot}</strong> com {professional.name}. Você receberá a confirmação em breve.
             </p>
           </section>
         )}
@@ -377,15 +386,13 @@ function NotAvailable() {
   );
 }
 
-function toISODate(d: Date) {
-  const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, "0"); const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
 function formatBRL(cents: number) { return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
-function formatDate(d: Date) { return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" }); }
+function formatDate(d: Date, tz: string) {
+  return formatInTZ(d, tz, { day: "2-digit", month: "long" });
+}
 
-function computeSlots({ date, duration, avail, breaks, busy }: {
-  date: Date; duration: number;
+function computeSlots({ date, timeZone, duration, avail, breaks, busy }: {
+  date: Date; timeZone: string; duration: number;
   avail: { start_time: string; end_time: string }[];
   breaks: { start_time: string; end_time: string }[];
   busy: { start: Date; end: Date }[];
@@ -393,11 +400,12 @@ function computeSlots({ date, duration, avail, breaks, busy }: {
   const step = 15; // minutes
   const out: string[] = [];
   const now = new Date();
+  const p = getZonedParts(date, timeZone);
   for (const win of avail) {
     const [sh, sm] = win.start_time.split(":").map(Number);
     const [eh, em] = win.end_time.split(":").map(Number);
-    const winStart = new Date(date); winStart.setHours(sh, sm, 0, 0);
-    const winEnd = new Date(date); winEnd.setHours(eh, em, 0, 0);
+    const winStart = zonedWallToUTC(p.year, p.month, p.day, sh, sm, timeZone);
+    const winEnd = zonedWallToUTC(p.year, p.month, p.day, eh, em, timeZone);
     for (let t = winStart.getTime(); t + duration * 60000 <= winEnd.getTime(); t += step * 60000) {
       const slotStart = new Date(t);
       const slotEnd = new Date(t + duration * 60000);
@@ -405,14 +413,15 @@ function computeSlots({ date, duration, avail, breaks, busy }: {
       const hitsBreak = breaks.some((b) => {
         const [bh, bm] = b.start_time.split(":").map(Number);
         const [beh, bem] = b.end_time.split(":").map(Number);
-        const bs = new Date(date); bs.setHours(bh, bm, 0, 0);
-        const be = new Date(date); be.setHours(beh, bem, 0, 0);
+        const bs = zonedWallToUTC(p.year, p.month, p.day, bh, bm, timeZone);
+        const be = zonedWallToUTC(p.year, p.month, p.day, beh, bem, timeZone);
         return slotStart < be && slotEnd > bs;
       });
       if (hitsBreak) continue;
       const hitsBusy = busy.some((b) => slotStart < b.end && slotEnd > b.start);
       if (hitsBusy) continue;
-      out.push(`${String(slotStart.getHours()).padStart(2, "0")}:${String(slotStart.getMinutes()).padStart(2, "0")}`);
+      const zp = getZonedParts(slotStart, timeZone);
+      out.push(`${String(zp.hour).padStart(2, "0")}:${String(zp.minute).padStart(2, "0")}`);
     }
   }
   return out;
