@@ -118,7 +118,7 @@ function BookingsPage() {
         const [y, mo, d] = to.split("-").map(Number);
         q = q.lt("start_at", zonedWallToUTC(y, mo, d + 1, 0, 0, tz).toISOString());
       }
-      const { data, error } = await q;
+      const { data, error } = await q.limit(1000);
       if (error) throw error;
       return data;
     },
