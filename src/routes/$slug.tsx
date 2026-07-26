@@ -338,6 +338,15 @@ function PublicBookingPage() {
               {company.name} recebeu sua solicitação de <strong className="text-foreground">{service.name}</strong> em{" "}
               <strong className="text-foreground">{formatDate(date, tz)} às {slot}</strong> com {professional.name}. Você receberá a confirmação em breve.
             </p>
+            {manageToken && (
+              <div className="mt-8 surface-card p-5 text-left">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">Seu link de gerenciamento</p>
+                <p className="text-sm mt-2">
+                  Salve este link para <strong>cancelar</strong> ou <strong>remarcar</strong> seu agendamento a qualquer momento — sem precisar criar conta.
+                </p>
+                <ManageLink token={manageToken} />
+              </div>
+            )}
           </section>
         )}
       </main>
