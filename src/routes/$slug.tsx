@@ -456,7 +456,8 @@ function BookingDialog({
         end_at: end.toISOString(),
         status: "pending",
         manage_token: manageToken,
-      });
+        payment_method: acceptedMethods.length > 0 ? paymentMethod : null,
+      } as any);
       if (error) throw error;
       return manageToken;
     },
