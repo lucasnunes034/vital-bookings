@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Loader2, Plus, Trash2, Pencil, ArrowLeft, Users, Sparkles, Clock, Coffee, Copy, Check,
-  Palette, Images, MessageCircle, RotateCcw, Wallet,
+  Palette, Images, MessageCircle, RotateCcw, Wallet, Paintbrush,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -41,13 +41,14 @@ import {
   sortPaymentMethods,
   type PaymentMethodKind,
 } from "@/lib/payment-methods";
+import { AppearanceTab } from "./_appearance-tab";
 
-type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
+type TabKey = "brand" | "appearance" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): { tab?: TabKey } => {
     const t = s.tab;
-    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages", "payments"].includes(t)
+    return typeof t === "string" && ["brand", "appearance", "gallery", "services", "professionals", "availability", "breaks", "messages", "payments"].includes(t)
       ? { tab: t as TabKey }
       : {};
   },
@@ -133,8 +134,9 @@ function SettingsPage() {
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-3 sm:grid-cols-8 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-9 w-full sm:w-auto">
             <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
+            <TabsTrigger value="appearance"><Paintbrush className="size-4 mr-1.5" /> Aparência</TabsTrigger>
             <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
             <TabsTrigger value="services"><Sparkles className="size-4 mr-1.5" /> Serviços</TabsTrigger>
             <TabsTrigger value="professionals"><Users className="size-4 mr-1.5" /> Equipe</TabsTrigger>
@@ -145,6 +147,7 @@ function SettingsPage() {
           </TabsList>
 
           <TabsContent value="brand"><BrandTab companyId={company.id} /></TabsContent>
+          <TabsContent value="appearance"><AppearanceTab companyId={company.id} /></TabsContent>
           <TabsContent value="gallery"><GalleryTab companyId={company.id} /></TabsContent>
           <TabsContent value="services"><ServicesTab companyId={company.id} /></TabsContent>
           <TabsContent value="professionals"><ProfessionalsTab companyId={company.id} /></TabsContent>
