@@ -18,6 +18,7 @@ import {
 import {
   formatInTZ, getZonedParts, toZonedISODate, zonedDayOfWeek, zonedWallToUTC,
 } from "@/lib/timezone";
+import { mapBookingError } from "@/lib/booking-errors";
 
 type ViewMode = "day" | "week";
 
