@@ -62,6 +62,7 @@ type PublicCompany = {
   gallery: { url: string; caption?: string | null }[] | null;
   reviews_avg: number | null;
   reviews_count: number | null;
+  accepted_payment_methods: string[] | null;
   services: {
     id: string;
     name: string;
