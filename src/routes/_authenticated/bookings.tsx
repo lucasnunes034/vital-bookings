@@ -408,6 +408,12 @@ function DetailsDialog({ booking, tz, company, onClose }: { booking: any; tz: st
                 <p>{booking.cancellation_reason}</p>
               </div>
             )}
+            {booking.payment_method && (
+              <div className="grid gap-1">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Forma de pagamento</p>
+                <p>{formatPaymentMethod(booking.payment_method)} <span className="text-xs text-muted-foreground">(no local)</span></p>
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">Criado em {formatInTZ(booking.created_at, tz, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
           </div>
         )}
