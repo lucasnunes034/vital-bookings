@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { applyTheme } from "@/lib/theme/apply";
-import { contrastRatio, ensureReadable, isValidHex } from "@/lib/theme/contrast";
+import { contrastRatio, ensureReadable, isValidHex, readableOn } from "@/lib/theme/contrast";
 import { TEMPLATE_PRESETS, getTemplate } from "@/lib/theme/templates";
 import { DEFAULT_THEME, type CompanyTheme, type ThemeFont, type ThemeMode, type ThemeTemplateId } from "@/lib/theme/types";
 
@@ -300,9 +300,9 @@ function PreviewCard({ theme }: { theme: Draft }) {
         <p className="text-sm font-medium">Prévia rápida</p>
       </div>
       <div className="flex flex-wrap gap-2">
-        <span className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium" style={{ background: theme.primary_color, color: readOn(theme.primary_color) }}>Primário</span>
-        <span className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium" style={{ background: theme.secondary_color, color: readOn(theme.secondary_color) }}>Secundário</span>
-        <span className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium" style={{ background: theme.accent_color, color: readOn(theme.accent_color) }}>Destaque</span>
+        <span className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium" style={{ background: theme.primary_color, color: readableOn(theme.primary_color) }}>Primário</span>
+        <span className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium" style={{ background: theme.secondary_color, color: readableOn(theme.secondary_color) }}>Secundário</span>
+        <span className="inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium" style={{ background: theme.accent_color, color: readableOn(theme.accent_color) }}>Destaque</span>
       </div>
       <p className="text-[11px] text-muted-foreground">Contraste primário vs. fundo: {primaryRatio.toFixed(2)}:1</p>
     </div>
