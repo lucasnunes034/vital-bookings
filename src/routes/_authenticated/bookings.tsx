@@ -158,7 +158,10 @@ function BookingsPage() {
       setCancelId(null);
       setCancelReason("");
     },
-    onError: (e: any) => toast.error(e.message ?? "Erro ao atualizar"),
+    onError: (e: any) => {
+      const m = mapBookingError(e, "confirm");
+      toast.error(m.message, m.description ? { description: m.description } : undefined);
+    },
   });
 
   const clearFilters = () => { setProFilter(""); setSvcFilter(""); setFrom(""); setTo(""); setSearch(""); };
@@ -465,8 +468,9 @@ function RescheduleDialog({ booking, tz, onClose, onDone }: { booking: any; tz: 
     },
     onSuccess: () => { toast.success("Agendamento remarcado"); onDone(); },
     onError: (e: any) => {
-      if (e?.code === "23P01") { toast.error("Esse horário conflita com outro agendamento"); setSlot(null); }
-      else toast.error(e?.message ?? "Erro ao remarcar");
+      const m = mapBookingError(e, "reschedule");
+      if (m.kind === "conflict") setSlot(null);
+      toast.error(m.message, m.description ? { description: m.description } : undefined);
     },
   });
 
