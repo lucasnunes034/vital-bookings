@@ -83,6 +83,9 @@ export type Database = {
           id: string
           manage_token: string
           notes: string | null
+          payment_method:
+            | Database["public"]["Enums"]["payment_method_kind"]
+            | null
           professional_id: string
           reminder_1h_sent_at: string | null
           reminder_24h_sent_at: string | null
@@ -103,6 +106,9 @@ export type Database = {
           id?: string
           manage_token?: string
           notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["payment_method_kind"]
+            | null
           professional_id: string
           reminder_1h_sent_at?: string | null
           reminder_24h_sent_at?: string | null
@@ -123,6 +129,9 @@ export type Database = {
           id?: string
           manage_token?: string
           notes?: string | null
+          payment_method?:
+            | Database["public"]["Enums"]["payment_method_kind"]
+            | null
           professional_id?: string
           reminder_1h_sent_at?: string | null
           reminder_24h_sent_at?: string | null
@@ -158,6 +167,7 @@ export type Database = {
       }
       companies: {
         Row: {
+          accepted_payment_methods: Database["public"]["Enums"]["payment_method_kind"][]
           address: string | null
           business_hours: Json
           city: string | null
@@ -187,6 +197,7 @@ export type Database = {
           whatsapp_phone: string | null
         }
         Insert: {
+          accepted_payment_methods?: Database["public"]["Enums"]["payment_method_kind"][]
           address?: string | null
           business_hours?: Json
           city?: string | null
@@ -216,6 +227,7 @@ export type Database = {
           whatsapp_phone?: string | null
         }
         Update: {
+          accepted_payment_methods?: Database["public"]["Enums"]["payment_method_kind"][]
           address?: string | null
           business_hours?: Json
           city?: string | null
@@ -808,6 +820,7 @@ export type Database = {
         | "cancelled"
         | "refunded"
         | "failed"
+      payment_method_kind: "cash" | "pix" | "debit_card" | "credit_card"
       payment_mode: "none" | "fixed" | "percentage" | "full"
     }
     CompositeTypes: {
@@ -951,6 +964,7 @@ export const Constants = {
         "refunded",
         "failed",
       ],
+      payment_method_kind: ["cash", "pix", "debit_card", "credit_card"],
       payment_mode: ["none", "fixed", "percentage", "full"],
     },
   },

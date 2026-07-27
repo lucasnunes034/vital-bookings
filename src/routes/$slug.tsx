@@ -36,6 +36,11 @@ import {
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
 import { mapBookingError } from "@/lib/booking-errors";
+import {
+  PAYMENT_METHOD_LABEL,
+  sortPaymentMethods,
+  type PaymentMethodKind,
+} from "@/lib/payment-methods";
 
 type PublicCompany = {
   id: string;
@@ -62,6 +67,7 @@ type PublicCompany = {
   gallery: { url: string; caption?: string | null }[] | null;
   reviews_avg: number | null;
   reviews_count: number | null;
+  accepted_payment_methods: string[] | null;
   services: {
     id: string;
     name: string;
@@ -370,6 +376,11 @@ function BookingDialog({
   const [slot, setSlot] = useState<string | null>(null);
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", customer_email: "", notes: "" });
   const [manageToken, setManageToken] = useState<string | null>(null);
+  const acceptedMethods = useMemo(
+    () => sortPaymentMethods(company.accepted_payment_methods),
+    [company.accepted_payment_methods],
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKind | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -379,8 +390,9 @@ function BookingDialog({
     setSlot(null);
     setManageToken(null);
     setForm({ customer_name: "", customer_phone: "", customer_email: "", notes: "" });
+    setPaymentMethod(acceptedMethods[0] ?? null);
     setStep(initialServiceId ? (initialProfessionalId ? "datetime" : "professional") : "service");
-  }, [open, initialServiceId, initialProfessionalId]);
+  }, [open, initialServiceId, initialProfessionalId, acceptedMethods]);
 
   const service = company.services.find((s) => s.id === serviceId) ?? null;
   const professional = company.professionals.find((p) => p.id === professionalId) ?? null;
@@ -444,7 +456,8 @@ function BookingDialog({
         end_at: end.toISOString(),
         status: "pending",
         manage_token: manageToken,
-      });
+        payment_method: acceptedMethods.length > 0 ? paymentMethod : null,
+      } as any);
       if (error) throw error;
       return manageToken;
     },
@@ -569,7 +582,31 @@ function BookingDialog({
               <Field label="Telefone / WhatsApp" required><Input value={form.customer_phone} onChange={(e) => setForm((f) => ({ ...f, customer_phone: e.target.value }))} required /></Field>
               <Field label="Email (opcional)"><Input type="email" value={form.customer_email} onChange={(e) => setForm((f) => ({ ...f, customer_email: e.target.value }))} /></Field>
               <Field label="Observações (opcional)"><Input value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Alguma preferência ou detalhe" /></Field>
-              <button type="submit" disabled={createBooking.isPending} className="btn-primary w-full">
+              {acceptedMethods.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm">Como você pretende pagar? <span className="text-xs font-normal text-muted-foreground">(pagamento no local)</span></Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {acceptedMethods.map((m) => {
+                      const selected = paymentMethod === m;
+                      return (
+                        <button
+                          type="button"
+                          key={m}
+                          onClick={() => setPaymentMethod(m)}
+                          className={`h-10 rounded-md border text-sm transition-colors ${
+                            selected
+                              ? "border-foreground bg-muted/50 font-medium"
+                              : "border-border hover:border-foreground/40"
+                          }`}
+                        >
+                          {PAYMENT_METHOD_LABEL[m]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <button type="submit" disabled={createBooking.isPending || (acceptedMethods.length > 0 && !paymentMethod)} className="btn-primary w-full">
                 {createBooking.isPending ? <Loader2 className="size-4 animate-spin" /> : "Solicitar agendamento"}
               </button>
               <p className="text-xs text-muted-foreground text-center">Seu agendamento ficará pendente até o estabelecimento confirmar.</p>

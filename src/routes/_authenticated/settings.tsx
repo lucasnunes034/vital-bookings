@@ -35,6 +35,12 @@ import {
 import { PROVIDER_CATALOG } from "@/lib/payments/providers";
 import type { PaymentMode, PaymentProviderId } from "@/lib/payments/types";
 import { computeChargeAmount } from "@/lib/payments/pricing";
+import {
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_METHOD_ORDER,
+  sortPaymentMethods,
+  type PaymentMethodKind,
+} from "@/lib/payment-methods";
 
 type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
@@ -1016,6 +1022,40 @@ const MODE_LABEL: Record<PaymentMode, string> = {
 function PaymentsTab({ companyId }: { companyId: string }) {
   const qc = useQueryClient();
 
+  const acceptedQ = useQuery({
+    queryKey: ["accepted-payment-methods", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("accepted_payment_methods")
+        .eq("id", companyId)
+        .single();
+      if (error) throw error;
+      return sortPaymentMethods((data as any)?.accepted_payment_methods);
+    },
+  });
+
+  const saveAccepted = useMutation({
+    mutationFn: async (methods: PaymentMethodKind[]) => {
+      const { error } = await supabase
+        .from("companies")
+        .update({ accepted_payment_methods: methods } as any)
+        .eq("id", companyId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Formas de pagamento atualizadas");
+      qc.invalidateQueries({ queryKey: ["accepted-payment-methods", companyId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível salvar"),
+  });
+
+  const toggleMethod = (m: PaymentMethodKind) => {
+    const current = acceptedQ.data ?? [];
+    const next = current.includes(m) ? current.filter((x) => x !== m) : [...current, m];
+    saveAccepted.mutate(sortPaymentMethods(next));
+  };
+
   const q = useQuery({
     queryKey: ["payment-settings", companyId],
     queryFn: async () => {
@@ -1112,6 +1152,37 @@ function PaymentsTab({ companyId }: { companyId: string }) {
 
   return (
     <div className="space-y-6 max-w-3xl">
+      {/* Formas de pagamento aceitas no local */}
+      <div className="surface-card p-5 space-y-3">
+        <div>
+          <p className="font-medium">Formas de pagamento aceitas no local</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Marque como sua empresa aceita receber. O cliente vai escolher uma dessas opções ao concluir o agendamento.
+          </p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {PAYMENT_METHOD_ORDER.map((m) => {
+            const checked = (acceptedQ.data ?? []).includes(m);
+            return (
+              <label
+                key={m}
+                className={`flex items-center justify-between gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                  checked ? "border-foreground bg-muted/40" : "border-border hover:border-foreground/40"
+                }`}
+              >
+                <span className="text-sm">{PAYMENT_METHOD_LABEL[m]}</span>
+                <Switch checked={checked} onCheckedChange={() => toggleMethod(m)} disabled={saveAccepted.isPending} />
+              </label>
+            );
+          })}
+        </div>
+        {(acceptedQ.data ?? []).length === 0 && (
+          <p className="text-xs text-amber-600/90 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
+            Nenhuma forma selecionada — a pergunta não aparecerá para o cliente na hora de agendar.
+          </p>
+        )}
+      </div>
+
       {/* Master switch */}
       <div className="surface-card p-5 space-y-3">
         <div className="flex items-start justify-between gap-3">
