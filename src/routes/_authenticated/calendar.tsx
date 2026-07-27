@@ -497,10 +497,10 @@ function CalendarPage() {
           </div>
           <div className="flex items-center gap-2">
             <div className="inline-flex rounded-md border border-border overflow-hidden">
-              <button onClick={() => setView("day")} className={`px-3 h-9 text-sm inline-flex items-center gap-1 ${view === "day" ? "bg-foreground text-background" : "hover:bg-accent"}`}>
+              <button onClick={() => setView("day")} className={`px-3 h-9 text-sm inline-flex items-center gap-1 ${view === "day" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
                 <CalendarDays className="size-3.5" /> Dia
               </button>
-              <button onClick={() => setView("week")} className={`px-3 h-9 text-sm inline-flex items-center gap-1 ${view === "week" ? "bg-foreground text-background" : "hover:bg-accent"}`}>
+              <button onClick={() => setView("week")} className={`px-3 h-9 text-sm inline-flex items-center gap-1 ${view === "week" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
                 <CalendarRange className="size-3.5" /> Semana
               </button>
             </div>
@@ -891,9 +891,9 @@ function BookingsOverlay({
               const dim = svcFilter && b.service_id !== svcFilter;
               const status = b.status as string;
               const tone =
-                status === "pending" ? "bg-amber-500/20 border-amber-500/60 text-amber-100" :
-                status === "confirmed" ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-100" :
-                "bg-muted border-border";
+                status === "pending" ? "status-pending" :
+                status === "confirmed" ? "status-confirmed" :
+                "bg-muted border border-border text-muted-foreground";
               return (
                 <div
                   key={b.id}
@@ -1109,7 +1109,7 @@ function ConflictDialog({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="inline-flex items-center gap-2">
-            <AlertTriangle className="size-4 text-amber-500" /> Conflito de horário
+            <AlertTriangle className="size-4 text-warning" /> Conflito de horário
           </DialogTitle>
           <DialogDescription>
             {state && (

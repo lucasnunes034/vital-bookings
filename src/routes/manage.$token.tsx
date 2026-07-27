@@ -332,7 +332,7 @@ function ManagePage() {
           </div>
         ) : canReview ? (
           <div className="mt-6 surface-card p-5 text-center">
-            <Star className="size-8 mx-auto text-amber-400" />
+            <Star className="size-8 mx-auto text-warning" />
             <p className="mt-2 font-medium">Como foi seu atendimento?</p>
             <p className="text-xs text-muted-foreground mt-1">Sua opinião ajuda outros clientes a escolher.</p>
             <button onClick={() => { setReviewName(b.customer_name); setReviewOpen(true); }} className="btn-primary mt-4 h-10 text-sm">
@@ -463,7 +463,7 @@ function ManagePage() {
             <div className="flex items-center justify-center gap-1">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button key={n} type="button" onClick={() => setRating(n)} className="p-1">
-                  <Star className={`size-8 ${n <= rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+                  <Star className={`size-8 ${n <= rating ? "fill-warning text-warning" : "text-muted-foreground/40"}`} />
                 </button>
               ))}
             </div>
@@ -492,17 +492,17 @@ function StatusBanner({ status, isPast }: { status: Booking["status"]; isPast: b
   const map: Record<Booking["status"], { label: string; tone: string; icon: React.ReactNode }> = {
     pending: {
       label: "Aguardando confirmação do estabelecimento",
-      tone: "bg-amber-500/10 text-amber-600 border-amber-500/30",
+      tone: "status-pending",
       icon: <Clock className="size-4" />,
     },
     confirmed: {
       label: isPast ? "Agendamento realizado" : "Agendamento confirmado",
-      tone: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+      tone: "status-confirmed",
       icon: <CheckCircle2 className="size-4" />,
     },
     completed: {
       label: "Agendamento concluído",
-      tone: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30",
+      tone: "status-confirmed",
       icon: <CheckCircle2 className="size-4" />,
     },
     cancelled: {

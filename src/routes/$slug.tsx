@@ -169,25 +169,25 @@ function PublicLandingPage() {
       </header>
 
       <section className="relative">
-        <div className="relative w-full aspect-[16/7] sm:aspect-[16/6] overflow-hidden bg-muted">
+        <div className="relative w-full h-[220px] sm:h-[300px] md:h-[360px] overflow-hidden bg-muted">
           {company.cover_url ? (
             <img src={company.cover_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full" style={{ background: "var(--gradient-brand, linear-gradient(135deg,#111,#333))" }} />
+            <div className="w-full h-full" style={{ background: "var(--gradient-brand)" }} />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
         </div>
-        <div className="container-page relative -mt-20 sm:-mt-24 pb-8">
+        <div className="container-page relative -mt-14 sm:-mt-16 pb-4">
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-6">
-            <div className="size-24 sm:size-32 rounded-2xl overflow-hidden border-4 border-background bg-muted shrink-0 shadow-xl">
+            <div className="size-20 sm:size-24 rounded-2xl overflow-hidden border-4 border-background bg-muted shrink-0 shadow-xl">
               {company.logo_url ? (
                 <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted"><Sparkles className="size-10 text-muted-foreground" /></div>
+                <div className="w-full h-full flex items-center justify-center bg-muted"><Sparkles className="size-8 text-muted-foreground" /></div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h2 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight">{company.name}</h2>
+              <h2 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight">{company.name}</h2>
               {company.tagline && <p className="mt-1 text-base text-muted-foreground">{company.tagline}</p>}
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
                 {reviewsCount > 0 && (
@@ -202,7 +202,7 @@ function PublicLandingPage() {
               </div>
             </div>
             <div className="flex gap-2 sm:justify-end">
-              <button onClick={() => openBooking()} className="btn-primary h-11 !px-6">
+              <button onClick={() => openBooking()} className="btn-primary h-10 !px-5">
                 <CalendarIcon className="size-4" /> Agendar agora
               </button>
             </div>
@@ -210,7 +210,7 @@ function PublicLandingPage() {
         </div>
       </section>
 
-      <main className="container-page pb-20 space-y-14">
+      <main className="container-page pb-12 space-y-8">
         {company.description && (
           <section>
             <h3 className="font-display text-xl font-semibold mb-3">Sobre</h3>
@@ -301,10 +301,10 @@ function PublicLandingPage() {
               <h3 className="font-display text-lg font-semibold flex items-center gap-2"><MapPin className="size-4" /> Contato & localização</h3>
               {addressLine && <p className="text-sm">{addressLine}{company.postal_code ? ` · CEP ${company.postal_code}` : ""}</p>}
               <div className="flex flex-wrap gap-2">
-                {company.whatsapp_phone && <a href={`https://wa.me/${company.whatsapp_phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><MessageCircle className="size-4 text-emerald-500" /> WhatsApp</a>}
-                {company.phone && <a href={`tel:${company.phone}`} className="btn-ghost h-9 !px-3 text-sm"><Phone className="size-4" /> {company.phone}</a>}
-                {company.instagram_url && <a href={company.instagram_url} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><Instagram className="size-4 text-pink-500" /> Instagram</a>}
-                {company.facebook_url && <a href={company.facebook_url} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><Facebook className="size-4 text-blue-500" /> Facebook</a>}
+                {company.whatsapp_phone && <a href={`https://wa.me/${company.whatsapp_phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><MessageCircle className="size-4 text-success" /> WhatsApp</a>}
+                {company.phone && <a href={`tel:${company.phone}`} className="btn-ghost h-9 !px-3 text-sm"><Phone className="size-4 text-primary" /> {company.phone}</a>}
+                {company.instagram_url && <a href={company.instagram_url} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><Instagram className="size-4 text-primary" /> Instagram</a>}
+                {company.facebook_url && <a href={company.facebook_url} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><Facebook className="size-4 text-primary" /> Facebook</a>}
                 {company.website_url && <a href={company.website_url} target="_blank" rel="noreferrer" className="btn-ghost h-9 !px-3 text-sm"><Globe className="size-4" /> Site</a>}
               </div>
               {addressLine && (
@@ -618,7 +618,7 @@ function BookingDialog({
 
         {step === "done" && service && professional && date && slot && (
           <section className="mt-6 text-center max-w-lg mx-auto pb-4">
-            <div className="size-16 mx-auto rounded-full bg-emerald-500/10 flex items-center justify-center"><CheckCircle2 className="size-8 text-emerald-500" /></div>
+            <div className="size-16 mx-auto rounded-full bg-success-soft flex items-center justify-center"><CheckCircle2 className="size-8 text-success" /></div>
             <h2 className="mt-6 font-display text-2xl font-semibold">Solicitação enviada</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {company.name} recebeu sua solicitação de <strong className="text-foreground">{service.name}</strong> em{" "}
@@ -714,7 +714,7 @@ function Stars({ value }: { value: number }) {
   return (
     <span className="inline-flex">
       {[1, 2, 3, 4, 5].map((n) => (
-        <Star key={n} className={`size-3.5 ${n <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+        <Star key={n} className={`size-3.5 ${n <= Math.round(value) ? "fill-warning text-warning" : "text-muted-foreground/40"}`} />
       ))}
     </span>
   );

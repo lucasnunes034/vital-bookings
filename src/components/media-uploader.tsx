@@ -70,7 +70,7 @@ export function MediaUploader({ companyId, kind, value, onChange, aspect = "squa
                 onChange(null);
                 removeCompanyMedia(prev).catch(() => {});
               }}
-              className="h-8 px-2 text-xs rounded-md bg-background/90 border border-border shadow-sm text-red-500"
+              className="h-8 px-2 text-xs rounded-md bg-background/90 border border-border shadow-sm text-destructive"
             >
               <X className="size-3.5" />
             </button>

@@ -240,7 +240,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
                 <button className="btn-ghost h-9 !px-3 text-sm" onClick={() => setEditing(s)}>
                   <Pencil className="size-3.5" />
                 </button>
-                <button className="btn-ghost h-9 !px-3 text-sm text-red-400" onClick={() => setToDelete(s)}>
+                <button className="btn-ghost h-9 !px-3 text-sm text-destructive" onClick={() => setToDelete(s)}>
                   <Trash2 className="size-3.5" />
                 </button>
               </div>
@@ -461,7 +461,7 @@ function ProfessionalsTab({ companyId }: { companyId: string }) {
                 <button className="btn-ghost h-9 !px-3 text-sm" onClick={() => setEditing(p)}>
                   <Pencil className="size-3.5" />
                 </button>
-                <button className="btn-ghost h-9 !px-3 text-sm text-red-400" onClick={() => setToDelete(p)}>
+                <button className="btn-ghost h-9 !px-3 text-sm text-destructive" onClick={() => setToDelete(p)}>
                   <Trash2 className="size-3.5" />
                 </button>
               </div>
@@ -793,7 +793,7 @@ function ScheduleTab({ companyId, kind }: { companyId: string; kind: "availabili
                           onChange={(e) => updateSlot(dow, idx, { label: e.target.value })}
                         />
                       )}
-                      <button className="btn-ghost h-9 !px-3 text-sm text-red-400" onClick={() => removeSlot(dow, idx)}>
+                      <button className="btn-ghost h-9 !px-3 text-sm text-destructive" onClick={() => removeSlot(dow, idx)}>
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>
@@ -815,14 +815,14 @@ function Field({ label, children, error }: { label: string; children: React.Reac
     <div className="space-y-1.5">
       <Label className="text-sm">{label}</Label>
       {children}
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`chip ${status === "active" ? "!text-emerald-300 !border-emerald-500/30" : ""}`}>
+    <span className={`chip ${status === "active" ? "!text-success !border-success-border" : ""}`}>
       {status === "active" ? "Ativo" : "Inativo"}
     </span>
   );
@@ -1180,7 +1180,7 @@ function PaymentsTab({ companyId }: { companyId: string }) {
           })}
         </div>
         {(acceptedQ.data ?? []).length === 0 && (
-          <p className="text-xs text-amber-600/90 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
+          <p className="text-xs status-pending rounded-md px-3 py-2">
             Nenhuma forma selecionada — a pergunta não aparecerá para o cliente na hora de agendar.
           </p>
         )}
@@ -1198,7 +1198,7 @@ function PaymentsTab({ companyId }: { companyId: string }) {
           <Switch checked={form.enabled} onCheckedChange={(v) => setForm({ ...form, enabled: v })} />
         </div>
         {!form.enabled && (
-          <p className="text-xs text-amber-600/90 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
+          <p className="text-xs status-pending rounded-md px-3 py-2">
             Enquanto estiver desativado, o fluxo atual de agendamento continua funcionando normalmente, sem cobrança.
           </p>
         )}
@@ -1401,7 +1401,7 @@ function BusinessHoursRow({
           <Input type="time" className="w-[110px] h-9" value={s.open} onChange={(e) => onChange(slots.map((x, i) => i === idx ? { ...x, open: e.target.value } : x))} />
           <span className="text-xs text-muted-foreground">até</span>
           <Input type="time" className="w-[110px] h-9" value={s.close} onChange={(e) => onChange(slots.map((x, i) => i === idx ? { ...x, close: e.target.value } : x))} />
-          <button className="btn-ghost h-9 !px-2 text-red-400" onClick={() => onChange(slots.filter((_, i) => i !== idx))}><Trash2 className="size-3.5" /></button>
+          <button className="btn-ghost h-9 !px-2 text-destructive" onClick={() => onChange(slots.filter((_, i) => i !== idx))}><Trash2 className="size-3.5" /></button>
         </div>
       ))}
       <button className="btn-ghost h-8 !px-3 text-xs ml-auto" onClick={() => onChange([...slots, { open: "09:00", close: "18:00" }])}>
@@ -1449,7 +1449,7 @@ function GalleryTab({ companyId }: { companyId: string }) {
             <img src={it.url} alt={it.caption ?? ""} className="w-full h-full object-cover" />
             <button
               onClick={() => save.mutate(items.filter((_, x) => x !== i))}
-              className="absolute top-2 right-2 h-8 px-2 rounded-md bg-background/90 border border-border text-red-500 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-2 right-2 h-8 px-2 rounded-md bg-background/90 border border-border text-destructive text-xs opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Trash2 className="size-3.5" />
             </button>

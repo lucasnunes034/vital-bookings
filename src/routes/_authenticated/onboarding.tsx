@@ -1215,7 +1215,7 @@ function ProfessionalAvailabilityEditor({
 
                   {dayBreaks.map((b) => (
                     <div key={b.id} className="flex items-center gap-2">
-                      <Coffee className="size-3.5 text-amber-400/80" />
+                      <Coffee className="size-3.5 text-warning/80" />
                       <input
                         defaultValue={b.label ?? ""}
                         placeholder="Pausa"
