@@ -240,7 +240,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
                 <button className="btn-ghost h-9 !px-3 text-sm" onClick={() => setEditing(s)}>
                   <Pencil className="size-3.5" />
                 </button>
-                <button className="btn-ghost h-9 !px-3 text-sm text-red-400" onClick={() => setToDelete(s)}>
+                <button className="btn-ghost h-9 !px-3 text-sm text-destructive" onClick={() => setToDelete(s)}>
                   <Trash2 className="size-3.5" />
                 </button>
               </div>

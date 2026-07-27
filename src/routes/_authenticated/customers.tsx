@@ -90,8 +90,8 @@ const STATUS_LABEL: Record<Status, string> = {
 };
 
 const STATUS_STYLE: Record<Status, string> = {
-  pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  confirmed: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  pending: "status-pending",
+  confirmed: "status-confirmed",
   completed: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
   cancelled: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
 };

@@ -12,7 +12,15 @@ export function ShareDialog({ open, onClose, url, title }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    QRCode.toDataURL(url, { width: 512, margin: 2, color: { dark: "#0a0a0a", light: "#ffffff" } })
+    // Sample computed theme colors so the QR follows the company brand.
+    const styles = typeof window !== "undefined" ? getComputedStyle(document.documentElement) : null;
+    const toHex = (v: string, fallback: string) => {
+      const s = (v || "").trim();
+      return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s) ? s : fallback;
+    };
+    const dark = toHex(styles?.getPropertyValue("--foreground") ?? "", "#0a0a0a");
+    const light = toHex(styles?.getPropertyValue("--background") ?? "", "#ffffff");
+    QRCode.toDataURL(url, { width: 512, margin: 2, color: { dark, light } })
       .then(setQr)
       .catch(() => setQr(null));
   }, [open, url]);
@@ -47,7 +55,7 @@ export function ShareDialog({ open, onClose, url, title }: Props) {
           <DialogDescription>Envie o link ou imprima o QR Code para receber agendamentos.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-white p-4 flex items-center justify-center">
+          <div className="rounded-xl border border-border bg-background p-4 flex items-center justify-center">
             {qr ? <img src={qr} alt="QR Code" className="w-56 h-56" /> : <div className="w-56 h-56" />}
           </div>
           <div className="flex gap-2">
@@ -65,7 +73,7 @@ export function ShareDialog({ open, onClose, url, title }: Props) {
               rel="noreferrer"
               className="flex-1 h-10 rounded-md border border-border inline-flex items-center justify-center gap-1.5 text-sm hover:bg-muted/40"
             >
-              <MessageCircle className="size-4 text-emerald-500" /> WhatsApp
+              <MessageCircle className="size-4 text-success" /> WhatsApp
             </a>
             <a
               href={`https://www.facebook.com/sharer/sharer.php?u=${enc}`}
@@ -73,7 +81,7 @@ export function ShareDialog({ open, onClose, url, title }: Props) {
               rel="noreferrer"
               className="flex-1 h-10 rounded-md border border-border inline-flex items-center justify-center gap-1.5 text-sm hover:bg-muted/40"
             >
-              <Facebook className="size-4 text-blue-500" />
+              <Facebook className="size-4 text-primary" />
             </a>
             <a
               href={`https://twitter.com/intent/tweet?url=${enc}&text=${msg}`}

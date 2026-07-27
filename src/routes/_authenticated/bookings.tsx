@@ -194,7 +194,7 @@ function BookingsPage() {
             <button
               key={s}
               onClick={() => setTab(s)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === s ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === s ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
               {STATUS_LABEL[s]}
             </button>
@@ -510,7 +510,7 @@ function RescheduleDialog({ booking, tz, onClose, onDone }: { booking: any; tz: 
             ) : (
               <div className="flex flex-wrap gap-2">
                 {slots.map((s) => (
-                  <button key={s} onClick={() => setSlot(s)} className={`h-9 px-3 rounded-md border text-sm ${slot === s ? "bg-foreground text-background border-foreground" : "border-border hover:bg-accent"}`}>{s}</button>
+                  <button key={s} onClick={() => setSlot(s)} className={`h-9 px-3 rounded-md border text-sm ${slot === s ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-accent"}`}>{s}</button>
                 ))}
               </div>
             )}
