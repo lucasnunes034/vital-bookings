@@ -146,18 +146,9 @@ export function AppearanceTab({ companyId }: { companyId: string }) {
             <Input value={draft.tagline ?? ""} onChange={(e) => set("tagline", e.target.value || null)} placeholder="Ex: Beleza que transforma" />
           </div>
           <div className="grid sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Logo</Label>
-              <MediaUploader companyId={companyId} value={draft.logo_url} onChange={(u) => set("logo_url", u)} folder="theme" />
-            </div>
-            <div className="space-y-2">
-              <Label>Favicon</Label>
-              <MediaUploader companyId={companyId} value={draft.favicon_url} onChange={(u) => set("favicon_url", u)} folder="theme" />
-            </div>
-            <div className="space-y-2">
-              <Label>Banner</Label>
-              <MediaUploader companyId={companyId} value={draft.banner_url} onChange={(u) => set("banner_url", u)} folder="theme" />
-            </div>
+            <MediaUploader companyId={companyId} kind="logo" value={draft.logo_url} onChange={(u) => set("logo_url", u)} label="Logo" />
+            <MediaUploader companyId={companyId} kind="logo" value={draft.favicon_url} onChange={(u) => set("favicon_url", u)} label="Favicon" hint="Quadrado, mín. 64×64px" />
+            <MediaUploader companyId={companyId} kind="cover" aspect="cover" value={draft.banner_url} onChange={(u) => set("banner_url", u)} label="Banner" />
           </div>
         </div>
 
