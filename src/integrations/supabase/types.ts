@@ -345,6 +345,137 @@ export type Database = {
           },
         ]
       }
+      payment_intents: {
+        Row: {
+          amount_cents: number
+          booking_id: string
+          checkout_url: string | null
+          company_id: string
+          created_at: string
+          currency: string
+          expires_at: string | null
+          failure_reason: string | null
+          id: string
+          paid_at: string | null
+          provider: string
+          provider_intent_id: string | null
+          raw_payload: Json
+          refunded_at: string | null
+          status: Database["public"]["Enums"]["payment_intent_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          booking_id: string
+          checkout_url?: string | null
+          company_id: string
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          paid_at?: string | null
+          provider: string
+          provider_intent_id?: string | null
+          raw_payload?: Json
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["payment_intent_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          booking_id?: string
+          checkout_url?: string | null
+          company_id?: string
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          paid_at?: string | null
+          provider?: string
+          provider_intent_id?: string | null
+          raw_payload?: Json
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["payment_intent_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_intents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_intents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_settings: {
+        Row: {
+          cancellation_policy: string | null
+          company_id: string
+          created_at: string
+          currency: string
+          enabled: boolean
+          expires_after_minutes: number
+          fixed_amount_cents: number
+          mode: Database["public"]["Enums"]["payment_mode"]
+          percentage: number
+          provider: string | null
+          provider_config: Json
+          refund_policy: string | null
+          require_per_service: boolean
+          updated_at: string
+        }
+        Insert: {
+          cancellation_policy?: string | null
+          company_id: string
+          created_at?: string
+          currency?: string
+          enabled?: boolean
+          expires_after_minutes?: number
+          fixed_amount_cents?: number
+          mode?: Database["public"]["Enums"]["payment_mode"]
+          percentage?: number
+          provider?: string | null
+          provider_config?: Json
+          refund_policy?: string | null
+          require_per_service?: boolean
+          updated_at?: string
+        }
+        Update: {
+          cancellation_policy?: string | null
+          company_id?: string
+          created_at?: string
+          currency?: string
+          enabled?: boolean
+          expires_after_minutes?: number
+          fixed_amount_cents?: number
+          mode?: Database["public"]["Enums"]["payment_mode"]
+          percentage?: number
+          provider?: string | null
+          provider_config?: Json
+          refund_policy?: string | null
+          require_per_service?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_availability: {
         Row: {
           company_id: string
@@ -533,6 +664,7 @@ export type Database = {
           name: string
           photo_url: string | null
           price_cents: number
+          requires_payment: boolean
           status: string
           updated_at: string
         }
@@ -547,6 +679,7 @@ export type Database = {
           name: string
           photo_url?: string | null
           price_cents?: number
+          requires_payment?: boolean
           status?: string
           updated_at?: string
         }
@@ -561,6 +694,7 @@ export type Database = {
           name?: string
           photo_url?: string | null
           price_cents?: number
+          requires_payment?: boolean
           status?: string
           updated_at?: string
         }
@@ -632,11 +766,25 @@ export type Database = {
               start_at: string
             }[]
           }
+      get_payment_intent_by_token: {
+        Args: { _token: string }
+        Returns: {
+          amount_cents: number
+          booking_id: string
+          checkout_url: string
+          currency: string
+          expires_at: string
+          id: string
+          provider: string
+          status: Database["public"]["Enums"]["payment_intent_status"]
+        }[]
+      }
       get_public_company_by_slug: { Args: { _slug: string }; Returns: Json }
       recompute_company_reviews_stats: {
         Args: { _company_id: string }
         Returns: undefined
       }
+      release_expired_payment_intents: { Args: never; Returns: number }
       reschedule_booking_by_token: {
         Args: { _new_end: string; _new_start: string; _token: string }
         Returns: undefined
@@ -653,6 +801,14 @@ export type Database = {
         | "cancellation"
         | "reminder_24h"
         | "reminder_1h"
+      payment_intent_status:
+        | "pending"
+        | "paid"
+        | "expired"
+        | "cancelled"
+        | "refunded"
+        | "failed"
+      payment_mode: "none" | "fixed" | "percentage" | "full"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -787,6 +943,15 @@ export const Constants = {
         "reminder_24h",
         "reminder_1h",
       ],
+      payment_intent_status: [
+        "pending",
+        "paid",
+        "expired",
+        "cancelled",
+        "refunded",
+        "failed",
+      ],
+      payment_mode: ["none", "fixed", "percentage", "full"],
     },
   },
 } as const
