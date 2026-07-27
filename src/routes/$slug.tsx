@@ -36,6 +36,11 @@ import {
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
 import { mapBookingError } from "@/lib/booking-errors";
+import {
+  PAYMENT_METHOD_LABEL,
+  sortPaymentMethods,
+  type PaymentMethodKind,
+} from "@/lib/payment-methods";
 
 type PublicCompany = {
   id: string;
@@ -371,6 +376,11 @@ function BookingDialog({
   const [slot, setSlot] = useState<string | null>(null);
   const [form, setForm] = useState({ customer_name: "", customer_phone: "", customer_email: "", notes: "" });
   const [manageToken, setManageToken] = useState<string | null>(null);
+  const acceptedMethods = useMemo(
+    () => sortPaymentMethods(company.accepted_payment_methods),
+    [company.accepted_payment_methods],
+  );
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodKind | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -380,8 +390,9 @@ function BookingDialog({
     setSlot(null);
     setManageToken(null);
     setForm({ customer_name: "", customer_phone: "", customer_email: "", notes: "" });
+    setPaymentMethod(acceptedMethods[0] ?? null);
     setStep(initialServiceId ? (initialProfessionalId ? "datetime" : "professional") : "service");
-  }, [open, initialServiceId, initialProfessionalId]);
+  }, [open, initialServiceId, initialProfessionalId, acceptedMethods]);
 
   const service = company.services.find((s) => s.id === serviceId) ?? null;
   const professional = company.professionals.find((p) => p.id === professionalId) ?? null;
