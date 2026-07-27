@@ -418,6 +418,13 @@ function BookingDialog({
       const p = getZonedParts(date!, tz);
       const start = zonedWallToUTC(p.year, p.month, p.day, h, m, tz);
       const end = new Date(start.getTime() + service!.duration_minutes * 60000);
+      // Pré-checagem client-side para mensagens mais precisas antes do RLS bloquear.
+      if (start.getTime() <= Date.now()) {
+        throw new Error("client_past_time");
+      }
+      if (!service || !professional) {
+        throw new Error("client_missing_resource");
+      }
       const { data, error } = await supabase.from("bookings").insert({
         company_id: company.id,
         professional_id: professionalId!,
@@ -435,17 +442,29 @@ function BookingDialog({
     },
     onSuccess: (token) => { setManageToken(token ?? null); setStep("done"); },
     onError: (err: any) => {
-      const code = err?.code ?? err?.details?.code;
-      const msg = String(err?.message ?? "");
-      if (code === "23P01" || msg.includes("bookings_no_overlap") || msg.toLowerCase().includes("exclusion")) {
-        toast.error("Este horário acabou de ser reservado. Escolha outro, por favor.");
+      // Erros de validação Zod: mostra a primeira mensagem do próprio schema.
+      if (err?.name === "ZodError" && Array.isArray(err.issues) && err.issues[0]?.message) {
+        console.error("[booking:create] validação", err.issues);
+        toast.error("Dados obrigatórios inválidos", { description: err.issues[0].message });
+        return;
+      }
+      // Pré-checagens client-side
+      if (err?.message === "client_past_time") {
+        toast.error("O horário selecionado já passou.", {
+          description: "Escolha um horário futuro e tente novamente.",
+        });
         setSlot(null); setStep("datetime"); availabilityQ.refetch(); return;
       }
-      if (code === "42501" || msg.toLowerCase().includes("row-level security")) {
-        toast.error("Não foi possível confirmar: verifique os dados e tente novamente."); return;
+      if (err?.message === "client_missing_resource") {
+        toast.error("Selecione o serviço e o profissional antes de confirmar.");
+        setStep(serviceId ? "professional" : "service"); return;
       }
-      if (code === "23514") { toast.error("Dados inválidos. Revise nome, telefone, e-mail e observações."); return; }
-      toast.error(msg || "Não foi possível agendar");
+      const mapped = mapBookingError(err, "create");
+      if (mapped.kind === "conflict") {
+        toast.error(mapped.message, { description: mapped.description });
+        setSlot(null); setStep("datetime"); availabilityQ.refetch(); return;
+      }
+      toast.error(mapped.message, mapped.description ? { description: mapped.description } : undefined);
     },
   });
 
