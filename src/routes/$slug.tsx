@@ -425,7 +425,14 @@ function BookingDialog({
       if (!service || !professional) {
         throw new Error("client_missing_resource");
       }
-      const { data, error } = await supabase.from("bookings").insert({
+      // Gera o token no cliente para evitar depender do RETURNING (anon não
+      // tem policy de SELECT em bookings — PostgREST devolveria 42501 mesmo
+      // com o INSERT tendo sido aceito).
+      const manageToken =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+      const { error } = await supabase.from("bookings").insert({
         company_id: company.id,
         professional_id: professionalId!,
         service_id: serviceId!,
@@ -436,9 +443,10 @@ function BookingDialog({
         start_at: start.toISOString(),
         end_at: end.toISOString(),
         status: "pending",
-      }).select("manage_token").single();
+        manage_token: manageToken,
+      });
       if (error) throw error;
-      return data?.manage_token as string | undefined;
+      return manageToken;
     },
     onSuccess: (token) => { setManageToken(token ?? null); setStep("done"); },
     onError: (err: any) => {
