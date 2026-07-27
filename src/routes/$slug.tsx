@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ShareDialog } from "@/components/share-dialog";
+import { PublicThemeApplier } from "@/components/theme-provider";
 import {
   formatInTZ,
   toZonedISODate,
@@ -148,6 +149,7 @@ function PublicLandingPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <PublicThemeApplier slug={company.slug} />
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
