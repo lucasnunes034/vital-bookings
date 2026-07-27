@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Loader2, Plus, Trash2, Pencil, ArrowLeft, Users, Sparkles, Clock, Coffee, Copy, Check,
-  Palette, Images, MessageCircle, RotateCcw,
+  Palette, Images, MessageCircle, RotateCcw, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,13 +32,16 @@ import {
   MESSAGE_VARIABLES,
   type MessageKind,
 } from "@/lib/whatsapp";
+import { PROVIDER_CATALOG } from "@/lib/payments/providers";
+import type { PaymentMode, PaymentProviderId } from "@/lib/payments/types";
+import { computeChargeAmount } from "@/lib/payments/pricing";
 
-type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages";
+type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): { tab?: TabKey } => {
     const t = s.tab;
-    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages"].includes(t)
+    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages", "payments"].includes(t)
       ? { tab: t as TabKey }
       : {};
   },
@@ -124,7 +127,7 @@ function SettingsPage() {
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-3 sm:grid-cols-7 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-8 w-full sm:w-auto">
             <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
             <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
             <TabsTrigger value="services"><Sparkles className="size-4 mr-1.5" /> Serviços</TabsTrigger>
@@ -132,6 +135,7 @@ function SettingsPage() {
             <TabsTrigger value="availability"><Clock className="size-4 mr-1.5" /> Horários</TabsTrigger>
             <TabsTrigger value="breaks"><Coffee className="size-4 mr-1.5" /> Pausas</TabsTrigger>
             <TabsTrigger value="messages"><MessageCircle className="size-4 mr-1.5" /> Mensagens</TabsTrigger>
+            <TabsTrigger value="payments"><Wallet className="size-4 mr-1.5" /> Financeiro</TabsTrigger>
           </TabsList>
 
           <TabsContent value="brand"><BrandTab companyId={company.id} /></TabsContent>
@@ -141,6 +145,7 @@ function SettingsPage() {
           <TabsContent value="availability"><ScheduleTab companyId={company.id} kind="availability" /></TabsContent>
           <TabsContent value="breaks"><ScheduleTab companyId={company.id} kind="breaks" /></TabsContent>
           <TabsContent value="messages"><MessagesTab companyId={company.id} /></TabsContent>
+          <TabsContent value="payments"><PaymentsTab companyId={company.id} /></TabsContent>
         </Tabs>
       </main>
     </div>
@@ -155,7 +160,11 @@ const serviceSchema = z.object({
   price_cents: z.number().int().min(0, "Preço inválido").max(100000000),
   status: z.enum(["active", "inactive"]),
 });
-type ServiceForm = z.infer<typeof serviceSchema> & { description?: string | null; photo_url?: string | null };
+type ServiceForm = z.infer<typeof serviceSchema> & {
+  description?: string | null;
+  photo_url?: string | null;
+  requires_payment?: boolean;
+};
 type ServiceRow = ServiceForm & { id: string };
 
 function ServicesTab({ companyId }: { companyId: string }) {
@@ -169,7 +178,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, name, duration_minutes, price_cents, status, description, photo_url")
+        .select("id, name, duration_minutes, price_cents, status, description, photo_url, requires_payment")
         .eq("company_id", companyId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -255,7 +264,7 @@ function ServiceDialog({
 }: { open: boolean; onClose: () => void; companyId: string; initial: ServiceRow | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ServiceForm>({
-    name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null,
+    name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null, requires_payment: false,
   });
   const [priceStr, setPriceStr] = useState("0,00");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -263,8 +272,8 @@ function ServiceDialog({
   useEffect(() => {
     if (open) {
       const base: ServiceForm = initial
-        ? { name: initial.name, duration_minutes: initial.duration_minutes, price_cents: initial.price_cents, status: initial.status, description: initial.description ?? "", photo_url: initial.photo_url ?? null }
-        : { name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null };
+        ? { name: initial.name, duration_minutes: initial.duration_minutes, price_cents: initial.price_cents, status: initial.status, description: initial.description ?? "", photo_url: initial.photo_url ?? null, requires_payment: (initial as any).requires_payment ?? false }
+        : { name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null, requires_payment: false };
       setForm(base);
       setPriceStr((base.price_cents / 100).toFixed(2).replace(".", ","));
       setErrors({});
@@ -280,7 +289,12 @@ function ServiceDialog({
         setErrors(map);
         throw new Error("Verifique os campos");
       }
-      const payload = { ...parsed.data, description: form.description || null, photo_url: form.photo_url || null };
+      const payload = {
+        ...parsed.data,
+        description: form.description || null,
+        photo_url: form.photo_url || null,
+        requires_payment: !!form.requires_payment,
+      };
       if (initial) {
         const { error } = await supabase.from("services").update(payload).eq("id", initial.id);
         if (error) throw error;
@@ -339,6 +353,16 @@ function ServiceDialog({
             <div className="flex items-center gap-3 h-10">
               <Switch checked={form.status === "active"} onCheckedChange={(v) => setForm({ ...form, status: v ? "active" : "inactive" })} />
               <span className="text-sm text-muted-foreground">{form.status === "active" ? "Ativo (visível no link público)" : "Inativo (oculto)"}</span>
+            </div>
+          </Field>
+          <Field label="Pagamento antecipado">
+            <div className="flex items-center gap-3 h-10">
+              <Switch checked={!!form.requires_payment} onCheckedChange={(v) => setForm({ ...form, requires_payment: v })} />
+              <span className="text-sm text-muted-foreground">
+                {form.requires_payment
+                  ? "Exigir pagamento antecipado neste serviço"
+                  : "Sem exigência específica deste serviço"}
+              </span>
             </div>
           </Field>
         </div>
@@ -960,6 +984,331 @@ function BrandTab({ companyId }: { companyId: string }) {
       <div className="flex justify-end">
         <button className="btn-primary h-10 text-sm" disabled={save.isPending} onClick={() => save.mutate()}>
           {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Salvar alterações
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------- Payments ------------------------------- */
+
+type PaymentSettingsRow = {
+  company_id: string;
+  enabled: boolean;
+  mode: PaymentMode;
+  fixed_amount_cents: number;
+  percentage: number;
+  currency: string;
+  provider: PaymentProviderId | null;
+  expires_after_minutes: number;
+  require_per_service: boolean;
+  cancellation_policy: string | null;
+  refund_policy: string | null;
+};
+
+const MODE_LABEL: Record<PaymentMode, string> = {
+  none: "Nenhum pagamento",
+  fixed: "Valor fixo (sinal)",
+  percentage: "Percentual do serviço",
+  full: "Pagamento integral",
+};
+
+function PaymentsTab({ companyId }: { companyId: string }) {
+  const qc = useQueryClient();
+
+  const q = useQuery({
+    queryKey: ["payment-settings", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_settings")
+        .select(
+          "company_id, enabled, mode, fixed_amount_cents, percentage, currency, provider, expires_after_minutes, require_per_service, cancellation_policy, refund_policy",
+        )
+        .eq("company_id", companyId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as PaymentSettingsRow | null;
+    },
+  });
+
+  const servicesQ = useQuery({
+    queryKey: ["payment-services", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("services")
+        .select("id, name, price_cents, requires_payment, status")
+        .eq("company_id", companyId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const [form, setForm] = useState<PaymentSettingsRow | null>(null);
+  const [fixedStr, setFixedStr] = useState("0,00");
+
+  useEffect(() => {
+    if (q.data) {
+      setForm(q.data);
+      setFixedStr((q.data.fixed_amount_cents / 100).toFixed(2).replace(".", ","));
+    } else if (q.isSuccess && !q.data) {
+      const defaults: PaymentSettingsRow = {
+        company_id: companyId,
+        enabled: false,
+        mode: "none",
+        fixed_amount_cents: 0,
+        percentage: 0,
+        currency: "BRL",
+        provider: "manual",
+        expires_after_minutes: 30,
+        require_per_service: false,
+        cancellation_policy: null,
+        refund_policy: null,
+      };
+      setForm(defaults);
+      setFixedStr("0,00");
+    }
+  }, [q.data, q.isSuccess, companyId]);
+
+  const save = useMutation({
+    mutationFn: async (payload: PaymentSettingsRow) => {
+      const { error } = await supabase
+        .from("payment_settings")
+        .upsert(payload, { onConflict: "company_id" });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Configurações salvas");
+      qc.invalidateQueries({ queryKey: ["payment-settings", companyId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível salvar"),
+  });
+
+  const toggleService = useMutation({
+    mutationFn: async ({ id, value }: { id: string; value: boolean }) => {
+      const { error } = await supabase.from("services").update({ requires_payment: value }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["payment-services", companyId] }),
+  });
+
+  if (q.isLoading || !form) return <Loader />;
+
+  const provider = form.provider ?? "manual";
+  const chargeExample = (() => {
+    const sample = servicesQ.data?.[0];
+    if (!sample) return null;
+    const amount = computeChargeAmount({
+      settings: {
+        ...form,
+        provider,
+        provider_config: {},
+      },
+      servicePriceCents: sample.price_cents,
+      serviceRequiresPayment: sample.requires_payment ?? false,
+    });
+    return { service: sample, amount };
+  })();
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      {/* Master switch */}
+      <div className="surface-card p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-medium">Pagamento antecipado</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Quando ativado, o cliente precisará concluir o pagamento antes da confirmação do agendamento.
+            </p>
+          </div>
+          <Switch checked={form.enabled} onCheckedChange={(v) => setForm({ ...form, enabled: v })} />
+        </div>
+        {!form.enabled && (
+          <p className="text-xs text-amber-600/90 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
+            Enquanto estiver desativado, o fluxo atual de agendamento continua funcionando normalmente, sem cobrança.
+          </p>
+        )}
+      </div>
+
+      <fieldset disabled={!form.enabled} className="space-y-6 disabled:opacity-60 disabled:pointer-events-none">
+        {/* Mode */}
+        <div className="surface-card p-5 space-y-4">
+          <div>
+            <p className="font-medium">Modo de cobrança</p>
+            <p className="text-xs text-muted-foreground mt-1">Como você quer cobrar o cliente antes do atendimento.</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {(Object.keys(MODE_LABEL) as PaymentMode[]).map((m) => (
+              <label
+                key={m}
+                className={`flex items-start gap-3 rounded-md border p-3 cursor-pointer transition-colors ${
+                  form.mode === m ? "border-foreground bg-muted/40" : "border-border hover:border-foreground/40"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="mode"
+                  className="mt-1"
+                  checked={form.mode === m}
+                  onChange={() => setForm({ ...form, mode: m })}
+                />
+                <span className="text-sm">{MODE_LABEL[m]}</span>
+              </label>
+            ))}
+          </div>
+
+          {form.mode === "fixed" && (
+            <Field label="Valor do sinal (R$)">
+              <Input
+                inputMode="decimal"
+                value={fixedStr}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^\d,.]/g, "");
+                  setFixedStr(raw);
+                  const n = Number(raw.replace(/\./g, "").replace(",", "."));
+                  setForm({ ...form, fixed_amount_cents: Number.isFinite(n) ? Math.round(n * 100) : 0 });
+                }}
+                placeholder="0,00"
+              />
+            </Field>
+          )}
+
+          {form.mode === "percentage" && (
+            <Field label="Percentual do serviço (%)">
+              <Input
+                type="number" min={0} max={100} step={1}
+                value={form.percentage}
+                onChange={(e) => setForm({ ...form, percentage: Math.max(0, Math.min(100, Number(e.target.value) || 0)) })}
+              />
+            </Field>
+          )}
+
+          {chargeExample && form.mode !== "none" && (
+            <p className="text-xs text-muted-foreground">
+              Exemplo com “{chargeExample.service.name}” ({formatBRL(chargeExample.service.price_cents)}):{" "}
+              <span className="font-medium text-foreground">{formatBRL(chargeExample.amount)}</span>
+              {chargeExample.amount === 0 && form.require_per_service && (
+                <> — não cobra porque o serviço não está marcado como "exige pagamento".</>
+              )}
+            </p>
+          )}
+        </div>
+
+        {/* Per-service */}
+        <div className="surface-card p-5 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="font-medium">Cobrar apenas em serviços selecionados</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Quando ativado, só serviços marcados abaixo exigirão pagamento antecipado.
+              </p>
+            </div>
+            <Switch checked={form.require_per_service} onCheckedChange={(v) => setForm({ ...form, require_per_service: v })} />
+          </div>
+
+          {form.require_per_service && (
+            <div className="space-y-2">
+              {(servicesQ.data ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">Nenhum serviço cadastrado.</p>
+              ) : (
+                (servicesQ.data ?? []).map((s: any) => (
+                  <label key={s.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
+                    <span className="text-sm truncate">
+                      {s.name} <span className="text-muted-foreground">· {formatBRL(s.price_cents)}</span>
+                    </span>
+                    <Switch
+                      checked={!!s.requires_payment}
+                      onCheckedChange={(v) => toggleService.mutate({ id: s.id, value: v })}
+                    />
+                  </label>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Expiration */}
+        <div className="surface-card p-5 space-y-3">
+          <div>
+            <p className="font-medium">Expiração do pagamento</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Se o pagamento não for concluído neste tempo, o horário é liberado automaticamente.
+            </p>
+          </div>
+          <Field label="Minutos até expirar">
+            <Input
+              type="number" min={5} max={1440} step={5}
+              value={form.expires_after_minutes}
+              onChange={(e) => setForm({ ...form, expires_after_minutes: Math.max(5, Math.min(1440, Number(e.target.value) || 30)) })}
+            />
+          </Field>
+        </div>
+
+        {/* Provider */}
+        <div className="surface-card p-5 space-y-4">
+          <div>
+            <p className="font-medium">Provedor de pagamento</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Escolha por onde os clientes vão pagar. Novas integrações serão liberadas em breve.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {PROVIDER_CATALOG.map((p) => {
+              const selected = provider === p.id;
+              const disabled = !p.available;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => setForm({ ...form, provider: p.id })}
+                  className={`text-left rounded-md border p-3 transition-colors ${
+                    selected ? "border-foreground bg-muted/40" : "border-border hover:border-foreground/40"
+                  } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">{p.label}</p>
+                    {!p.available && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Em breve</span>}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{p.description}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Policies */}
+        <div className="surface-card p-5 space-y-4">
+          <div>
+            <p className="font-medium">Políticas</p>
+            <p className="text-xs text-muted-foreground mt-1">Textos exibidos ao cliente na tela de pagamento.</p>
+          </div>
+          <Field label="Política de cancelamento">
+            <Textarea
+              rows={3} maxLength={1000}
+              value={form.cancellation_policy ?? ""}
+              onChange={(e) => setForm({ ...form, cancellation_policy: e.target.value })}
+              placeholder="Ex.: cancelamento gratuito até 24h antes do atendimento."
+            />
+          </Field>
+          <Field label="Política de reembolso">
+            <Textarea
+              rows={3} maxLength={1000}
+              value={form.refund_policy ?? ""}
+              onChange={(e) => setForm({ ...form, refund_policy: e.target.value })}
+              placeholder="Ex.: reembolsamos 100% em caso de cancelamento com mais de 24h de antecedência."
+            />
+          </Field>
+        </div>
+      </fieldset>
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => save.mutate(form)}
+          disabled={save.isPending}
+          className="btn-primary h-10 text-sm"
+        >
+          {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Salvar configurações
         </button>
       </div>
     </div>
