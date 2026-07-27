@@ -35,6 +35,12 @@ import {
 import { PROVIDER_CATALOG } from "@/lib/payments/providers";
 import type { PaymentMode, PaymentProviderId } from "@/lib/payments/types";
 import { computeChargeAmount } from "@/lib/payments/pricing";
+import {
+  PAYMENT_METHOD_LABEL,
+  PAYMENT_METHOD_ORDER,
+  sortPaymentMethods,
+  type PaymentMethodKind,
+} from "@/lib/payment-methods";
 
 type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
