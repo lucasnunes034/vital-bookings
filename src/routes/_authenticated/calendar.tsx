@@ -296,6 +296,7 @@ function CalendarPage() {
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
     onError: (e: any, v, ctx) => {
+      console.error("[calendar:reschedule]", e);
       // rollback
       if (ctx?.snapshots) {
         for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
@@ -345,6 +346,7 @@ function CalendarPage() {
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
     onError: (e: any) => {
+      console.error("[calendar:undo-reschedule]", e);
       if (e?.code === "23P01") {
         toast.error("Não foi possível desfazer", {
           description: "O horário anterior já está ocupado por outro agendamento.",
