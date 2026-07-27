@@ -319,6 +319,65 @@ export type Database = {
           },
         ]
       }
+      company_theme_settings: {
+        Row: {
+          accent_color: string
+          banner_url: string | null
+          company_id: string
+          created_at: string
+          display_name: string | null
+          favicon_url: string | null
+          font_family: string
+          logo_url: string | null
+          primary_color: string
+          secondary_color: string
+          tagline: string | null
+          template_id: string
+          theme_mode: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          banner_url?: string | null
+          company_id: string
+          created_at?: string
+          display_name?: string | null
+          favicon_url?: string | null
+          font_family?: string
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          tagline?: string | null
+          template_id?: string
+          theme_mode?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          banner_url?: string | null
+          company_id?: string
+          created_at?: string
+          display_name?: string | null
+          favicon_url?: string | null
+          font_family?: string
+          logo_url?: string | null
+          primary_color?: string
+          secondary_color?: string
+          tagline?: string | null
+          template_id?: string
+          theme_mode?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_theme_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_templates: {
         Row: {
           body: string
@@ -778,6 +837,31 @@ export type Database = {
               start_at: string
             }[]
           }
+      get_company_theme_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          accent_color: string
+          banner_url: string | null
+          company_id: string
+          created_at: string
+          display_name: string | null
+          favicon_url: string | null
+          font_family: string
+          logo_url: string | null
+          primary_color: string
+          secondary_color: string
+          tagline: string | null
+          template_id: string
+          theme_mode: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "company_theme_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_payment_intent_by_token: {
         Args: { _token: string }
         Returns: {
