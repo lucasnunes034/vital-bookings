@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import {
   Calendar, Loader2, Plus, Trash2, Pencil, ArrowLeft, Users, Sparkles, Clock, Coffee, Copy, Check,
-  Palette, Images, MessageCircle, RotateCcw,
+  Palette, Images, MessageCircle, RotateCcw, Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,13 +32,16 @@ import {
   MESSAGE_VARIABLES,
   type MessageKind,
 } from "@/lib/whatsapp";
+import { PROVIDER_CATALOG } from "@/lib/payments/providers";
+import type { PaymentMode, PaymentProviderId } from "@/lib/payments/types";
+import { computeChargeAmount } from "@/lib/payments/pricing";
 
-type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages";
+type TabKey = "brand" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   validateSearch: (s: Record<string, unknown>): { tab?: TabKey } => {
     const t = s.tab;
-    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages"].includes(t)
+    return typeof t === "string" && ["brand", "gallery", "services", "professionals", "availability", "breaks", "messages", "payments"].includes(t)
       ? { tab: t as TabKey }
       : {};
   },
