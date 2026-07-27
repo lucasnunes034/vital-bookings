@@ -29,6 +29,7 @@ import {
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
 import { mapBookingError } from "@/lib/booking-errors";
+import { formatPaymentMethod } from "@/lib/payment-methods";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -260,6 +261,11 @@ function BookingsPage() {
                       <span className="inline-flex items-center gap-1"><Phone className="size-3" /> {b.customer_phone}</span>
                       {b.customer_email && <span className="inline-flex items-center gap-1"><Mail className="size-3" /> {b.customer_email}</span>}
                       {b.notes && <span className="inline-flex items-center gap-1"><StickyNote className="size-3" /> {b.notes}</span>}
+                      {b.payment_method && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[11px] text-foreground/80">
+                          Pagamento: {formatPaymentMethod(b.payment_method)}
+                        </span>
+                      )}
                     </div>
                     {b.status === "cancelled" && b.cancellation_reason && (
                       <p className="text-xs text-muted-foreground">Motivo: {b.cancellation_reason}</p>
