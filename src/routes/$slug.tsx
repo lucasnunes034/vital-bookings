@@ -35,6 +35,7 @@ import {
   getZonedParts,
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
+import { mapBookingError } from "@/lib/booking-errors";
 
 type PublicCompany = {
   id: string;
