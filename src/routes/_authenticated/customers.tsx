@@ -297,7 +297,7 @@ function CustomersPage() {
                   </div>
                   <div className="text-right space-y-1 text-xs">
                     {c.nextVisit ? (
-                      <p className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                      <p className="inline-flex items-center gap-1 text-success">
                         <CalendarIcon className="size-3" /> Próxima: {formatDT(c.nextVisit, tz)}
                       </p>
                     ) : (
@@ -376,7 +376,7 @@ function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer |
 
             <div className="grid gap-2 text-xs">
               {customer.nextVisit && (
-                <p className="text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
+                <p className="text-success inline-flex items-center gap-1">
                   <CalendarIcon className="size-3" /> Próxima visita: {formatDT(customer.nextVisit, tz)}
                 </p>
               )}
