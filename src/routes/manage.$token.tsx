@@ -35,6 +35,7 @@ import {
   zonedWallToUTC,
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
+import { mapBookingError } from "@/lib/booking-errors";
 
 type Booking = {
   id: string;
@@ -169,7 +170,10 @@ function ManagePage() {
       setCancelReason("");
       qc.invalidateQueries({ queryKey: ["manage-booking", token] });
     },
-    onError: (err: any) => toast.error(mapRpcError(err)),
+    onError: (err: any) => {
+      const m = mapBookingError(err, "cancel");
+      toast.error(m.message, m.description ? { description: m.description } : undefined);
+    },
   });
 
   const rescheduleMut = useMutation({
@@ -194,15 +198,14 @@ function ManagePage() {
       qc.invalidateQueries({ queryKey: ["manage-booking", token] });
     },
     onError: (err: any) => {
-      const code = err?.code ?? err?.details?.code;
-      const msg = String(err?.message ?? "");
-      if (code === "23P01" || msg.includes("bookings_no_overlap")) {
-        toast.error("Este horário acabou de ser reservado. Escolha outro.");
+      const m = mapBookingError(err, "reschedule");
+      if (m.kind === "conflict") {
+        toast.error(m.message, { description: m.description });
         setSlot(null);
         availabilityQ.refetch();
         return;
       }
-      toast.error(mapRpcError(err));
+      toast.error(m.message, m.description ? { description: m.description } : undefined);
     },
   });
 
@@ -225,7 +228,8 @@ function ManagePage() {
       const msg = String(err?.message ?? "");
       if (msg.includes("already_reviewed")) { toast.error("Este agendamento já foi avaliado."); setReviewSent(true); setReviewOpen(false); return; }
       if (msg.includes("not_completed") || msg.includes("too_early")) { toast.error("A avaliação estará disponível após o atendimento."); return; }
-      toast.error(mapRpcError(err));
+      const m = mapBookingError(err, "review");
+      toast.error(m.message, m.description ? { description: m.description } : undefined);
     },
   });
 

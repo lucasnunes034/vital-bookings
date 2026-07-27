@@ -18,6 +18,7 @@ import {
 import {
   formatInTZ, getZonedParts, toZonedISODate, zonedDayOfWeek, zonedWallToUTC,
 } from "@/lib/timezone";
+import { mapBookingError } from "@/lib/booking-errors";
 
 type ViewMode = "day" | "week";
 
@@ -296,6 +297,7 @@ function CalendarPage() {
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
     onError: (e: any, v, ctx) => {
+      console.error("[calendar:reschedule]", e);
       // rollback
       if (ctx?.snapshots) {
         for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
@@ -345,6 +347,7 @@ function CalendarPage() {
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
     },
     onError: (e: any) => {
+      console.error("[calendar:undo-reschedule]", e);
       if (e?.code === "23P01") {
         toast.error("Não foi possível desfazer", {
           description: "O horário anterior já está ocupado por outro agendamento.",
@@ -1011,15 +1014,8 @@ function CreateBookingDialog({
     onSuccess: () => { toast.success("Agendamento criado"); onDone(); },
     onError: (e: any) => {
       if (e?.message === "validation") return;
-      if (e?.code === "23P01" || String(e?.message ?? "").includes("bookings_no_overlap")) {
-        toast.error("Este horário conflita com outro agendamento.");
-      } else if (e?.code === "42501") {
-        toast.error("Dados fora das regras (verifique horário e serviço).");
-      } else if (e?.code === "23514") {
-        toast.error("Dados inválidos para o agendamento.");
-      } else {
-        toast.error(e?.message ?? "Não foi possível criar.");
-      }
+      const m = mapBookingError(e, "create");
+      toast.error(m.message, m.description ? { description: m.description } : undefined);
     },
   });
 
