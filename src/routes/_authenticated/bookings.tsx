@@ -28,6 +28,7 @@ import {
   zonedWallToUTC,
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
+import { mapBookingError } from "@/lib/booking-errors";
 import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
