@@ -160,7 +160,11 @@ const serviceSchema = z.object({
   price_cents: z.number().int().min(0, "Preço inválido").max(100000000),
   status: z.enum(["active", "inactive"]),
 });
-type ServiceForm = z.infer<typeof serviceSchema> & { description?: string | null; photo_url?: string | null };
+type ServiceForm = z.infer<typeof serviceSchema> & {
+  description?: string | null;
+  photo_url?: string | null;
+  requires_payment?: boolean;
+};
 type ServiceRow = ServiceForm & { id: string };
 
 function ServicesTab({ companyId }: { companyId: string }) {
@@ -174,7 +178,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("services")
-        .select("id, name, duration_minutes, price_cents, status, description, photo_url")
+        .select("id, name, duration_minutes, price_cents, status, description, photo_url, requires_payment")
         .eq("company_id", companyId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -260,7 +264,7 @@ function ServiceDialog({
 }: { open: boolean; onClose: () => void; companyId: string; initial: ServiceRow | null }) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ServiceForm>({
-    name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null,
+    name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null, requires_payment: false,
   });
   const [priceStr, setPriceStr] = useState("0,00");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -268,8 +272,8 @@ function ServiceDialog({
   useEffect(() => {
     if (open) {
       const base: ServiceForm = initial
-        ? { name: initial.name, duration_minutes: initial.duration_minutes, price_cents: initial.price_cents, status: initial.status, description: initial.description ?? "", photo_url: initial.photo_url ?? null }
-        : { name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null };
+        ? { name: initial.name, duration_minutes: initial.duration_minutes, price_cents: initial.price_cents, status: initial.status, description: initial.description ?? "", photo_url: initial.photo_url ?? null, requires_payment: (initial as any).requires_payment ?? false }
+        : { name: "", duration_minutes: 30, price_cents: 0, status: "active", description: "", photo_url: null, requires_payment: false };
       setForm(base);
       setPriceStr((base.price_cents / 100).toFixed(2).replace(".", ","));
       setErrors({});
@@ -285,7 +289,12 @@ function ServiceDialog({
         setErrors(map);
         throw new Error("Verifique os campos");
       }
-      const payload = { ...parsed.data, description: form.description || null, photo_url: form.photo_url || null };
+      const payload = {
+        ...parsed.data,
+        description: form.description || null,
+        photo_url: form.photo_url || null,
+        requires_payment: !!form.requires_payment,
+      };
       if (initial) {
         const { error } = await supabase.from("services").update(payload).eq("id", initial.id);
         if (error) throw error;
@@ -344,6 +353,16 @@ function ServiceDialog({
             <div className="flex items-center gap-3 h-10">
               <Switch checked={form.status === "active"} onCheckedChange={(v) => setForm({ ...form, status: v ? "active" : "inactive" })} />
               <span className="text-sm text-muted-foreground">{form.status === "active" ? "Ativo (visível no link público)" : "Inativo (oculto)"}</span>
+            </div>
+          </Field>
+          <Field label="Pagamento antecipado">
+            <div className="flex items-center gap-3 h-10">
+              <Switch checked={!!form.requires_payment} onCheckedChange={(v) => setForm({ ...form, requires_payment: v })} />
+              <span className="text-sm text-muted-foreground">
+                {form.requires_payment
+                  ? "Exigir pagamento antecipado neste serviço"
+                  : "Sem exigência específica deste serviço"}
+              </span>
             </div>
           </Field>
         </div>
