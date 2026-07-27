@@ -1022,6 +1022,40 @@ const MODE_LABEL: Record<PaymentMode, string> = {
 function PaymentsTab({ companyId }: { companyId: string }) {
   const qc = useQueryClient();
 
+  const acceptedQ = useQuery({
+    queryKey: ["accepted-payment-methods", companyId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("accepted_payment_methods")
+        .eq("id", companyId)
+        .single();
+      if (error) throw error;
+      return sortPaymentMethods((data as any)?.accepted_payment_methods);
+    },
+  });
+
+  const saveAccepted = useMutation({
+    mutationFn: async (methods: PaymentMethodKind[]) => {
+      const { error } = await supabase
+        .from("companies")
+        .update({ accepted_payment_methods: methods } as any)
+        .eq("id", companyId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Formas de pagamento atualizadas");
+      qc.invalidateQueries({ queryKey: ["accepted-payment-methods", companyId] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Não foi possível salvar"),
+  });
+
+  const toggleMethod = (m: PaymentMethodKind) => {
+    const current = acceptedQ.data ?? [];
+    const next = current.includes(m) ? current.filter((x) => x !== m) : [...current, m];
+    saveAccepted.mutate(sortPaymentMethods(next));
+  };
+
   const q = useQuery({
     queryKey: ["payment-settings", companyId],
     queryFn: async () => {
