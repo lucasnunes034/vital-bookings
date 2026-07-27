@@ -582,7 +582,31 @@ function BookingDialog({
               <Field label="Telefone / WhatsApp" required><Input value={form.customer_phone} onChange={(e) => setForm((f) => ({ ...f, customer_phone: e.target.value }))} required /></Field>
               <Field label="Email (opcional)"><Input type="email" value={form.customer_email} onChange={(e) => setForm((f) => ({ ...f, customer_email: e.target.value }))} /></Field>
               <Field label="Observações (opcional)"><Input value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} placeholder="Alguma preferência ou detalhe" /></Field>
-              <button type="submit" disabled={createBooking.isPending} className="btn-primary w-full">
+              {acceptedMethods.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-sm">Como você pretende pagar? <span className="text-xs font-normal text-muted-foreground">(pagamento no local)</span></Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {acceptedMethods.map((m) => {
+                      const selected = paymentMethod === m;
+                      return (
+                        <button
+                          type="button"
+                          key={m}
+                          onClick={() => setPaymentMethod(m)}
+                          className={`h-10 rounded-md border text-sm transition-colors ${
+                            selected
+                              ? "border-foreground bg-muted/50 font-medium"
+                              : "border-border hover:border-foreground/40"
+                          }`}
+                        >
+                          {PAYMENT_METHOD_LABEL[m]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <button type="submit" disabled={createBooking.isPending || (acceptedMethods.length > 0 && !paymentMethod)} className="btn-primary w-full">
                 {createBooking.isPending ? <Loader2 className="size-4 animate-spin" /> : "Solicitar agendamento"}
               </button>
               <p className="text-xs text-muted-foreground text-center">Seu agendamento ficará pendente até o estabelecimento confirmar.</p>
