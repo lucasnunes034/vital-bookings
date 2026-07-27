@@ -64,6 +64,15 @@ function buildCss(theme: CompanyTheme): { css: string; scheme: "light" | "dark" 
   const secondaryFg = readableOn(secondary);
   const accentFg = readableOn(accent);
 
+  // Semantic status colors: derived from accent (success) + fixed hue (warning)
+  // but re-tinted for the chosen scheme so they stay readable.
+  const successBase = accent; // treat the brand accent as "success"
+  const warningBase = isLight ? "#B45309" : "#F59E0B";
+  const successSoft = `color-mix(in oklab, ${successBase} 14%, transparent)`;
+  const successBorder = `color-mix(in oklab, ${successBase} 40%, transparent)`;
+  const warningSoft = `color-mix(in oklab, ${warningBase} 14%, transparent)`;
+  const warningBorder = `color-mix(in oklab, ${warningBase} 40%, transparent)`;
+
   const css = `:root{
     --background:${bg};
     --foreground:${fg};
@@ -86,9 +95,20 @@ function buildCss(theme: CompanyTheme): { css: string; scheme: "light" | "dark" 
     --border:${border};
     --input:${input};
     --ring:${primary};
+    --success:${successBase};
+    --success-foreground:${readableOn(successBase)};
+    --success-soft:${successSoft};
+    --success-border:${successBorder};
+    --warning:${warningBase};
+    --warning-foreground:${readableOn(warningBase)};
+    --warning-soft:${warningSoft};
+    --warning-border:${warningBorder};
     --gradient-brand:linear-gradient(135deg, ${primary}, ${secondary});
+    --gradient-accent:linear-gradient(135deg, ${primary}, ${accent});
+    --gradient-soft:linear-gradient(180deg, color-mix(in oklab, ${primary} 6%, ${surface}), ${bg});
     --gradient-hero:radial-gradient(ellipse 80% 60% at 50% 0%, ${primary}40, transparent 70%);
     --shadow-glow:0 0 60px -10px ${primary}80;
+    --shadow-card:0 1px 0 0 ${isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"} inset, 0 8px 24px -12px ${isLight ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.6)"};
     --font-sans:"${theme.font_family}", ui-sans-serif, system-ui, sans-serif;
     --font-display:"${theme.font_family}", ui-sans-serif, system-ui, sans-serif;
   }`;
