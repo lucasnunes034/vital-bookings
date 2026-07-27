@@ -127,7 +127,7 @@ function SettingsPage() {
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
           className="space-y-6"
         >
-          <TabsList className="grid grid-cols-3 sm:grid-cols-7 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-3 sm:grid-cols-8 w-full sm:w-auto">
             <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
             <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
             <TabsTrigger value="services"><Sparkles className="size-4 mr-1.5" /> Serviços</TabsTrigger>
@@ -135,6 +135,7 @@ function SettingsPage() {
             <TabsTrigger value="availability"><Clock className="size-4 mr-1.5" /> Horários</TabsTrigger>
             <TabsTrigger value="breaks"><Coffee className="size-4 mr-1.5" /> Pausas</TabsTrigger>
             <TabsTrigger value="messages"><MessageCircle className="size-4 mr-1.5" /> Mensagens</TabsTrigger>
+            <TabsTrigger value="payments"><Wallet className="size-4 mr-1.5" /> Financeiro</TabsTrigger>
           </TabsList>
 
           <TabsContent value="brand"><BrandTab companyId={company.id} /></TabsContent>
@@ -144,6 +145,7 @@ function SettingsPage() {
           <TabsContent value="availability"><ScheduleTab companyId={company.id} kind="availability" /></TabsContent>
           <TabsContent value="breaks"><ScheduleTab companyId={company.id} kind="breaks" /></TabsContent>
           <TabsContent value="messages"><MessagesTab companyId={company.id} /></TabsContent>
+          <TabsContent value="payments"><PaymentsTab companyId={company.id} /></TabsContent>
         </Tabs>
       </main>
     </div>
