@@ -1,84 +1,160 @@
-# Plano de evolução — Slotly SaaS
 
-Confirmei a análise anterior lendo `$slug.tsx`, `_authenticated/bookings.tsx`, `dashboard`, `onboarding`, cliente Supabase, middleware auth, `start.ts` e as 6 migrações existentes. Os problemas críticos identificados continuam válidos.
+# Relatório Completo — Slotly SaaS
 
-## Regras de execução
-
-- **Uma tarefa por vez.** Só avanço com sua aprovação de cada entrega.
-- **Não mexo em nada que já funciona** sem necessidade técnica.
-- **Padrão visual e arquitetura preservados** (TanStack Start + Supabase + Tailwind v4 + shadcn).
-- Ao fim de cada tarefa: revisão + validação (build/typecheck + teste do fluxo afetado) antes da próxima.
+Panorama atual do produto após as Fases 1–3 implementadas, com auditoria de funcionalidades, bugs conhecidos/potenciais e sugestões de evolução. Nenhum código será alterado antes da sua aprovação.
 
 ---
 
-## FASE 1 — Produção (base sólida)
+## 1. Funcionalidades já implementadas
 
-Objetivo: zero bugs críticos, dados seguros, CRUDs completos.
+### Autenticação & Onboarding
+- Login/cadastro por e-mail + senha (Zod validado) e Google OAuth.
+- Recuperação de senha via link mágico.
+- Onboarding guiado para criação da empresa (nome, segmento, timezone).
+- Rotas protegidas via `_authenticated/route.tsx` com redirect para `/auth`.
 
-1. **Prevenção de conflito de horário no servidor** — hoje o insert de `bookings` não valida sobreposição; duas pessoas podem pegar o mesmo slot. Criar `EXCLUDE USING gist` + revalidação em `createServerFn`.
-2. **Fuso horário correto** — padronizar tudo em UTC no banco, exibir no fuso da empresa (coluna `timezone` em `companies`).
-3. **CRUD Serviços** (criar/editar/pausar/excluir + preço, duração, categoria).
-4. **CRUD Profissionais** (dados, especialidades, status, vínculo de serviços).
-5. **CRUD Horários** (disponibilidade semanal + intervalos + bloqueios pontuais).
-6. **Cadastro de clientes com histórico** — tabela `customers` + vínculo em `bookings`, tela de listagem com histórico por cliente.
-7. **Autoatendimento cliente** — link mágico por token para cancelar/reagendar sem login.
-8. **Segurança dos agendamentos** — revisar RLS, rate limit no endpoint público, validação Zod server-side, prevenir enumeração de slugs.
-9. **Performance** — índices faltantes (`bookings(company_id, start_at)`, `professional_id, start_at`), suspense + query keys corretas, remover N+1 no dashboard.
+### Painel Administrativo
+- **Dashboard**: KPIs do dia, próximos agendamentos, lembretes pendentes (WhatsApp).
+- **Agendamentos**: filtros por status/profissional/serviço, modal de detalhes, reagendamento com validação de conflitos, cancelamento com motivo.
+- **Calendário visual (dia/semana)**: drag-and-drop, sugestão automática de horários alternativos em conflito, undo (8s), histórico de reagendamentos (`booking_reschedule_history`), click-to-create em slot livre, filtros em tempo real.
+- **Clientes (CRM)**: agregação por telefone/e-mail, histórico, KPIs de fidelidade (frequência, ticket, última visita).
+- **Serviços / Profissionais / Disponibilidade / Intervalos**: CRUD completo com fotos, ordenação, ativo/inativo.
+- **Configurações**:
+  - Empresa (nome, slug, contato, endereço, redes sociais, galeria).
+  - Horário de funcionamento.
+  - Formas de pagamento presencial (dinheiro, PIX, débito, crédito).
+  - Templates de mensagem WhatsApp (confirmação, reagendamento, cancelamento, lembretes 24h/1h).
+  - Aparência (White Label): logo, favicon, banner, cores, tema (claro/escuro/auto), fonte, templates por segmento, preview em tempo real e validação de contraste WCAG.
 
-## FASE 2 — Experiência
+### Página Pública (`/$slug`)
+- Hero compacto com banner, logo, tagline, avaliação média.
+- Lista de serviços e profissionais com foto.
+- Endereço com Google Maps, redes sociais, horário de funcionamento.
+- Fluxo de agendamento em etapas (serviço → profissional → data/hora → dados → forma de pagamento).
+- Avaliações dos clientes (após atendimento).
+- Botão compartilhar com QR Code dinâmico (cores do tema).
 
-10. Calendário estilo Google (dia/semana/mês, drag-to-reschedule).
-11. Dashboard completo (KPIs, próximos agendamentos, ocupação, faturamento).
-12. Filtros e busca (por cliente, serviço, profissional, período).
-13. Upload de logo da empresa (Storage bucket).
-14. Upload de foto dos profissionais.
-15. QR Code do link público.
-16. Refino UI/UX (empty states, skeletons, toasts, mobile).
+### Autoatendimento do Cliente
+- Link mágico `/manage/$token` para cancelar ou reagendar sem login.
+- RPCs seguras `get_booking_by_token`, `cancel_booking_by_token`, `reschedule_booking_by_token`.
 
-## FASE 3 — SaaS
+### Notificações WhatsApp
+- Templates personalizáveis por empresa.
+- Botão manual (`wa.me`) na tela de agendamentos.
+- Widget de lembretes pendentes (24h/1h) no dashboard.
 
-17. Google Calendar sync (App User Connector).
-18. Notificações WhatsApp (via provedor + fila).
-19. Notificações e-mail (Resend/SMTP + templates).
-20. Planos e assinatura (Stripe).
-21. Multiempresa por usuário.
-22. Multiusuários por empresa.
-23. Papéis e permissões (`user_roles` + `has_role`).
+### Pagamentos (arquitetura pronta, presencial ativo)
+- Registro de método escolhido pelo cliente no agendamento.
+- Tabelas `payment_settings`, `payment_intents` e interface `PaymentProvider` prontas para Stripe/Pix online (desativado por padrão).
 
-## FASE 4 — Diferenciais
-
-24. Financeiro (receita, comissões, formas de pagamento).
-25. Relatórios exportáveis (CSV/PDF).
-26. PWA instalável + offline básico.
-27. IA (sugestão de horários, resumo de cliente, no-show prediction).
-28. Fidelidade (pontos, cupons).
-29. Avaliações pós-atendimento.
-30. Analytics de conversão do link público.
+### Infra & Qualidade
+- Timezone consistente (UTC no DB, local via `src/lib/timezone.ts`).
+- Exclusion constraint no Postgres previne overlap de bookings.
+- RLS endurecida em todas as tabelas + GRANTs explícitos.
+- Mapeamento de erros específico (`src/lib/booking-errors.ts`).
+- QueryClient com `staleTime`/`gcTime` calibrados.
+- Design system 100% baseado em CSS variables + tokens semânticos.
 
 ---
 
-## Próxima tarefa (a executar agora, após aprovação)
+## 2. Bugs & problemas a corrigir
 
-**Tarefa 1.1 — Prevenção de conflito de horário (crítico)**
+### Alta severidade
+1. **Sem verificação de e-mail obrigatória**: `signUp` cria conta sem confirmar identidade — permite spam e reset de senha para e-mails alheios.
+2. **Timezone da empresa não editável na UI**: definido no onboarding, sem tela para ajustar depois. Empresas que migram de fuso ficam com horários incorretos.
+3. **Lembretes WhatsApp são manuais**: o widget mostra pendências mas depende do admin clicar; sem cron/automação, "reminder_24h_sent_at" nunca é preenchido de forma confiável.
+4. **Sem paginação em listas grandes**: `bookings`, `customers` e `calendar` carregam com `limit` fixo — empresas com histórico longo perdem dados na UI.
+5. **Google OAuth redirect_uri = `window.location.origin`**: se o usuário abrir `/auth` de um subdomínio custom não configurado no provider, o login falha silenciosamente.
 
-Escopo:
+### Média severidade
+6. **Página pública sem tratamento de slug inexistente**: retorna erro genérico em vez de 404 estilizado.
+7. **Upload de mídia sem limite/validação de tamanho** consistente no cliente (só no bucket).
+8. **`manage_token` exposto na URL** sem expiração — se vazar (screenshot, e-mail encaminhado) permite cancelar indefinidamente.
+9. **Sem rate limit em RPCs públicas** (`get_booking_by_token`, criação de bookings) — vetor de brute force / spam.
+10. **Reviews não têm moderação**: cliente pode publicar review ofensivo sem aprovação do dono.
+11. **Preview de aparência não persiste em refresh** até salvar — comportamento esperado, mas sem aviso claro.
+12. **Sem indicador de "carregando" em transições de rota** — TanStack pendingComponent não configurado.
 
-- Migração:
-  - Adicionar extensão `btree_gist`.
-  - Adicionar coluna gerada `time_range tstzrange` em `bookings`.
-  - `EXCLUDE USING gist (professional_id WITH =, time_range WITH &&) WHERE (status IN ('pending','confirmed'))`.
-  - Índice `bookings(company_id, start_at)` e `bookings(professional_id, start_at)`.
-- Server function `createBooking` (nova, em `src/lib/bookings.functions.ts`):
-  - Valida payload com Zod.
-  - Recalcula `end_at` a partir de `service.duration_minutes` (não confia no cliente).
-  - Insere via cliente publishable server-side + policy `TO anon` estreita, tratando erro `23P01` (exclusion violation) como "horário indisponível".
-- Frontend `$slug.tsx`: substituir insert direto por chamada da server fn e mensagem amigável em caso de conflito.
-- Não altero visual nem outros fluxos.
+### Baixa severidade
+13. **Landing SaaS (`/`)** ainda tem cores hardcoded (mockup decorativo) — intencional, mas inconsistente com a auditoria White Label.
+14. **Sem SEO por empresa**: `head()` da rota `$slug` não inclui `og:image` do banner da empresa.
+15. **Sitemap** não lista páginas públicas das empresas ativas.
+16. **Sem dark mode toggle** no painel autenticado (só via config da empresa).
+17. **Mensagens WhatsApp** sem preview antes de abrir o `wa.me`.
+18. **Sem confirmação ao excluir** serviço/profissional com agendamentos futuros.
 
-Critério de aceite:
+---
 
-- Duas requisições paralelas para o mesmo slot: apenas uma vence.
-- Bookings existentes continuam funcionando (dashboard, lista, mudança de status).
-- Build/typecheck ok.
+## 3. Sugestões de novas funcionalidades
 
-Se aprovar, começo pela migração. Depois seguimos para 1.2 (timezone).
+### Curto prazo — alto valor comercial
+- **Automação real de lembretes** (cron via `pg_cron` + endpoint `/api/public/cron/reminders`) enviando via WhatsApp Business API ou provedor SMS.
+- **Multi-usuário por empresa** (`user_roles`: owner, gerente, profissional, recepção) com permissões granulares.
+- **Bloqueio de agenda / folgas pontuais** por profissional (férias, feriados).
+- **Recorrência de agendamentos** (semanal/quinzenal/mensal).
+- **Lista de espera** quando horário desejado está ocupado.
+- **Check-in / status "em atendimento" / "concluído"** para operação do dia.
+
+### Médio prazo — diferenciação
+- **Comissões por profissional** e relatório de repasse.
+- **Relatórios financeiros e operacionais** (faturamento, no-show rate, ocupação por profissional, serviços mais rentáveis) com exportação CSV/PDF.
+- **Pacotes e assinaturas** (ex.: "5 cortes por mês") com controle de saldo.
+- **Cupons e promoções** (percentual, valor fixo, primeira visita).
+- **Programa de fidelidade** (pontos, cashback, aniversariante do mês).
+- **Integração com Google Calendar / Apple Calendar** (2-way sync).
+- **Confirmação automática pelo cliente via link** (reduz no-show).
+- **App PWA instalável** para o painel + notificações push.
+
+### Longo prazo — plataforma
+- **Ativação de pagamentos online** (Stripe/Mercado Pago/Pix) com split e antecipação.
+- **Marketplace público** (`slotly.app/descobrir`) para clientes acharem empresas por cidade/segmento.
+- **Multi-unidades/filiais** dentro da mesma conta.
+- **API pública + Webhooks** para integrações externas.
+- **Planos SaaS com billing** (Free / Pro / Business) usando Stripe Billing.
+- **App mobile nativo** (React Native) para profissionais.
+- **IA**: sugestão de horários ótimos, previsão de no-show, chatbot de agendamento no WhatsApp/Instagram DM.
+
+### UX / Polimento
+- **Onboarding interativo** com checklist ("adicione seu primeiro serviço", "convide um profissional").
+- **Empty states** ilustrados em todas as listas.
+- **Skeleton loaders** em vez de spinners.
+- **Comandos ⌘K** (command palette) para navegar rápido.
+- **Tour guiado** no primeiro acesso.
+- **Feedback in-app** (widget de sugestões).
+
+---
+
+## 4. Priorização sugerida
+
+### Alta (bloqueia produção séria)
+- Automação de lembretes WhatsApp (cron real).
+- Verificação de e-mail no cadastro.
+- Editor de timezone nas configurações da empresa.
+- Multi-usuário + roles.
+- Rate limit + expiração do `manage_token`.
+- Paginação em listas grandes.
+
+### Média (competitividade)
+- Bloqueio de agenda, recorrência, lista de espera.
+- Relatórios financeiros e comissões.
+- Integração Google Calendar.
+- Confirmação do cliente por link (anti no-show).
+- Moderação de reviews + 404 estilizado.
+
+### Baixa (polimento e crescimento)
+- Marketplace público + SEO por empresa.
+- PWA + push.
+- Pacotes/assinaturas, cupons, fidelidade.
+- Command palette, onboarding checklist, skeletons.
+- Billing SaaS (planos pagos).
+
+---
+
+## 5. Próximo passo recomendado
+
+Sugiro atacar em sequência:
+1. **Automação de lembretes WhatsApp** (fecha a promessa da Fase 3).
+2. **Multi-usuário com roles** (destrava vendas para empresas com equipe).
+3. **Bloqueio de agenda + recorrência** (features mais pedidas em SaaS de agendamento).
+
+Me confirme qual bloco atacamos primeiro (ou reordene à vontade) que eu abro um plano de implementação detalhado só dessa fase.
