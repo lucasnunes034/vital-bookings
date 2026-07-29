@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -52,6 +52,16 @@ export function CompanyThemeApplier({ companyId }: { companyId?: string | null }
 
 /** Applies theme for a public company page by slug. */
 export function PublicThemeApplier({ slug }: { slug: string }) {
+  usePublicTheme(slug);
+  return null;
+}
+
+/**
+ * Fetches and applies the public theme for a slug. Returns `ready = true`
+ * once the theme has been applied (or the fetch has settled), so callers
+ * can gate rendering to avoid a flash of default colors.
+ */
+export function usePublicTheme(slug: string) {
   const q = useQuery({
     queryKey: ["public-company-theme", slug],
     staleTime: 60_000,
@@ -62,12 +72,22 @@ export function PublicThemeApplier({ slug }: { slug: string }) {
     },
   });
 
-  useEffect(() => {
-    if (q.data) applyTheme(q.data);
-    return () => resetTheme();
-  }, [q.data]);
+  const [ready, setReady] = useState(false);
 
-  return null;
+  useEffect(() => {
+    if (q.data) {
+      applyTheme(q.data);
+      setReady(true);
+    } else if (q.isError) {
+      setReady(true);
+    }
+  }, [q.data, q.isError]);
+
+  useEffect(() => {
+    return () => resetTheme();
+  }, []);
+
+  return { ready };
 }
 
 export { applyTheme, resetTheme };
