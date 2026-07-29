@@ -329,6 +329,7 @@ function ReturnOpportunitiesCard({ company }: { company: { id: string; name: str
           Ainda não há clientes vencidos. Assim que alguém passar de {RECURRENCE_DAYS} dias sem retornar, aparece aqui pronto para contato.
         </p>
       ) : (
+        <>
         <div className="hidden md:block overflow-x-auto -mx-5 px-5">
           <table className="w-full text-sm">
             <thead>
@@ -421,6 +422,7 @@ function ReturnOpportunitiesCard({ company }: { company: { id: string; name: str
             );
           })}
         </div>
+        </>
       )}
     </div>
   );
