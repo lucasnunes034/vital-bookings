@@ -36,10 +36,10 @@ export function MediaUploader({ companyId, kind, value, onChange, aspect = "squa
   }
 
   return (
-    <div className="space-y-2">
-      {label && <p className="text-sm font-medium">{label}</p>}
+    <div className="space-y-3">
+      {label && <p className="text-sm font-medium mb-2">{label}</p>}
       <div
-        className={`relative w-full ${aspectCls} rounded-xl border border-dashed border-border overflow-hidden bg-muted/30 group`}
+        className={`relative w-full ${aspectCls} rounded-xl border border-dashed border-border overflow-hidden bg-muted/30 group mt-2`}
       >
         {value ? (
           <img src={value} alt="" className="w-full h-full object-cover" />
@@ -77,7 +77,7 @@ export function MediaUploader({ companyId, kind, value, onChange, aspect = "squa
           )}
         </div>
       </div>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="text-xs text-muted-foreground mt-2">{hint}</p>}
       <input
         ref={inputRef}
         type="file"

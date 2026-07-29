@@ -157,7 +157,29 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
       </section>
 
       <section>
-        <table className="w-full text-sm">
+        {/* Mobile: card list */}
+        <div className="md:hidden space-y-3">
+          {items.map((i: any) => (
+            <div key={i.id} className="rounded-lg border border-border/60 p-3 space-y-2">
+              <p className="text-sm font-medium break-words">{i.description}</p>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Qtd: <span className="text-foreground tabular-nums">{Number(i.quantity)}</span></span>
+                <span>Unit: <span className="text-foreground tabular-nums">{formatCents(i.unit_price_cents)}</span></span>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-2 text-sm">
+                <span className="text-muted-foreground">Total</span>
+                <span className="font-semibold tabular-nums">{formatCents(i.total_cents)}</span>
+              </div>
+            </div>
+          ))}
+          <div className="flex items-center justify-between border-t-2 border-border pt-3">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">Total geral</span>
+            <span className="font-display text-xl font-semibold tabular-nums">{formatCents(quote.total_cents)}</span>
+          </div>
+        </div>
+
+        {/* Desktop: table */}
+        <table className="hidden md:table w-full text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
               <th className="py-2 pr-2 font-medium">Descrição</th>
