@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { zonedDayRangeUTC, formatInTZ } from "@/lib/timezone";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
+import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -129,6 +130,8 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
         </div>
 
         <RemindersCard company={company} />
+
+        <ReturnOpportunitiesCard company={company} />
 
         <div className="surface-card p-8 text-center">
           <Clock className="size-8 mx-auto text-muted-foreground" />
