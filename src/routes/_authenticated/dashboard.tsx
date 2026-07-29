@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 import { zonedDayRangeUTC, formatInTZ } from "@/lib/timezone";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
+import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -130,6 +131,8 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
 
         <RemindersCard company={company} />
 
+        <ReturnOpportunitiesCard company={company} />
+
         <div className="surface-card p-8 text-center">
           <Clock className="size-8 mx-auto text-muted-foreground" />
           <h2 className="mt-4 font-display text-xl font-semibold">Compartilhe seu link e receba agendamentos</h2>
@@ -233,6 +236,149 @@ function RemindersCard({ company }: { company: { id: string; name: string; timez
               </div>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+type ReturnRow = {
+  key: string;
+  customer_name: string;
+  customer_phone: string | null;
+  service_name: string;
+  last_at: string;
+  daysOverdue: number;
+  intervalDays: number;
+};
+
+function overdueLabel(days: number): string {
+  if (days < 30) return `${days} dias`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} ${months === 1 ? "mês" : "meses"}`;
+  const years = Math.floor(months / 12);
+  const rem = months % 12;
+  return rem ? `${years}a ${rem}m` : `${years} ${years === 1 ? "ano" : "anos"}`;
+}
+
+function returnMessage(customer: string, service: string, companyName: string) {
+  return `Olá ${customer}! 👋\n\nAqui é da *${companyName}*. Passou um tempinho desde o último *${service}* — que tal já garantir um novo horário? Posso te enviar as opções disponíveis. 😉`;
+}
+
+function ReturnOpportunitiesCard({ company }: { company: { id: string; name: string; timezone?: string | null; slug?: string | null } }) {
+  const tz = company.timezone || "America/Sao_Paulo";
+  // Serviços recorrentes típicos (higienização, limpeza, manutenção) sugerem ~90 dias.
+  const RECURRENCE_DAYS = 90;
+
+  const q = useQuery({
+    queryKey: ["return-opportunities", company.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, start_at, status, customer_name, customer_phone, service:services(name)")
+        .eq("company_id", company.id)
+        .in("status", ["confirmed", "completed"])
+        .lt("start_at", new Date().toISOString())
+        .order("start_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const rows: ReturnRow[] = (() => {
+    const seen = new Map<string, ReturnRow>();
+    for (const b of (q.data ?? []) as any[]) {
+      const key = (b.customer_phone || "").replace(/\D/g, "") || `name:${b.customer_name?.toLowerCase()}`;
+      if (!key || seen.has(key)) continue;
+      const last = new Date(b.start_at).getTime();
+      const days = Math.floor((Date.now() - last) / (1000 * 60 * 60 * 24));
+      if (days < RECURRENCE_DAYS) continue;
+      seen.set(key, {
+        key,
+        customer_name: b.customer_name,
+        customer_phone: b.customer_phone,
+        service_name: b.service?.name ?? "Serviço",
+        last_at: b.start_at,
+        daysOverdue: days - RECURRENCE_DAYS,
+        intervalDays: days,
+      });
+    }
+    return Array.from(seen.values())
+      .sort((a, b) => b.daysOverdue - a.daysOverdue)
+      .slice(0, 20);
+  })();
+
+  return (
+    <div className="surface-card p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Repeat className="size-4 text-muted-foreground" />
+          <h2 className="font-medium">Oportunidades de retorno</h2>
+          <span className="text-xs text-muted-foreground">— clientes que já passaram do ciclo de {RECURRENCE_DAYS} dias</span>
+        </div>
+      </div>
+      {q.isLoading ? (
+        <div className="py-6 flex justify-center"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Ainda não há clientes vencidos. Assim que alguém passar de {RECURRENCE_DAYS} dias sem retornar, aparece aqui pronto para contato.
+        </p>
+      ) : (
+        <div className="overflow-x-auto -mx-5 px-5">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border/60">
+                <th className="py-2 pr-3 font-medium">Cliente</th>
+                <th className="py-2 pr-3 font-medium">Serviço anterior</th>
+                <th className="py-2 pr-3 font-medium">Último atendimento</th>
+                <th className="py-2 pr-3 font-medium">Tempo vencido</th>
+                <th className="py-2 pr-3 font-medium text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/60">
+              {rows.map((r) => {
+                const url = buildWhatsappUrl(r.customer_phone, returnMessage(r.customer_name, r.service_name, company.name));
+                const hasPhone = !!(r.customer_phone && r.customer_phone.replace(/\D/g, ""));
+                const overdue = r.daysOverdue;
+                const tone = overdue >= 90 ? "bg-destructive/10 text-destructive border-destructive/30" : overdue >= 30 ? "bg-warning/10 text-warning border-warning/30" : "bg-muted text-muted-foreground border-border";
+                return (
+                  <tr key={r.key} className="hover:bg-accent/40">
+                    <td className="py-3 pr-3">
+                      <p className="font-medium truncate">{r.customer_name}</p>
+                      {r.customer_phone && <p className="text-xs text-muted-foreground">{r.customer_phone}</p>}
+                    </td>
+                    <td className="py-3 pr-3 text-muted-foreground">{r.service_name}</td>
+                    <td className="py-3 pr-3 text-muted-foreground">
+                      {formatInTZ(r.last_at, tz, { day: "2-digit", month: "short", year: "numeric" })}
+                    </td>
+                    <td className="py-3 pr-3">
+                      <span className={`inline-flex items-center text-[11px] uppercase tracking-wide px-2 py-0.5 rounded-md border ${tone}`}>
+                        {overdueLabel(overdue)}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-3 text-right">
+                      {hasPhone ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium text-white shadow-sm transition hover:opacity-90"
+                          style={{ backgroundColor: "#25D366" }}
+                          title="Oferecer novo agendamento via WhatsApp"
+                        >
+                          <MessageCircle className="size-3.5" /> WhatsApp
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Sem telefone</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
