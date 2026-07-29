@@ -184,7 +184,7 @@ function NewQuotePage() {
               <Plus className="size-3.5" /> Adicionar item
             </button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
@@ -231,6 +231,46 @@ function NewQuotePage() {
               </tfoot>
             </table>
           </div>
+          <div className="md:hidden space-y-3">
+            {items.map((it, idx) => {
+              const q = parseFloat(it.quantity.replace(",", ".")) || 0;
+              const line = Math.round(q * parseMoneyToCents(it.unit));
+              return (
+                <div key={it.key} className="rounded-lg border border-border/60 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Item {idx + 1}</p>
+                    <button type="button" onClick={() => removeItem(it.key)} className="btn-ghost h-8 !px-2 text-muted-foreground hover:text-destructive" title="Remover">
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-muted-foreground">Descrição</label>
+                    <input value={it.description} onChange={(e) => updateItem(it.key, { description: e.target.value })} className="input mt-1 h-11 w-full" placeholder="Ex.: Higienização de split 12.000 BTUs" maxLength={200} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[11px] text-muted-foreground">Qtd.</label>
+                      <input value={it.quantity} onChange={(e) => updateItem(it.key, { quantity: e.target.value })} className="input mt-1 h-11 w-full text-right" inputMode="decimal" />
+                    </div>
+                    <div>
+                      <label className="text-[11px] text-muted-foreground">Unitário (R$)</label>
+                      <input value={it.unit} onChange={(e) => updateItem(it.key, { unit: e.target.value })}
+                        onBlur={(e) => updateItem(it.key, { unit: centsToInput(parseMoneyToCents(e.target.value)) })}
+                        className="input mt-1 h-11 w-full text-right" inputMode="decimal" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border/40 pt-2">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">Subtotal</span>
+                    <span className="font-medium tabular-nums">{formatCents(line)}</span>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-3">
+              <span className="text-sm uppercase tracking-wider text-muted-foreground">Total</span>
+              <span className="font-display text-xl font-semibold tabular-nums">{formatCents(totalCents)}</span>
+            </div>
+          </div>
         </section>
 
         <section className="surface-card p-6 grid gap-4 md:grid-cols-3">
@@ -243,6 +283,13 @@ function NewQuotePage() {
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} className="input mt-1 w-full resize-y" maxLength={2000} placeholder="Condições de pagamento, garantia, prazo de execução..." />
           </div>
         </section>
+
+        <div className="md:hidden pt-2 pb-6">
+          <button onClick={save} disabled={saving} className="btn-primary w-full h-14 text-base">
+            {saving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
+            Salvar orçamento
+          </button>
+        </div>
       </main>
     </div>
   );

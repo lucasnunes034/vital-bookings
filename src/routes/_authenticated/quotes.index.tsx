@@ -74,7 +74,8 @@ function QuotesListPage() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border/60">
@@ -110,6 +111,33 @@ function QuotesListPage() {
                 </tbody>
               </table>
             </div>
+            <div className="md:hidden divide-y divide-border/60">
+              {q.data!.map((row: any) => (
+                <Link
+                  key={row.id}
+                  to="/quotes/$id"
+                  params={{ id: row.id }}
+                  className="block p-4 hover:bg-accent/40 active:bg-accent/60"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{row.customer_name}</p>
+                      <p className="text-xs font-mono text-muted-foreground mt-0.5">{quoteNumberLabel(row.quote_number)}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-semibold tabular-nums">{formatCents(row.total_cents)}</p>
+                      <span className={`mt-1 inline-flex items-center text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border ${statusTone(row.status)}`}>
+                        {QUOTE_STATUS_LABEL[row.status] ?? row.status}
+                      </span>
+                    </div>
+                  </div>
+                  {row.valid_until && (
+                    <p className="mt-2 text-[11px] text-muted-foreground">Válido até {new Date(row.valid_until).toLocaleDateString("pt-BR")}</p>
+                  )}
+                </Link>
+              ))}
+            </div>
+            </>
           )}
         </div>
       </main>
