@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ManageTokenRouteImport } from './routes/manage.$token'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
@@ -62,6 +63,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQuotesRoute = AuthenticatedQuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/quotes': typeof AuthenticatedQuotesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/quotes': typeof AuthenticatedQuotesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/quotes': typeof AuthenticatedQuotesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/onboarding'
+    | '/quotes'
     | '/settings'
     | '/auth/reset-password'
     | '/manage/$token'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/onboarding'
+    | '/quotes'
     | '/settings'
     | '/auth/reset-password'
     | '/manage/$token'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
+    | '/_authenticated/quotes'
     | '/_authenticated/settings'
     | '/auth/reset-password'
     | '/manage/$token'
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/quotes': {
+      id: '/_authenticated/quotes'
+      path: '/quotes'
+      fullPath: '/quotes'
+      preLoaderRoute: typeof AuthenticatedQuotesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/onboarding': {
       id: '/_authenticated/onboarding'
       path: '/onboarding'
@@ -289,6 +308,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
@@ -298,6 +318,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedQuotesRoute: AuthenticatedQuotesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
