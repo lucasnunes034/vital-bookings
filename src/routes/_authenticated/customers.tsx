@@ -13,6 +13,11 @@ import {
   StickyNote,
   Repeat,
   TrendingUp,
+  MapPin,
+  ExternalLink,
+  MessageCircle,
+  Wrench,
+  User as UserIcon,
 } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +31,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { normalizePhone as normalizeWa } from "@/lib/whatsapp";
 
 type Status = "pending" | "confirmed" | "cancelled" | "completed";
 
