@@ -14,14 +14,19 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QTokenRouteImport } from './routes/q.$token'
 import { Route as ManageTokenRouteImport } from './routes/manage.$token'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCustomersRouteImport } from './routes/_authenticated/customers'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
+import { Route as AuthenticatedQuotesIndexRouteImport } from './routes/_authenticated/quotes.index'
+import { Route as AuthenticatedQuotesNewRouteImport } from './routes/_authenticated/quotes.new'
+import { Route as AuthenticatedQuotesIdRouteImport } from './routes/_authenticated/quotes.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -47,6 +52,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QTokenRoute = QTokenRouteImport.update({
+  id: '/q/$token',
+  path: '/q/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManageTokenRoute = ManageTokenRouteImport.update({
   id: '/manage/$token',
   path: '/manage/$token',
@@ -60,6 +70,11 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedQuotesRoute = AuthenticatedQuotesRouteImport.update({
+  id: '/quotes',
+  path: '/quotes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
@@ -87,6 +102,22 @@ const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedQuotesIndexRoute =
+  AuthenticatedQuotesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedQuotesRoute,
+  } as any)
+const AuthenticatedQuotesNewRoute = AuthenticatedQuotesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AuthenticatedQuotesRoute,
+} as any)
+const AuthenticatedQuotesIdRoute = AuthenticatedQuotesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedQuotesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -98,9 +129,14 @@ export interface FileRoutesByFullPath {
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/q/$token': typeof QTokenRoute
+  '/quotes/$id': typeof AuthenticatedQuotesIdRoute
+  '/quotes/new': typeof AuthenticatedQuotesNewRoute
+  '/quotes/': typeof AuthenticatedQuotesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +151,10 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/q/$token': typeof QTokenRoute
+  '/quotes/$id': typeof AuthenticatedQuotesIdRoute
+  '/quotes/new': typeof AuthenticatedQuotesNewRoute
+  '/quotes': typeof AuthenticatedQuotesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -128,9 +168,14 @@ export interface FileRoutesById {
   '/_authenticated/customers': typeof AuthenticatedCustomersRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/q/$token': typeof QTokenRoute
+  '/_authenticated/quotes/$id': typeof AuthenticatedQuotesIdRoute
+  '/_authenticated/quotes/new': typeof AuthenticatedQuotesNewRoute
+  '/_authenticated/quotes/': typeof AuthenticatedQuotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -144,9 +189,14 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/onboarding'
+    | '/quotes'
     | '/settings'
     | '/auth/reset-password'
     | '/manage/$token'
+    | '/q/$token'
+    | '/quotes/$id'
+    | '/quotes/new'
+    | '/quotes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +211,10 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/reset-password'
     | '/manage/$token'
+    | '/q/$token'
+    | '/quotes/$id'
+    | '/quotes/new'
+    | '/quotes'
   id:
     | '__root__'
     | '/'
@@ -173,9 +227,14 @@ export interface FileRouteTypes {
     | '/_authenticated/customers'
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
+    | '/_authenticated/quotes'
     | '/_authenticated/settings'
     | '/auth/reset-password'
     | '/manage/$token'
+    | '/q/$token'
+    | '/_authenticated/quotes/$id'
+    | '/_authenticated/quotes/new'
+    | '/_authenticated/quotes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -185,6 +244,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ManageTokenRoute: typeof ManageTokenRoute
+  QTokenRoute: typeof QTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/q/$token': {
+      id: '/q/$token'
+      path: '/q/$token'
+      fullPath: '/q/$token'
+      preLoaderRoute: typeof QTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manage/$token': {
       id: '/manage/$token'
       path: '/manage/$token'
@@ -243,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/quotes': {
+      id: '/_authenticated/quotes'
+      path: '/quotes'
+      fullPath: '/quotes'
+      preLoaderRoute: typeof AuthenticatedQuotesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/onboarding': {
@@ -280,8 +354,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBookingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/quotes/': {
+      id: '/_authenticated/quotes/'
+      path: '/'
+      fullPath: '/quotes/'
+      preLoaderRoute: typeof AuthenticatedQuotesIndexRouteImport
+      parentRoute: typeof AuthenticatedQuotesRoute
+    }
+    '/_authenticated/quotes/new': {
+      id: '/_authenticated/quotes/new'
+      path: '/new'
+      fullPath: '/quotes/new'
+      preLoaderRoute: typeof AuthenticatedQuotesNewRouteImport
+      parentRoute: typeof AuthenticatedQuotesRoute
+    }
+    '/_authenticated/quotes/$id': {
+      id: '/_authenticated/quotes/$id'
+      path: '/$id'
+      fullPath: '/quotes/$id'
+      preLoaderRoute: typeof AuthenticatedQuotesIdRouteImport
+      parentRoute: typeof AuthenticatedQuotesRoute
+    }
   }
 }
+
+interface AuthenticatedQuotesRouteChildren {
+  AuthenticatedQuotesIdRoute: typeof AuthenticatedQuotesIdRoute
+  AuthenticatedQuotesNewRoute: typeof AuthenticatedQuotesNewRoute
+  AuthenticatedQuotesIndexRoute: typeof AuthenticatedQuotesIndexRoute
+}
+
+const AuthenticatedQuotesRouteChildren: AuthenticatedQuotesRouteChildren = {
+  AuthenticatedQuotesIdRoute: AuthenticatedQuotesIdRoute,
+  AuthenticatedQuotesNewRoute: AuthenticatedQuotesNewRoute,
+  AuthenticatedQuotesIndexRoute: AuthenticatedQuotesIndexRoute,
+}
+
+const AuthenticatedQuotesRouteWithChildren =
+  AuthenticatedQuotesRoute._addFileChildren(AuthenticatedQuotesRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
@@ -289,6 +399,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
@@ -298,6 +409,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedQuotesRoute: AuthenticatedQuotesRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
@@ -321,6 +433,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ManageTokenRoute: ManageTokenRoute,
+  QTokenRoute: QTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

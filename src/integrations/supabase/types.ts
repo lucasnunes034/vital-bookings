@@ -723,6 +723,106 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          position: number
+          quantity: number
+          quote_id: string
+          total_cents: number
+          unit_price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          position?: number
+          quantity?: number
+          quote_id: string
+          total_cents?: number
+          unit_price_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          quantity?: number
+          quote_id?: string
+          total_cents?: number
+          unit_price_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quotes: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          public_token: string
+          quote_number: number
+          status: Database["public"]["Enums"]["quote_status"]
+          total_cents: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          public_token?: string
+          quote_number: number
+          status?: Database["public"]["Enums"]["quote_status"]
+          total_cents?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          public_token?: string
+          quote_number?: number
+          status?: Database["public"]["Enums"]["quote_status"]
+          total_cents?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           company_id: string
@@ -876,6 +976,7 @@ export type Database = {
         }[]
       }
       get_public_company_by_slug: { Args: { _slug: string }; Returns: Json }
+      get_quote_by_token: { Args: { _token: string }; Returns: Json }
       recompute_company_reviews_stats: {
         Args: { _company_id: string }
         Returns: undefined
@@ -906,6 +1007,7 @@ export type Database = {
         | "failed"
       payment_method_kind: "cash" | "pix" | "debit_card" | "credit_card"
       payment_mode: "none" | "fixed" | "percentage" | "full"
+      quote_status: "draft" | "sent" | "accepted" | "rejected" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1050,6 +1152,7 @@ export const Constants = {
       ],
       payment_method_kind: ["cash", "pix", "debit_card", "credit_card"],
       payment_mode: ["none", "fixed", "percentage", "full"],
+      quote_status: ["draft", "sent", "accepted", "rejected", "expired"],
     },
   },
 } as const

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -113,6 +113,9 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             </Link>
             <Link to="/customers" className="btn-ghost h-11 text-sm">
               <Users className="size-4" /> Clientes
+            </Link>
+            <Link to="/quotes" className="btn-ghost h-11 text-sm">
+              <FileText className="size-4" /> Orçamentos
             </Link>
             <Link to="/calendar" className="btn-ghost h-11 text-sm">
               <Calendar className="size-4" /> Calendário
