@@ -329,7 +329,7 @@ function ReturnOpportunitiesCard({ company }: { company: { id: string; name: str
           Ainda não há clientes vencidos. Assim que alguém passar de {RECURRENCE_DAYS} dias sem retornar, aparece aqui pronto para contato.
         </p>
       ) : (
-        <div className="overflow-x-auto -mx-5 px-5">
+        <div className="hidden md:block overflow-x-auto -mx-5 px-5">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border/60">
@@ -382,6 +382,44 @@ function ReturnOpportunitiesCard({ company }: { company: { id: string; name: str
               })}
             </tbody>
           </table>
+        </div>
+        <div className="md:hidden space-y-2">
+          {rows.map((r) => {
+            const url = buildWhatsappUrl(r.customer_phone, returnMessage(r.customer_name, r.service_name, company.name));
+            const hasPhone = !!(r.customer_phone && r.customer_phone.replace(/\D/g, ""));
+            const overdue = r.daysOverdue;
+            const tone = overdue >= 90 ? "bg-destructive/10 text-destructive border-destructive/30" : overdue >= 30 ? "bg-warning/10 text-warning border-warning/30" : "bg-muted text-muted-foreground border-border";
+            return (
+              <div key={r.key} className="rounded-lg border border-border/60 p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{r.customer_name}</p>
+                    {r.customer_phone && <p className="text-xs text-muted-foreground truncate">{r.customer_phone}</p>}
+                  </div>
+                  <span className={`shrink-0 inline-flex items-center text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border ${tone}`}>
+                    {overdueLabel(overdue)}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-0.5">
+                  <p><span className="text-foreground">{r.service_name}</span></p>
+                  <p>Último: {formatInTZ(r.last_at, tz, { day: "2-digit", month: "short", year: "numeric" })}</p>
+                </div>
+                {hasPhone ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex w-full items-center justify-center gap-1.5 h-12 px-4 rounded-md text-sm font-medium text-white shadow-sm transition hover:opacity-90"
+                    style={{ backgroundColor: "#25D366" }}
+                  >
+                    <MessageCircle className="size-4" /> Oferecer via WhatsApp
+                  </a>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Sem telefone cadastrado</p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
