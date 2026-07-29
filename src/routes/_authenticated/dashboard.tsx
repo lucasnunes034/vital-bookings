@@ -89,9 +89,14 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             </div>
             <span className="font-display text-lg font-semibold">Slotly</span>
           </Link>
-          <button onClick={signOut} className="btn-ghost h-9 !px-3 text-sm">
-            <LogOut className="size-4" /> Sair
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/settings" className="btn-ghost size-9" aria-label="Configurações">
+              <Settings className="size-5" />
+            </Link>
+            <button onClick={signOut} className="btn-ghost h-9 !px-3 text-sm">
+              <LogOut className="size-4" /> Sair
+            </button>
+          </div>
         </div>
       </header>
 
@@ -108,9 +113,6 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             </p>
           </div>
           <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 w-full md:w-auto -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible md:pb-0">
-            <Link to="/settings" className="btn-ghost h-11 text-sm">
-              <Settings className="size-4" /> Configurações
-            </Link>
             <Link to="/customers" className="btn-ghost h-11 text-sm">
               <Users className="size-4" /> Clientes
             </Link>
