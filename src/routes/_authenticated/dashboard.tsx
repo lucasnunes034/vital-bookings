@@ -96,8 +96,8 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
       </header>
 
       <main className="container-page py-10 space-y-8">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+        <div className="flex flex-col md:flex-row md:flex-wrap md:items-end md:justify-between gap-4">
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{company.segment}</p>
             <h1 className="font-display text-3xl font-semibold tracking-tight mt-1">{company.name}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -107,7 +107,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
               </a>
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 w-full md:w-auto -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible md:pb-0">
             <Link to="/settings" className="btn-ghost h-11 text-sm">
               <Settings className="size-4" /> Configurações
             </Link>
@@ -120,7 +120,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/calendar" className="btn-ghost h-11 text-sm">
               <Calendar className="size-4" /> Calendário
             </Link>
-            <Link to="/bookings" className="btn-primary">
+            <Link to="/bookings" className="btn-primary shrink-0">
               <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
             </Link>
           </div>
