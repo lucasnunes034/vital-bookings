@@ -25,6 +25,7 @@ import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedQuotesIndexRouteImport } from './routes/_authenticated/quotes.index'
 import { Route as AuthenticatedQuotesNewRouteImport } from './routes/_authenticated/quotes.new'
+import { Route as AuthenticatedQuotesIdRouteImport } from './routes/_authenticated/quotes.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -106,6 +107,11 @@ const AuthenticatedQuotesNewRoute = AuthenticatedQuotesNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedQuotesRoute,
 } as any)
+const AuthenticatedQuotesIdRoute = AuthenticatedQuotesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedQuotesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/quotes/$id': typeof AuthenticatedQuotesIdRoute
   '/quotes/new': typeof AuthenticatedQuotesNewRoute
   '/quotes/': typeof AuthenticatedQuotesIndexRoute
 }
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/quotes/$id': typeof AuthenticatedQuotesIdRoute
   '/quotes/new': typeof AuthenticatedQuotesNewRoute
   '/quotes': typeof AuthenticatedQuotesIndexRoute
 }
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/manage/$token': typeof ManageTokenRoute
+  '/_authenticated/quotes/$id': typeof AuthenticatedQuotesIdRoute
   '/_authenticated/quotes/new': typeof AuthenticatedQuotesNewRoute
   '/_authenticated/quotes/': typeof AuthenticatedQuotesIndexRoute
 }
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/reset-password'
     | '/manage/$token'
+    | '/quotes/$id'
     | '/quotes/new'
     | '/quotes/'
   fileRoutesByTo: FileRoutesByTo
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/reset-password'
     | '/manage/$token'
+    | '/quotes/$id'
     | '/quotes/new'
     | '/quotes'
   id:
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/auth/reset-password'
     | '/manage/$token'
+    | '/_authenticated/quotes/$id'
     | '/_authenticated/quotes/new'
     | '/_authenticated/quotes/'
   fileRoutesById: FileRoutesById
@@ -336,15 +348,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedQuotesNewRouteImport
       parentRoute: typeof AuthenticatedQuotesRoute
     }
+    '/_authenticated/quotes/$id': {
+      id: '/_authenticated/quotes/$id'
+      path: '/$id'
+      fullPath: '/quotes/$id'
+      preLoaderRoute: typeof AuthenticatedQuotesIdRouteImport
+      parentRoute: typeof AuthenticatedQuotesRoute
+    }
   }
 }
 
 interface AuthenticatedQuotesRouteChildren {
+  AuthenticatedQuotesIdRoute: typeof AuthenticatedQuotesIdRoute
   AuthenticatedQuotesNewRoute: typeof AuthenticatedQuotesNewRoute
   AuthenticatedQuotesIndexRoute: typeof AuthenticatedQuotesIndexRoute
 }
 
 const AuthenticatedQuotesRouteChildren: AuthenticatedQuotesRouteChildren = {
+  AuthenticatedQuotesIdRoute: AuthenticatedQuotesIdRoute,
   AuthenticatedQuotesNewRoute: AuthenticatedQuotesNewRoute,
   AuthenticatedQuotesIndexRoute: AuthenticatedQuotesIndexRoute,
 }
