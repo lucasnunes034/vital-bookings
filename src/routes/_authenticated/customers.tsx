@@ -352,89 +352,269 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Users; label: string;
 
 function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer | null; tz: string; onClose: () => void }) {
   const open = !!customer;
+  const mock = customer ? mockProfileFor(customer.key) : null;
+  const history = customer ? enrichHistory(customer) : [];
+  const waPhone = customer?.phone ? normalizeWa(customer.phone) : "";
+  const mapsUrl = mock ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mock.address)}` : "";
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{customer?.name}</DialogTitle>
-          <DialogDescription>Histórico completo de agendamentos.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <UserIcon className="size-4" />
+            </span>
+            {customer?.name}
+          </DialogTitle>
+          <DialogDescription>Detalhes do cliente, contato e histórico de atendimentos.</DialogDescription>
         </DialogHeader>
         {customer && (
           <div className="space-y-5 text-sm">
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              {customer.phone && (
-                <a href={`tel:${customer.phone}`} className="inline-flex items-center gap-1 hover:underline">
-                  <Phone className="size-3" /> {customer.phone}
-                </a>
-              )}
-              {customer.phone && (
-                <a
-                  href={`https://wa.me/${normalizePhone(customer.phone)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:underline"
-                >
-                  WhatsApp
-                </a>
-              )}
-              {customer.email && (
-                <a href={`mailto:${customer.email}`} className="inline-flex items-center gap-1 hover:underline">
-                  <Mail className="size-3" /> {customer.email}
-                </a>
-              )}
-            </div>
-
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MiniStat label="Total" value={String(customer.total)} />
               <MiniStat label="Concluídos" value={String(customer.completed)} />
               <MiniStat label="Cancelados" value={String(customer.cancelled)} />
-              <MiniStat label="Gasto total" value={formatBRL(customer.totalSpentCents)} />
+              <MiniStat label="Gasto total" value={formatBRL(customer.totalSpentCents || mockRevenueCents(history))} />
             </div>
 
-            <div className="grid gap-2 text-xs">
-              {customer.nextVisit && (
-                <p className="text-success inline-flex items-center gap-1">
-                  <CalendarIcon className="size-3" /> Próxima visita: {formatDT(customer.nextVisit, tz)}
-                </p>
-              )}
-              {customer.lastVisit && (
-                <p className="text-muted-foreground inline-flex items-center gap-1">
-                  <Clock className="size-3" /> Última visita: {formatDT(customer.lastVisit, tz)}
-                </p>
-              )}
-            </div>
+            <Tabs defaultValue="contato" className="w-full">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="contato">Contato</TabsTrigger>
+                <TabsTrigger value="historico">Histórico de Serviços</TabsTrigger>
+              </TabsList>
 
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Histórico</p>
-              <div className="space-y-2">
-                {customer.bookings.map((b) => (
-                  <div key={b.id} className="rounded-lg border border-border/60 p-3 space-y-1.5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{formatDT(b.start_at, tz)}</p>
-                      <span className={`text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border ${STATUS_STYLE[b.status]}`}>
-                        {STATUS_LABEL[b.status]}
-                      </span>
+              <TabsContent value="contato" className="mt-4 space-y-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <InfoRow icon={UserIcon} label="Nome">
+                    <span className="text-foreground">{customer.name}</span>
+                  </InfoRow>
+                  <InfoRow icon={Phone} label="Telefone">
+                    {customer.phone ? (
+                      <a href={`tel:${customer.phone}`} className="hover:underline">{customer.phone}</a>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </InfoRow>
+                  <InfoRow icon={MessageCircle} label="WhatsApp">
+                    {waPhone ? (
+                      <a
+                        href={`https://wa.me/${waPhone}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-success hover:underline"
+                      >
+                        Abrir conversa <ExternalLink className="size-3" />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </InfoRow>
+                  <InfoRow icon={Mail} label="E-mail">
+                    {customer.email ? (
+                      <a href={`mailto:${customer.email}`} className="hover:underline">{customer.email}</a>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </InfoRow>
+                </div>
+
+                {mock && (
+                  <div className="rounded-lg border border-border/60 p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
+                          <MapPin className="size-3" /> Endereço
+                        </p>
+                        <p className="font-medium">{mock.address}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {mock.neighborhood} · {mock.city} — {mock.state}, {mock.zip}
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="outline">
+                        <a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+                          <MapPin className="size-3.5" /> Ver no mapa
+                        </a>
+                      </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {b.service?.name} · com {b.professional?.name} · {b.service?.duration_minutes} min · {formatBRL(b.service?.price_cents)}
-                    </p>
-                    {b.notes && (
-                      <p className="text-xs text-muted-foreground inline-flex items-start gap-1">
-                        <StickyNote className="size-3 mt-0.5" /> {b.notes}
-                      </p>
-                    )}
-                    {b.status === "cancelled" && b.cancellation_reason && (
-                      <p className="text-xs text-rose-600 dark:text-rose-400">Motivo: {b.cancellation_reason}</p>
-                    )}
+                    <div className="aspect-[16/8] w-full overflow-hidden rounded-md border border-border/60">
+                      <iframe
+                        title="Mapa do endereço"
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(mock.address + ", " + mock.city)}&output=embed`}
+                        className="w-full h-full"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
+
+                <div className="grid gap-2 text-xs">
+                  {customer.nextVisit && (
+                    <p className="text-success inline-flex items-center gap-1">
+                      <CalendarIcon className="size-3" /> Próxima visita: {formatDT(customer.nextVisit, tz)}
+                    </p>
+                  )}
+                  {customer.lastVisit && (
+                    <p className="text-muted-foreground inline-flex items-center gap-1">
+                      <Clock className="size-3" /> Última visita: {formatDT(customer.lastVisit, tz)}
+                    </p>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="historico" className="mt-4">
+                <div className="rounded-lg border border-border/60 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[140px]">Data</TableHead>
+                        <TableHead>Serviço</TableHead>
+                        <TableHead>Profissional</TableHead>
+                        <TableHead className="w-[120px]">Status</TableHead>
+                        <TableHead className="w-[110px] text-right">Valor</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {history.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-sm text-muted-foreground py-6">
+                            Sem atendimentos registrados.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        history.map((h) => (
+                          <TableRow key={h.id}>
+                            <TableCell className="text-xs whitespace-nowrap">{formatDT(h.date, tz)}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Wrench className="size-3.5 text-muted-foreground" />
+                                <div>
+                                  <p className="text-sm font-medium">{h.service}</p>
+                                  {h.notes && (
+                                    <p className="text-[11px] text-muted-foreground line-clamp-1">{h.notes}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs">{h.professional}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={STATUS_STYLE[h.status]}>
+                                {STATUS_LABEL[h.status]}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right text-sm font-medium tabular-nums">
+                              {formatBRL(h.priceCents)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                {history.length > 0 && (
+                  <div className="mt-3 flex justify-end text-xs text-muted-foreground">
+                    Total no histórico: <span className="ml-1 text-foreground font-semibold">{formatBRL(history.reduce((s, h) => s + h.priceCents, 0))}</span>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </DialogContent>
     </Dialog>
   );
+}
+
+function InfoRow({ icon: Icon, label, children }: { icon: typeof Users; label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-border/60 p-3">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
+        <Icon className="size-3" /> {label}
+      </p>
+      <div className="mt-1 text-sm">{children}</div>
+    </div>
+  );
+}
+
+// --- Mock enrichment (dados de exemplo p/ contexto HVAC/residencial) ---
+
+const MOCK_ADDRESSES = [
+  { address: "Rua das Palmeiras, 145 — Apto 42", neighborhood: "Vila Madalena", city: "São Paulo", state: "SP", zip: "05435-020" },
+  { address: "Av. Beira-Mar, 2.100 — Casa 3", neighborhood: "Meireles", city: "Fortaleza", state: "CE", zip: "60165-121" },
+  { address: "Rua Coronel Andrade, 87", neighborhood: "Batel", city: "Curitiba", state: "PR", zip: "80420-160" },
+  { address: "Alameda Santos, 950 — Cj. 1204", neighborhood: "Jardim Paulista", city: "São Paulo", state: "SP", zip: "01418-100" },
+  { address: "Rua Voluntários da Pátria, 322", neighborhood: "Botafogo", city: "Rio de Janeiro", state: "RJ", zip: "22270-000" },
+  { address: "Av. do Contorno, 4.500", neighborhood: "Funcionários", city: "Belo Horizonte", state: "MG", zip: "30110-090" },
+];
+
+const MOCK_HVAC_SERVICES = [
+  { name: "Higienização de Split 12.000 BTUs", price: 22000 },
+  { name: "Instalação de Ar-Condicionado Split", price: 65000 },
+  { name: "Manutenção Preventiva — 2 aparelhos", price: 38000 },
+  { name: "Recarga de Gás R-410A", price: 45000 },
+  { name: "Troca de Placa Eletrônica", price: 58000 },
+  { name: "Limpeza de Filtros e Serpentina", price: 18000 },
+  { name: "Vistoria Técnica Residencial", price: 15000 },
+];
+
+const MOCK_TECHS = ["Carlos Andrade", "Ricardo Menezes", "Bruno Tavares", "Lucas Oliveira"];
+
+function hashKey(key: string): number {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function mockProfileFor(key: string) {
+  const h = hashKey(key);
+  return MOCK_ADDRESSES[h % MOCK_ADDRESSES.length];
+}
+
+type HistoryEntry = {
+  id: string;
+  date: string;
+  service: string;
+  professional: string;
+  status: Status;
+  priceCents: number;
+  notes: string | null;
+};
+
+function enrichHistory(customer: Customer): HistoryEntry[] {
+  if (customer.bookings.length > 0) {
+    const h = hashKey(customer.key);
+    return customer.bookings.map((b, i) => {
+      const fallback = MOCK_HVAC_SERVICES[(h + i) % MOCK_HVAC_SERVICES.length];
+      return {
+        id: b.id,
+        date: b.start_at,
+        service: b.service?.name || fallback.name,
+        professional: b.professional?.name || MOCK_TECHS[(h + i) % MOCK_TECHS.length],
+        status: b.status,
+        priceCents: b.service?.price_cents ?? fallback.price,
+        notes: b.notes,
+      };
+    });
+  }
+  // No real bookings — return mock AC service history
+  const h = hashKey(customer.key);
+  const now = Date.now();
+  return Array.from({ length: 4 }).map((_, i) => {
+    const svc = MOCK_HVAC_SERVICES[(h + i) % MOCK_HVAC_SERVICES.length];
+    return {
+      id: `mock-${customer.key}-${i}`,
+      date: new Date(now - (i + 1) * 1000 * 60 * 60 * 24 * 45).toISOString(),
+      service: svc.name,
+      professional: MOCK_TECHS[(h + i) % MOCK_TECHS.length],
+      status: (i === 0 ? "confirmed" : "completed") as Status,
+      priceCents: svc.price,
+      notes: i % 2 === 0 ? "Cliente relatou baixo rendimento do aparelho da sala." : null,
+    };
+  });
+}
+
+function mockRevenueCents(history: HistoryEntry[]): number {
+  return history.filter((h) => h.status === "completed").reduce((s, h) => s + h.priceCents, 0);
 }
 
 function MiniStat({ label, value }: { label: string; value: string }) {
