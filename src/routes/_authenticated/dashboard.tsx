@@ -90,7 +90,11 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <span className="font-display text-lg font-semibold">Slotly</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Link to="/settings" className="btn-ghost size-9" aria-label="Configurações">
+            <Link
+              to="/settings"
+              aria-label="Configurações"
+              className="inline-flex items-center justify-center size-9 rounded-full border border-border bg-background/40 text-foreground hover:bg-accent transition"
+            >
               <Settings className="size-5" />
             </Link>
             <button onClick={signOut} className="btn-ghost h-9 !px-3 text-sm">
@@ -112,17 +116,17 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
               </a>
             </p>
           </div>
-          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 w-full md:w-auto -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible md:pb-0">
-            <Link to="/customers" className="btn-ghost h-11 text-sm">
+          <div className="grid grid-cols-2 gap-3 w-full md:flex md:w-auto md:gap-2">
+            <Link to="/customers" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <Users className="size-4" /> Clientes
             </Link>
-            <Link to="/quotes" className="btn-ghost h-11 text-sm">
+            <Link to="/quotes" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <FileText className="size-4" /> Orçamentos
             </Link>
-            <Link to="/calendar" className="btn-ghost h-11 text-sm">
+            <Link to="/calendar" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <Calendar className="size-4" /> Calendário
             </Link>
-            <Link to="/bookings" className="btn-primary shrink-0">
+            <Link to="/bookings" className="btn-primary w-full md:w-auto">
               <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
             </Link>
           </div>
