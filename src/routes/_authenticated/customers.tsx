@@ -31,6 +31,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -333,7 +341,7 @@ function CustomersPage() {
         )}
       </main>
 
-      <CustomerDetailsDialog customer={detail} tz={tz} onClose={() => setDetailKey(null)} />
+      <CustomerDetailsPanel customer={detail} tz={tz} onClose={() => setDetailKey(null)} />
     </div>
   );
 }
@@ -350,26 +358,25 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Users; label: string;
   );
 }
 
-function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer | null; tz: string; onClose: () => void }) {
+function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | null; tz: string; onClose: () => void }) {
+  const isMobile = useIsMobile();
   const open = !!customer;
   const mock = customer ? mockProfileFor(customer.key) : null;
   const history = customer ? enrichHistory(customer) : [];
   const waPhone = customer?.phone ? normalizeWa(customer.phone) : "";
   const mapsUrl = mock ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mock.address)}` : "";
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <UserIcon className="size-4" />
-            </span>
-            {customer?.name}
-          </DialogTitle>
-          <DialogDescription>Detalhes do cliente, contato e histórico de atendimentos.</DialogDescription>
-        </DialogHeader>
-        {customer && (
-          <div className="space-y-5 text-sm">
+
+  const title = (
+    <span className="flex items-center gap-2">
+      <span className="inline-flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <UserIcon className="size-4" />
+      </span>
+      {customer?.name}
+    </span>
+  );
+
+  const body = customer && (
+    <div className="space-y-5 text-sm">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MiniStat label="Total" value={String(customer.total)} />
               <MiniStat label="Concluídos" value={String(customer.completed)} />
@@ -401,9 +408,10 @@ function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer |
                         href={`https://wa.me/${waPhone}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-success hover:underline"
+                        className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-md text-white shadow-sm transition hover:opacity-90 h-12 sm:h-9 px-4 text-sm font-medium"
+                        style={{ backgroundColor: "#25D366" }}
                       >
-                        Abrir conversa <ExternalLink className="size-3" />
+                        <MessageCircle className="size-4" /> Abrir WhatsApp <ExternalLink className="size-3" />
                       </a>
                     ) : (
                       <span className="text-muted-foreground">—</span>
@@ -430,9 +438,9 @@ function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer |
                           {mock.neighborhood} · {mock.city} — {mock.state}, {mock.zip}
                         </p>
                       </div>
-                      <Button asChild size="sm" variant="outline">
+                      <Button asChild variant="outline" className="shrink-0 h-10 sm:h-9">
                         <a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
-                          <MapPin className="size-3.5" /> Ver no mapa
+                          <MapPin className="size-3.5" /> Mapa
                         </a>
                       </Button>
                     </div>
@@ -463,7 +471,7 @@ function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer |
               </TabsContent>
 
               <TabsContent value="historico" className="mt-4">
-                <div className="rounded-lg border border-border/60 overflow-hidden">
+                <div className="hidden md:block rounded-lg border border-border/60 overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -511,6 +519,34 @@ function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer |
                     </TableBody>
                   </Table>
                 </div>
+                <div className="md:hidden space-y-2">
+                  {history.length === 0 ? (
+                    <p className="text-center text-sm text-muted-foreground py-6 rounded-lg border border-border/60">
+                      Sem atendimentos registrados.
+                    </p>
+                  ) : (
+                    history.map((h) => (
+                      <div key={h.id} className="rounded-lg border border-border/60 p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex items-start gap-2">
+                            <Wrench className="size-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">{h.service}</p>
+                              <p className="text-[11px] text-muted-foreground">{formatDT(h.date, tz)} · {h.professional}</p>
+                              {h.notes && <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">{h.notes}</p>}
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-semibold tabular-nums">{formatBRL(h.priceCents)}</p>
+                            <Badge variant="outline" className={`mt-1 ${STATUS_STYLE[h.status]}`}>
+                              {STATUS_LABEL[h.status]}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
                 {history.length > 0 && (
                   <div className="mt-3 flex justify-end text-xs text-muted-foreground">
                     Total no histórico: <span className="ml-1 text-foreground font-semibold">{formatBRL(history.reduce((s, h) => s + h.priceCents, 0))}</span>
@@ -518,8 +554,31 @@ function CustomerDetailsDialog({ customer, tz, onClose }: { customer: Customer |
                 )}
               </TabsContent>
             </Tabs>
-          </div>
-        )}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+        <DrawerContent className="max-h-[92vh]">
+          <DrawerHeader className="text-left">
+            <DrawerTitle>{title}</DrawerTitle>
+            <DrawerDescription>Detalhes do cliente, contato e histórico de atendimentos.</DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto">{body}</div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>Detalhes do cliente, contato e histórico de atendimentos.</DialogDescription>
+        </DialogHeader>
+        {body}
       </DialogContent>
     </Dialog>
   );
