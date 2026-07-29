@@ -89,9 +89,14 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             </div>
             <span className="font-display text-lg font-semibold">Slotly</span>
           </Link>
-          <button onClick={signOut} className="btn-ghost h-9 !px-3 text-sm">
-            <LogOut className="size-4" /> Sair
-          </button>
+          <div className="flex items-center gap-2">
+            <Link to="/settings" className="btn-ghost size-9" aria-label="Configurações">
+              <Settings className="size-5" />
+            </Link>
+            <button onClick={signOut} className="btn-ghost h-9 !px-3 text-sm">
+              <LogOut className="size-4" /> Sair
+            </button>
+          </div>
         </div>
       </header>
 
