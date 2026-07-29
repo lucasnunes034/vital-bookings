@@ -235,3 +235,9 @@ textarea.input { height: auto; padding-block: 0.5rem; }
   border: 1px solid color-mix(in oklab, var(--destructive) 35%, transparent);
   color: var(--destructive);
 }
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
