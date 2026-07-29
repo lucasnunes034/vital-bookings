@@ -71,11 +71,11 @@ function QuoteViewPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl sticky top-0 z-40 print:hidden">
-        <div className="container-page flex h-16 items-center justify-between gap-2 flex-wrap">
+        <div className="container-page flex h-16 items-center justify-between gap-2">
           <Link to="/quotes" className="btn-ghost h-9 !px-3 text-sm">
             <ArrowLeft className="size-4" /> Orçamentos
           </Link>
-          <div className="flex flex-wrap gap-2">
+          <div className="hidden sm:flex flex-wrap gap-2">
             <button onClick={() => window.print()} className="btn-ghost h-9 text-sm">
               <Printer className="size-4" /> Imprimir
             </button>
@@ -90,6 +90,22 @@ function QuoteViewPage() {
           </div>
         </div>
       </header>
+
+      <div className="sm:hidden container-page pt-4 space-y-2 print:hidden">
+        <a href={waUrl} target="_blank" rel="noreferrer"
+          className="inline-flex w-full items-center justify-center gap-1.5 h-14 px-4 rounded-md text-base font-medium text-white shadow-sm transition hover:opacity-90"
+          style={{ backgroundColor: "#25D366" }}>
+          <MessageCircle className="size-5" /> Enviar por WhatsApp
+        </a>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
+            {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público
+          </button>
+          <button onClick={() => window.print()} className="btn-ghost w-full h-12 text-sm justify-center">
+            <Printer className="size-4" /> Imprimir
+          </button>
+        </div>
+      </div>
 
       <main className="container-page py-10 max-w-4xl">
         <QuoteDocument quote={quote} items={items} company={quote.company} />
