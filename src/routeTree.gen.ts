@@ -20,6 +20,7 @@ import { Route as BillingPendingRouteImport } from './routes/billing.pending'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -84,6 +85,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedQuotesRoute = AuthenticatedQuotesRouteImport.update({
   id: '/quotes',
   path: '/quotes',
@@ -142,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/quotes': typeof AuthenticatedQuotesRouteWithChildren
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -162,6 +169,7 @@ export interface FileRoutesByTo {
   '/customers': typeof AuthenticatedCustomersRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/quotes': typeof AuthenticatedQuotesRouteWithChildren
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/onboarding'
     | '/quotes'
+    | '/reports'
     | '/settings'
     | '/super-admin'
     | '/auth/reset-password'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/customers'
     | '/dashboard'
     | '/onboarding'
+    | '/reports'
     | '/settings'
     | '/super-admin'
     | '/auth/reset-password'
@@ -250,6 +261,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/onboarding'
     | '/_authenticated/quotes'
+    | '/_authenticated/reports'
     | '/_authenticated/settings'
     | '/_authenticated/super-admin'
     | '/auth/reset-password'
@@ -351,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/quotes': {
       id: '/_authenticated/quotes'
       path: '/quotes'
@@ -439,6 +458,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRouteWithChildren
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
 }
@@ -450,6 +470,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedQuotesRoute: AuthenticatedQuotesRouteWithChildren,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
 }

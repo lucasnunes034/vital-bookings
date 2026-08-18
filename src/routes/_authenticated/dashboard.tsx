@@ -149,6 +149,9 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/calendar" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <Calendar className="size-4" /> Calendário
             </Link>
+            <Link to="/reports" className="btn-ghost h-11 text-sm w-full md:w-auto">
+              <BarChart3 className="size-4" /> Relatórios
+            </Link>
             <Link to="/bookings" className="btn-primary w-full md:w-auto">
               <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
             </Link>
