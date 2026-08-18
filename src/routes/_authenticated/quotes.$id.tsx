@@ -73,7 +73,17 @@ function QuoteViewPage() {
       return;
     }
     const url = buildWhatsappUrl(phone, waMessage);
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Try a true top-level popup first. In sandboxed preview iframes the popup
+    // may be blocked and the browser would otherwise fall back to navigating
+    // this frame to api.whatsapp.com (X-Frame-Options -> ERR_BLOCKED_BY_RESPONSE).
+    // When that happens, copy the link instead of leaving the iframe broken.
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win) {
+      navigator.clipboard?.writeText(url).catch(() => {});
+      toast.success("Abrir nova aba foi bloqueado pelo navegador", {
+        description: "O link do WhatsApp foi copiado — cole na barra de endereço para abrir.",
+      });
+    }
   }
 
   async function copyLink() {
