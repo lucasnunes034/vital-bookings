@@ -5,7 +5,7 @@ import { ArrowLeft, Link2, MessageCircle, Loader2, Printer, Check } from "lucide
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatCents, QUOTE_STATUS_LABEL, quoteNumberLabel } from "@/lib/quotes";
+import { formatCents, QUOTE_STATUS_LABEL, quoteNumberLabel, buildQuoteWhatsAppMessage } from "@/lib/quotes";
 import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/_authenticated/quotes/$id")({
@@ -58,8 +58,23 @@ function QuoteViewPage() {
   const { quote, items } = q.data as any;
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/q/${quote.public_token}` : "";
 
-  const waMessage = `Olá ${quote.customer_name}! Segue seu orçamento da *${quote.company?.name ?? ""}*:\n\n${publicUrl}\n\nQualquer dúvida, é só me chamar. 🙌`;
-  const waUrl = buildWhatsappUrl(quote.customer_phone, waMessage);
+  const waMessage = buildQuoteWhatsAppMessage({
+    customerName: quote.customer_name,
+    companyName: quote.company?.name,
+    totalCents: quote.total_cents,
+    validUntil: quote.valid_until,
+    publicUrl,
+  });
+
+  function handleSendWhatsApp() {
+    const phone = quote.customer_phone;
+    if (!phone || !String(phone).replace(/\D/g, "")) {
+      toast.error("Telefone do cliente não cadastrado. Preencha o telefone no cadastro do orçamento para enviar pelo WhatsApp.");
+      return;
+    }
+    const url = buildWhatsappUrl(phone, waMessage);
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   async function copyLink() {
     await navigator.clipboard.writeText(publicUrl);
@@ -82,21 +97,21 @@ function QuoteViewPage() {
             <button onClick={copyLink} className="btn-ghost h-9 text-sm">
               {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Gerar link público
             </button>
-            <a href={waUrl} target="_blank" rel="noreferrer"
+            <button onClick={handleSendWhatsApp}
               className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium text-white shadow-sm transition hover:opacity-90"
               style={{ backgroundColor: "#25D366" }}>
               <MessageCircle className="size-4" /> Enviar por WhatsApp
-            </a>
+            </button>
           </div>
         </div>
       </header>
 
       <div className="sm:hidden container-page pt-4 space-y-2 print:hidden">
-        <a href={waUrl} target="_blank" rel="noreferrer"
+        <button onClick={handleSendWhatsApp}
           className="inline-flex w-full items-center justify-center gap-1.5 h-14 px-4 rounded-md text-base font-medium text-white shadow-sm transition hover:opacity-90"
           style={{ backgroundColor: "#25D366" }}>
           <MessageCircle className="size-5" /> Enviar por WhatsApp
-        </a>
+        </button>
         <div className="grid grid-cols-2 gap-2">
           <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
             {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público
