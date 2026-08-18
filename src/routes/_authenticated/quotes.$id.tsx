@@ -5,7 +5,7 @@ import { ArrowLeft, Link2, MessageCircle, Loader2, Printer, Check } from "lucide
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { formatCents, QUOTE_STATUS_LABEL, quoteNumberLabel } from "@/lib/quotes";
+import { formatCents, QUOTE_STATUS_LABEL, quoteNumberLabel, buildQuoteWhatsAppMessage } from "@/lib/quotes";
 import { buildWhatsappUrl } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/_authenticated/quotes/$id")({
