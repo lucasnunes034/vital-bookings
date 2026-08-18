@@ -38,28 +38,25 @@ export type QuoteWhatsAppInput = {
 
 /** Monta a mensagem de WhatsApp profissional para envio do orçamento. */
 export function buildQuoteWhatsAppMessage(input: QuoteWhatsAppInput): string {
-  const customer = input.customerName?.trim() || "cliente";
-  const company = (input.companyName?.trim() || "nossa empresa");
-  const total = formatCents(input.totalCents);
-  const validDate = input.validUntil
+  const nomeCliente = input.customerName?.trim() || "cliente";
+  const nomeEmpresa = input.companyName?.trim() || "nossa empresa";
+  const valorTotal = formatCents(input.totalCents);
+  const dataValidade = input.validUntil
     ? new Date(input.validUntil).toLocaleDateString("pt-BR", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
       })
-    : null;
+    : "não informada";
+  const linkPublico = input.publicUrl;
 
-  // Template literal com quebras de linha reais (\n) — encodeURIComponent, em
-  // buildWhatsappUrl, converte cada \n em %0A e cada emoji/acentuação em seus
-  // bytes UTF-8 percentuais, evitando o caractere `` de codificação quebrada.
-  return `Olá ${customer}! 👋
+  return `Olá, ${nomeCliente}!
 
-Seu orçamento na *${company}* já está pronto e disponível para conferência.
+Seu orçamento da ${nomeEmpresa} já está pronto e disponível para conferência.
 
-💰 *Valor total:* ${total}${validDate ? `\n📅 *Válido até:* ${validDate}` : ""}
+Valor total: ${valorTotal} Válido até: ${dataValidade}
 
-👇 Toque no link abaixo para ver todos os detalhes e aprovar:
-${input.publicUrl}
+Acesse o link abaixo para ver todos os detalhes técnicos e aprovar o serviço: ${linkPublico}
 
-Qualquer dúvida, é só me chamar por aqui. Estou à disposição! 🙌`;
+Qualquer dúvida, estou à disposição!`;
 }
