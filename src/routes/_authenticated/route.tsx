@@ -34,6 +34,11 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({ to: "/auth" });
     }
 
+    // Super admin nunca é bloqueado pela assinatura.
+    if ((data.user.email ?? "").toLowerCase() === "lucasnunes239@gmail.com") {
+      return { user: data.user };
+    }
+
     // SubscriptionGuard: bloqueia o painel quando a assinatura expirou/cancelou.
     const { data: companies } = await supabase
       .from("companies")
