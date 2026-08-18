@@ -102,6 +102,17 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <span className="font-display text-lg font-semibold">Slotly</span>
           </Link>
           <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Link
+                to="/super-admin"
+                aria-label="Painel Admin"
+                title="Painel Admin"
+                className="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition text-sm font-medium"
+              >
+                <Shield className="size-4" />
+                <span className="hidden sm:inline">Painel Admin</span>
+              </Link>
+            )}
             <Link
               to="/settings"
               aria-label="Configurações"
