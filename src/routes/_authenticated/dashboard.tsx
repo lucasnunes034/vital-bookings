@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle, FileText } from "lucide-react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle, FileText, Shield } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -62,8 +62,20 @@ function DashboardPage() {
   return <DashboardContent company={company} signOut={signOut} />;
 }
 
+const SUPER_ADMIN_EMAIL = "lucasnunes239@gmail.com";
+
 function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
+
+  const meQ = useQuery({
+    queryKey: ["me-email"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return (data.user?.email ?? "").toLowerCase();
+    },
+    staleTime: Infinity,
+  });
+  const isSuperAdmin = meQ.data === SUPER_ADMIN_EMAIL;
   const { start: startOfDay, end: endOfDay } = zonedDayRangeUTC(new Date(), tz);
 
   const statsQ = useQuery({
@@ -90,6 +102,17 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <span className="font-display text-lg font-semibold">Slotly</span>
           </Link>
           <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Link
+                to="/super-admin"
+                aria-label="Painel Admin"
+                title="Painel Admin"
+                className="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 transition text-sm font-medium"
+              >
+                <Shield className="size-4" />
+                <span className="hidden sm:inline">Painel Admin</span>
+              </Link>
+            )}
             <Link
               to="/settings"
               aria-label="Configurações"

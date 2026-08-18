@@ -1,7 +1,7 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ExternalLink, MoreHorizontal, ShieldCheck } from "lucide-react";
+import { ExternalLink, MoreHorizontal, ShieldCheck, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -144,14 +144,22 @@ function SuperAdminPage() {
   return (
     <div className="min-h-screen bg-background text-foreground px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
-            <ShieldCheck className="size-5 text-muted-foreground" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
+              <ShieldCheck className="size-5 text-muted-foreground" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Torre de Controle</h1>
+              <p className="text-sm text-muted-foreground">Gerencie as assinaturas de todas as empresas cadastradas.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight">Torre de Controle</h1>
-            <p className="text-sm text-muted-foreground">Gerencie as assinaturas de todas as empresas cadastradas.</p>
-          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 h-9 px-3 rounded-full border border-border bg-background hover:bg-accent transition text-sm font-medium"
+          >
+            <ArrowLeft className="size-4" /> Voltar
+          </Link>
         </div>
 
         <Card>
