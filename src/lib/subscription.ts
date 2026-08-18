@@ -1,4 +1,4 @@
-export const SUPPORT_WHATSAPP = "5511999999999";
+export const SUPPORT_WHATSAPP = "5534997900208";
 
 export type SubscriptionStatus = "trial" | "active" | "past_due" | "canceled";
 
