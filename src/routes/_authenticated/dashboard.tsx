@@ -62,8 +62,20 @@ function DashboardPage() {
   return <DashboardContent company={company} signOut={signOut} />;
 }
 
+const SUPER_ADMIN_EMAIL = "lucasnunes239@gmail.com";
+
 function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
+
+  const meQ = useQuery({
+    queryKey: ["me-email"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return (data.user?.email ?? "").toLowerCase();
+    },
+    staleTime: Infinity,
+  });
+  const isSuperAdmin = meQ.data === SUPER_ADMIN_EMAIL;
   const { start: startOfDay, end: endOfDay } = zonedDayRangeUTC(new Date(), tz);
 
   const statsQ = useQuery({
