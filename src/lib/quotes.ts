@@ -49,17 +49,17 @@ export function buildQuoteWhatsAppMessage(input: QuoteWhatsAppInput): string {
       })
     : null;
 
-  const lines: string[] = [];
-  lines.push(`Olá ${customer}! 👋`);
-  lines.push("");
-  lines.push(`Seu orçamento na *${company}* já está pronto e disponível para conferência.`);
-  lines.push("");
-  lines.push(`💰 *Valor total:* ${total}`);
-  if (validDate) lines.push(`📅 *Válido até:* ${validDate}`);
-  lines.push("");
-  lines.push("👇 Toque no link abaixo para ver todos os detalhes e aprovar:");
-  lines.push(input.publicUrl);
-  lines.push("");
-  lines.push("Qualquer dúvida, é só me chamar por aqui. Estou à disposição! 🙌");
-  return lines.join("\n");
+  // Template literal com quebras de linha reais (\n) — encodeURIComponent, em
+  // buildWhatsappUrl, converte cada \n em %0A e cada emoji/acentuação em seus
+  // bytes UTF-8 percentuais, evitando o caractere `` de codificação quebrada.
+  return `Olá ${customer}! 👋
+
+Seu orçamento na *${company}* já está pronto e disponível para conferência.
+
+💰 *Valor total:* ${total}${validDate ? `\n📅 *Válido até:* ${validDate}` : ""}
+
+👇 Toque no link abaixo para ver todos os detalhes e aprovar:
+${input.publicUrl}
+
+Qualquer dúvida, é só me chamar por aqui. Estou à disposição! 🙌`;
 }
