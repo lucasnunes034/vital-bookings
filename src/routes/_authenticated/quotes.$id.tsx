@@ -107,11 +107,11 @@ function QuoteViewPage() {
       </header>
 
       <div className="sm:hidden container-page pt-4 space-y-2 print:hidden">
-        <a href={waUrl} target="_blank" rel="noreferrer"
+        <button onClick={handleSendWhatsApp}
           className="inline-flex w-full items-center justify-center gap-1.5 h-14 px-4 rounded-md text-base font-medium text-white shadow-sm transition hover:opacity-90"
           style={{ backgroundColor: "#25D366" }}>
           <MessageCircle className="size-5" /> Enviar por WhatsApp
-        </a>
+        </button>
         <div className="grid grid-cols-2 gap-2">
           <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
             {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público
