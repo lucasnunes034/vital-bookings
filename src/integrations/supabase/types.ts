@@ -190,6 +190,8 @@ export type Database = {
           segment: string
           slug: string
           state: string | null
+          subscription_ends_at: string | null
+          subscription_status: string
           tagline: string | null
           timezone: string
           updated_at: string
@@ -220,6 +222,8 @@ export type Database = {
           segment: string
           slug: string
           state?: string | null
+          subscription_ends_at?: string | null
+          subscription_status?: string
           tagline?: string | null
           timezone?: string
           updated_at?: string
@@ -250,6 +254,8 @@ export type Database = {
           segment?: string
           slug?: string
           state?: string | null
+          subscription_ends_at?: string | null
+          subscription_status?: string
           tagline?: string | null
           timezone?: string
           updated_at?: string
