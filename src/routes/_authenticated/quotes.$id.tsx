@@ -97,11 +97,11 @@ function QuoteViewPage() {
             <button onClick={copyLink} className="btn-ghost h-9 text-sm">
               {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Gerar link público
             </button>
-            <a href={waUrl} target="_blank" rel="noreferrer"
+            <button onClick={handleSendWhatsApp}
               className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium text-white shadow-sm transition hover:opacity-90"
               style={{ backgroundColor: "#25D366" }}>
               <MessageCircle className="size-4" /> Enviar por WhatsApp
-            </a>
+            </button>
           </div>
         </div>
       </header>
