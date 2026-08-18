@@ -983,6 +983,7 @@ export type Database = {
       }
       get_public_company_by_slug: { Args: { _slug: string }; Returns: Json }
       get_quote_by_token: { Args: { _token: string }; Returns: Json }
+      is_super_admin: { Args: never; Returns: boolean }
       recompute_company_reviews_stats: {
         Args: { _company_id: string }
         Returns: undefined
