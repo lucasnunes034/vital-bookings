@@ -18,6 +18,7 @@ import { Route as QTokenRouteImport } from './routes/q.$token'
 import { Route as ManageTokenRouteImport } from './routes/manage.$token'
 import { Route as BillingPendingRouteImport } from './routes/billing.pending'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
+import { Route as AuthenticatedSuperAdminRouteImport } from './routes/_authenticated/super-admin'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -72,6 +73,11 @@ const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
   getParentRoute: () => AuthRoute,
+} as any)
+const AuthenticatedSuperAdminRoute = AuthenticatedSuperAdminRouteImport.update({
+  id: '/super-admin',
+  path: '/super-admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
+  '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/billing/pending': typeof BillingPendingRoute
   '/manage/$token': typeof ManageTokenRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/super-admin': typeof AuthenticatedSuperAdminRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/billing/pending': typeof BillingPendingRoute
   '/manage/$token': typeof ManageTokenRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/super-admin': typeof AuthenticatedSuperAdminRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
   '/billing/pending': typeof BillingPendingRoute
   '/manage/$token': typeof ManageTokenRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/quotes'
     | '/settings'
+    | '/super-admin'
     | '/auth/reset-password'
     | '/billing/pending'
     | '/manage/$token'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/onboarding'
     | '/settings'
+    | '/super-admin'
     | '/auth/reset-password'
     | '/billing/pending'
     | '/manage/$token'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/quotes'
     | '/_authenticated/settings'
+    | '/_authenticated/super-admin'
     | '/auth/reset-password'
     | '/billing/pending'
     | '/manage/$token'
@@ -324,6 +336,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/reset-password'
       preLoaderRoute: typeof AuthResetPasswordRouteImport
       parentRoute: typeof AuthRoute
+    }
+    '/_authenticated/super-admin': {
+      id: '/_authenticated/super-admin'
+      path: '/super-admin'
+      fullPath: '/super-admin'
+      preLoaderRoute: typeof AuthenticatedSuperAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -421,6 +440,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSuperAdminRoute: typeof AuthenticatedSuperAdminRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -431,6 +451,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedQuotesRoute: AuthenticatedQuotesRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSuperAdminRoute: AuthenticatedSuperAdminRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
