@@ -128,7 +128,7 @@ const formSchema = z.object({
 });
 
 function PublicLandingPage() {
-  const { company } = Route.useLoaderData();
+  const { company } = Route.useLoaderData() as { company: PublicCompany };
   const { ready: themeReady } = usePublicTheme(company.slug);
   const tz = company.timezone || "America/Sao_Paulo";
   const [bookingOpen, setBookingOpen] = useState(false);

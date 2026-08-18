@@ -16,6 +16,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QTokenRouteImport } from './routes/q.$token'
 import { Route as ManageTokenRouteImport } from './routes/manage.$token'
+import { Route as BillingPendingRouteImport } from './routes/billing.pending'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
@@ -60,6 +61,11 @@ const QTokenRoute = QTokenRouteImport.update({
 const ManageTokenRoute = ManageTokenRouteImport.update({
   id: '/manage/$token',
   path: '/manage/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingPendingRoute = BillingPendingRouteImport.update({
+  id: '/billing/pending',
+  path: '/billing/pending',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/billing/pending': typeof BillingPendingRoute
   '/manage/$token': typeof ManageTokenRoute
   '/q/$token': typeof QTokenRoute
   '/quotes/$id': typeof AuthenticatedQuotesIdRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/billing/pending': typeof BillingPendingRoute
   '/manage/$token': typeof ManageTokenRoute
   '/q/$token': typeof QTokenRoute
   '/quotes/$id': typeof AuthenticatedQuotesIdRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
+  '/billing/pending': typeof BillingPendingRoute
   '/manage/$token': typeof ManageTokenRoute
   '/q/$token': typeof QTokenRoute
   '/_authenticated/quotes/$id': typeof AuthenticatedQuotesIdRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/settings'
     | '/auth/reset-password'
+    | '/billing/pending'
     | '/manage/$token'
     | '/q/$token'
     | '/quotes/$id'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/settings'
     | '/auth/reset-password'
+    | '/billing/pending'
     | '/manage/$token'
     | '/q/$token'
     | '/quotes/$id'
@@ -230,6 +241,7 @@ export interface FileRouteTypes {
     | '/_authenticated/quotes'
     | '/_authenticated/settings'
     | '/auth/reset-password'
+    | '/billing/pending'
     | '/manage/$token'
     | '/q/$token'
     | '/_authenticated/quotes/$id'
@@ -243,6 +255,7 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AuthRoute: typeof AuthRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  BillingPendingRoute: typeof BillingPendingRoute
   ManageTokenRoute: typeof ManageTokenRoute
   QTokenRoute: typeof QTokenRoute
 }
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       path: '/manage/$token'
       fullPath: '/manage/$token'
       preLoaderRoute: typeof ManageTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing/pending': {
+      id: '/billing/pending'
+      path: '/billing/pending'
+      fullPath: '/billing/pending'
+      preLoaderRoute: typeof BillingPendingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/reset-password': {
@@ -432,9 +452,20 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AuthRoute: AuthRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  BillingPendingRoute: BillingPendingRoute,
   ManageTokenRoute: ManageTokenRoute,
   QTokenRoute: QTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
