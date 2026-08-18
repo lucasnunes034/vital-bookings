@@ -58,8 +58,23 @@ function QuoteViewPage() {
   const { quote, items } = q.data as any;
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/q/${quote.public_token}` : "";
 
-  const waMessage = `Olá ${quote.customer_name}! Segue seu orçamento da *${quote.company?.name ?? ""}*:\n\n${publicUrl}\n\nQualquer dúvida, é só me chamar. 🙌`;
-  const waUrl = buildWhatsappUrl(quote.customer_phone, waMessage);
+  const waMessage = buildQuoteWhatsAppMessage({
+    customerName: quote.customer_name,
+    companyName: quote.company?.name,
+    totalCents: quote.total_cents,
+    validUntil: quote.valid_until,
+    publicUrl,
+  });
+
+  function handleSendWhatsApp() {
+    const phone = quote.customer_phone;
+    if (!phone || !String(phone).replace(/\D/g, "")) {
+      toast.error("Telefone do cliente não cadastrado. Preencha o telefone no cadastro do orçamento para enviar pelo WhatsApp.");
+      return;
+    }
+    const url = buildWhatsappUrl(phone, waMessage);
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   async function copyLink() {
     await navigator.clipboard.writeText(publicUrl);
