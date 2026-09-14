@@ -556,7 +556,52 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                   </InfoRow>
                 </div>
 
-                {mock && (
+                {customer.saved?.address && (
+                  <div className="rounded-lg border border-border/60 p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
+                          <MapPin className="size-3" /> Endereço
+                        </p>
+                        <p className="font-medium break-words">{customer.saved.address}</p>
+                      </div>
+                      <Button asChild variant="outline" className="shrink-0 h-10 sm:h-9">
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.saved.address)}`}
+                          target="_blank" rel="noreferrer" className="inline-flex items-center gap-1"
+                        >
+                          <MapPin className="size-3.5" /> Mapa
+                        </a>
+                      </Button>
+                    </div>
+                    <div className="aspect-[16/8] w-full overflow-hidden rounded-md border border-border/60">
+                      <iframe
+                        title="Mapa do endereço"
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(customer.saved.address)}&output=embed`}
+                        className="w-full h-full"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {(customer.saved?.service_notes || customer.saved?.preferred_payment_method) && (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {customer.saved?.service_notes && (
+                      <InfoRow icon={FileText} label="Detalhes do Equipamento / Preferências">
+                        <span className="whitespace-pre-wrap">{customer.saved.service_notes}</span>
+                      </InfoRow>
+                    )}
+                    {customer.saved?.preferred_payment_method && (
+                      <InfoRow icon={CreditCard} label="Forma de pagamento preferida">
+                        <span>{formatPaymentMethod(customer.saved.preferred_payment_method)}</span>
+                      </InfoRow>
+                    )}
+                  </div>
+                )}
+
+                {!customer.saved?.address && mock && (
                   <div className="rounded-lg border border-border/60 p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1">
