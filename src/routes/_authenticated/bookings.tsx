@@ -59,12 +59,7 @@ export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
 });
 
-const STATUS_LABEL: Record<Status, string> = {
-  pending: "Pendentes",
-  confirmed: "Confirmados",
-  completed: "Concluídos",
-  cancelled: "Cancelados",
-};
+const STATUS_LABEL = BOOKING_STATUS_LABEL_PLURAL;
 
 function BookingsPage() {
   const navigate = useNavigate();
