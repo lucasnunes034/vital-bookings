@@ -160,7 +160,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/bookings" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <Inbox className="size-4" /> Agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
             </Link>
-            <button onClick={() => setNewBooking(true)} className="btn-primary h-11 text-sm col-span-2 w-full md:w-auto">
+            <button onClick={() => setNewBooking(true)} className="btn-primary hidden h-11 text-sm md:inline-flex md:w-auto">
               <Plus className="size-4" /> Novo agendamento
             </button>
           </div>
