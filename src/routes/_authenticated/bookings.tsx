@@ -282,46 +282,31 @@ function BookingsPage() {
                     {companyQ.data && (
                       <WhatsappMenu booking={b} company={companyQ.data} />
                     )}
-                    {(tab === "pending" || tab === "confirmed") && (
+                    {tab !== "completed" && tab !== "cancelled" && (
                       <button onClick={() => setRescheduleId(b.id)} className="btn-ghost h-9 !px-3 text-xs">
                         <RefreshCw className="size-3.5" /> Remarcar
                       </button>
                     )}
-                    {tab === "pending" && (
-                      <>
+                    {BOOKING_STATUS_NEXT[tab].map((next) =>
+                      next === "cancelled" ? (
                         <button
-                          onClick={() => changeStatus.mutate({ id: b.id, status: "confirmed" })}
-                          className="btn-primary h-9 !px-3 text-xs"
-                          disabled={changeStatus.isPending}
-                        >
-                          <Check className="size-3.5" /> Confirmar
-                        </button>
-                        <button
+                          key={next}
                           onClick={() => { setCancelId(b.id); setCancelReason(""); }}
                           className="btn-ghost h-9 !px-3 text-xs"
                           disabled={changeStatus.isPending}
                         >
-                          <X className="size-3.5" /> Recusar
+                          <X className="size-3.5" /> {tab === "pending" ? "Recusar" : "Cancelar"}
                         </button>
-                      </>
-                    )}
-                    {tab === "confirmed" && (
-                      <>
+                      ) : (
                         <button
-                          onClick={() => changeStatus.mutate({ id: b.id, status: "completed" })}
-                          className="btn-ghost h-9 !px-3 text-xs"
+                          key={next}
+                          onClick={() => changeStatus.mutate({ id: b.id, status: next })}
+                          className={`${next === "confirmed" || next === "completed" ? "btn-primary" : "btn-ghost"} h-9 !px-3 text-xs`}
                           disabled={changeStatus.isPending}
                         >
-                          <Check className="size-3.5" /> Concluir
+                          <Check className="size-3.5" /> {BOOKING_STATUS_LABEL[next]}
                         </button>
-                        <button
-                          onClick={() => { setCancelId(b.id); setCancelReason(""); }}
-                          className="btn-ghost h-9 !px-3 text-xs"
-                          disabled={changeStatus.isPending}
-                        >
-                          <X className="size-3.5" /> Cancelar
-                        </button>
-                      </>
+                      )
                     )}
                   </div>
                 </div>
