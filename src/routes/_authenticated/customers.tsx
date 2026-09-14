@@ -332,13 +332,70 @@ function CustomersPage() {
         </div>
 
         <div className="surface-card p-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground inline-flex items-center gap-1">
-              <Search className="size-3" /> Buscar cliente
-            </Label>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, telefone ou e-mail" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="space-y-1.5 flex-1">
+              <Label className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                <Search className="size-3" /> Buscar cliente
+              </Label>
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, telefone ou e-mail" />
+            </div>
+            <button onClick={() => setNewOpen(true)} className="btn-primary h-10 text-sm justify-center">
+              <Plus className="size-4" /> Novo cliente
+            </button>
           </div>
         </div>
+
+        <Dialog open={newOpen} onOpenChange={setNewOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Novo cliente</DialogTitle>
+              <DialogDescription>Cadastre os dados e preferências do cliente.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Nome *</Label>
+                <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">WhatsApp / Telefone</Label>
+                  <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder="(11) 99999-9999" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">E-mail</Label>
+                  <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="cliente@email.com" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Endereço</Label>
+                <Textarea rows={2} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} placeholder="Rua, número, bairro, cidade" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Detalhes do Equipamento / Preferências</Label>
+                <Textarea rows={3} value={form.service_notes} onChange={(e) => setForm((f) => ({ ...f, service_notes: e.target.value }))} placeholder="Informações úteis para o atendimento" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Forma de pagamento preferida</Label>
+                <select
+                  value={form.preferred_payment_method}
+                  onChange={(e) => setForm((f) => ({ ...f, preferred_payment_method: e.target.value }))}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">Não informada</option>
+                  {PAYMENT_METHOD_ORDER.map((m) => (
+                    <option key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <button onClick={() => setNewOpen(false)} className="btn-ghost h-10 text-sm">Cancelar</button>
+              <button onClick={() => createCustomer.mutate()} disabled={createCustomer.isPending} className="btn-primary h-10 text-sm">
+                {createCustomer.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Salvar cliente
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {bookingsQ.isLoading ? (
           <div className="py-10 flex justify-center">
