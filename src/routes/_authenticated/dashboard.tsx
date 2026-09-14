@@ -186,6 +186,18 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
           <Link to="/onboarding" className="text-xs text-muted-foreground hover:text-foreground">Reabrir onboarding</Link>
         </div>
       </main>
+
+      {/* FAB mobile */}
+      <button
+        onClick={() => setNewBooking(true)}
+        aria-label="Novo agendamento"
+        className="md:hidden fixed bottom-6 right-5 z-50 size-14 rounded-full text-white shadow-lg flex items-center justify-center active:scale-95 transition"
+        style={{ backgroundColor: "#16a34a" }}
+      >
+        <Plus className="size-7" strokeWidth={2.5} />
+      </button>
+
+      <NewBookingDialog open={newBooking} onOpenChange={setNewBooking} companyId={company.id} tz={tz} />
     </div>
   );
 }
