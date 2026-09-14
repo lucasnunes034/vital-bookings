@@ -512,6 +512,9 @@ function CalendarPage() {
               <button onClick={goToday} className="px-3 h-9 text-sm border-x border-border hover:bg-accent">Hoje</button>
               <button onClick={() => shift(1)} className="px-2 h-9 hover:bg-accent" aria-label="Próximo"><ChevronRight className="size-4" /></button>
             </div>
+            <button onClick={() => setManualBooking(true)} className="hidden md:inline-flex btn-primary h-9 text-sm">
+              <Plus className="size-4" /> Novo agendamento
+            </button>
           </div>
         </div>
 
