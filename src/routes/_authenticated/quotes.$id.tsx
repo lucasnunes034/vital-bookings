@@ -22,6 +22,20 @@ export const Route = createFileRoute("/_authenticated/quotes/$id")({
 function QuoteViewPage() {
   const { id } = Route.useParams();
   const [copied, setCopied] = useState(false);
+  const qc = useQueryClient();
+
+  const approve = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("quotes").update({ status: "accepted" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quote", id] });
+      qc.invalidateQueries({ queryKey: ["quotes-list"] });
+      toast.success("Orçamento marcado como aprovado");
+    },
+    onError: (e: any) => toast.error(e?.message || "Não foi possível aprovar o orçamento."),
+  });
 
   const q = useQuery({
     queryKey: ["quote", id],
