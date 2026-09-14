@@ -42,7 +42,7 @@ import {
   BOOKING_STATUS_LABEL,
   BOOKING_STATUS_LABEL_PLURAL,
   BOOKING_STATUS_NEXT,
-  bookingStatusStyle,
+  
   type BookingStatus,
 } from "@/lib/booking-status";
 
