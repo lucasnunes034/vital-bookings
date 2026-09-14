@@ -115,6 +115,11 @@ function QuoteViewPage() {
             <ArrowLeft className="size-4" /> Orçamentos
           </Link>
           <div className="hidden sm:flex flex-wrap gap-2">
+            {quote.status !== "accepted" && (
+              <button onClick={() => approve.mutate()} disabled={approve.isPending} className="btn-primary h-9 text-sm">
+                {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
+              </button>
+            )}
             <button onClick={() => window.print()} className="btn-ghost h-9 text-sm">
               <Printer className="size-4" /> Imprimir
             </button>
