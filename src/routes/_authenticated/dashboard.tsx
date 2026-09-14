@@ -92,7 +92,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
@@ -129,7 +129,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
         </div>
       </header>
 
-      <main className="container-page py-10 space-y-8">
+      <main className="container-page min-w-0 py-10 pb-24 md:pb-10 space-y-8">
         <div className="flex flex-col md:flex-row md:flex-wrap md:items-end md:justify-between gap-4">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{company.segment}</p>
@@ -187,7 +187,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/bookings" className="btn-primary h-9 text-sm">Abrir agendamentos</Link>
           </div>
         </div>
-        <div className="pt-2 flex gap-4">
+        <div className="pt-2 flex flex-col gap-2 sm:flex-row sm:gap-4">
           <Link to="/settings" className="text-xs text-muted-foreground hover:text-foreground">Editar serviços, profissionais e horários</Link>
           <Link to="/customers" className="text-xs text-muted-foreground hover:text-foreground">Ver clientes e histórico</Link>
           <Link to="/onboarding" className="text-xs text-muted-foreground hover:text-foreground">Reabrir onboarding</Link>
@@ -198,8 +198,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
       <button
         onClick={() => setNewBooking(true)}
         aria-label="Novo agendamento"
-        className="md:hidden fixed bottom-6 right-5 z-50 size-14 rounded-full text-white shadow-lg flex items-center justify-center active:scale-95 transition"
-        style={{ backgroundColor: "#16a34a" }}
+        className="md:hidden fixed bottom-6 right-6 z-50 size-14 rounded-full bg-success text-success-foreground shadow-lg flex items-center justify-center active:scale-95 transition"
       >
         <Plus className="size-7" strokeWidth={2.5} />
       </button>
