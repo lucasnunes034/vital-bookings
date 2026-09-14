@@ -252,7 +252,7 @@ function CustomersPage() {
       if (!a.nextVisit && b.nextVisit) return 1;
       return aT - bT || b.total - a.total;
     });
-  }, [bookingsQ.data]);
+  }, [bookingsQ.data, savedQ.data]);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
