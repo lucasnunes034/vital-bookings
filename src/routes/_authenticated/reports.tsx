@@ -24,7 +24,7 @@ function ReportsPage() {
   const chart = useMemo(() => buildChartData(period, rows), [period, rows]);
 
   return (
-    <main className="container-page py-8 space-y-6">
+    <main className="container-page min-w-0 py-8 space-y-6">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
         <div className="min-w-0">
           <Link to="/dashboard" className="text-sm text-muted-foreground inline-flex items-center gap-1 hover:underline">

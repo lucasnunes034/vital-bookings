@@ -41,7 +41,7 @@ function QuotesListPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between">
           <Link to="/dashboard" className="btn-ghost h-9 !px-3 text-sm">
@@ -52,7 +52,7 @@ function QuotesListPage() {
           </Link>
         </div>
       </header>
-      <main className="container-page py-10 space-y-6">
+      <main className="container-page min-w-0 py-10 space-y-6">
         <div>
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Gestão</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight mt-1 flex items-center gap-2">
