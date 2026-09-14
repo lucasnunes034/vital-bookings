@@ -153,9 +153,15 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/reports" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <BarChart3 className="size-4" /> Relatórios
             </Link>
-            <Link to="/bookings" className="btn-primary w-full md:w-auto">
-              <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
+            <Link to="/settings" search={{ tab: "services" }} className="btn-ghost h-11 text-sm w-full md:w-auto">
+              <Sparkles className="size-4" /> Meus serviços
             </Link>
+            <Link to="/bookings" className="btn-ghost h-11 text-sm w-full md:w-auto">
+              <Inbox className="size-4" /> Agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
+            </Link>
+            <button onClick={() => setNewBooking(true)} className="btn-primary h-11 text-sm col-span-2 w-full md:w-auto">
+              <Plus className="size-4" /> Novo agendamento
+            </button>
           </div>
         </div>
 
