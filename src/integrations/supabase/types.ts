@@ -172,6 +172,7 @@ export type Database = {
           business_hours: Json
           city: string | null
           cover_url: string | null
+          cpf: string | null
           created_at: string
           description: string | null
           facebook_url: string | null
@@ -204,6 +205,7 @@ export type Database = {
           business_hours?: Json
           city?: string | null
           cover_url?: string | null
+          cpf?: string | null
           created_at?: string
           description?: string | null
           facebook_url?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           business_hours?: Json
           city?: string | null
           cover_url?: string | null
+          cpf?: string | null
           created_at?: string
           description?: string | null
           facebook_url?: string | null

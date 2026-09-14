@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -34,6 +35,11 @@ import { Route as AuthenticatedQuotesIdRouteImport } from './routes/_authenticat
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cadastro': typeof CadastroRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cadastro': typeof CadastroRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRoute
   '/auth': typeof AuthRouteWithChildren
+  '/cadastro': typeof CadastroRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/auth'
+    | '/cadastro'
     | '/sitemap.xml'
     | '/bookings'
     | '/calendar'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$slug'
     | '/auth'
+    | '/cadastro'
     | '/sitemap.xml'
     | '/bookings'
     | '/calendar'
@@ -254,6 +265,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/$slug'
     | '/auth'
+    | '/cadastro'
     | '/sitemap.xml'
     | '/_authenticated/bookings'
     | '/_authenticated/calendar'
@@ -278,6 +290,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRoute
   AuthRoute: typeof AuthRouteWithChildren
+  CadastroRoute: typeof CadastroRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   BillingPendingRoute: typeof BillingPendingRoute
   ManageTokenRoute: typeof ManageTokenRoute
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -493,6 +513,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRoute,
   AuthRoute: AuthRouteWithChildren,
+  CadastroRoute: CadastroRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   BillingPendingRoute: BillingPendingRoute,
   ManageTokenRoute: ManageTokenRoute,

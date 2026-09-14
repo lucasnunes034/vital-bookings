@@ -73,7 +73,7 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-2">
           <Link to="/auth" className="btn-ghost hidden sm:inline-flex">Entrar</Link>
-          <Link to="/auth" className="btn-primary">
+          <Link to="/cadastro" className="btn-primary">
             Começar grátis <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -113,7 +113,7 @@ function Hero() {
             clientes e financeiro — tudo em um painel moderno e rápido.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link to="/auth" className="btn-primary">
+            <Link to="/cadastro" className="btn-primary">
               Começar gratuitamente <ArrowRight className="size-4" />
             </Link>
             <a href="#how" className="btn-ghost">Ver como funciona</a>
@@ -300,7 +300,7 @@ function Pricing() {
                 <span className="font-display text-4xl font-semibold">{p.price}</span>
                 <span className="text-sm text-muted-foreground">{p.period}</span>
               </div>
-              <Link to="/auth" className={p.highlight ? "btn-primary mt-6" : "btn-ghost mt-6"}>
+              <Link to="/cadastro" className={p.highlight ? "btn-primary mt-6" : "btn-ghost mt-6"}>
                 {p.cta}
               </Link>
               <ul className="mt-7 space-y-3 text-sm">
@@ -400,7 +400,7 @@ function CTA() {
               Teste grátis. Sem cartão. Migre da planilha (ou do concorrente) em 5 minutos.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link to="/auth" className="btn-primary">
+              <Link to="/cadastro" className="btn-primary">
                 Começar gratuitamente <ArrowRight className="size-4" />
               </Link>
               <Link to="/auth" className="btn-ghost">Entrar</Link>
