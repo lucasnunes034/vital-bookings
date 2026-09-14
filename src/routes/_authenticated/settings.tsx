@@ -387,7 +387,6 @@ function ServiceDialog({
             </div>
           </Field>
         </div>
-        </div>
       </ResponsiveDialog>
   );
 }
