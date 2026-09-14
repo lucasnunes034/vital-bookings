@@ -67,6 +67,7 @@ const SUPER_ADMIN_EMAIL = "lucasnunes239@gmail.com";
 
 function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
+  const [newBooking, setNewBooking] = useState(false);
 
   const meQ = useQuery({
     queryKey: ["me-email"],
