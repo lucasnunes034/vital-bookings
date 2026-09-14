@@ -890,10 +890,7 @@ function BookingsOverlay({
               const height = (durMin / SLOT_MIN) * ROW_PX - 2;
               const dim = svcFilter && b.service_id !== svcFilter;
               const status = b.status as string;
-              const tone =
-                status === "pending" ? "status-pending" :
-                status === "confirmed" ? "status-confirmed" :
-                "bg-muted border border-border text-muted-foreground";
+              const tone = `border ${bookingStatusStyle(status)}`;
               return (
                 <div
                   key={b.id}
