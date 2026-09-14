@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { zonedWallToUTC, getZonedParts, formatInTZ } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -163,109 +163,110 @@ export function NewBookingDialog({ open, onOpenChange, companyId, tz, initialSta
   const noPros = prosQ.data?.length === 0;
   const noSvcs = svcsQ.data?.length === 0;
 
+  const footer = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+      <button onClick={() => onOpenChange(false)} className="btn-ghost h-12 !px-4 text-sm w-full sm:w-auto">Cancelar</button>
+      <button
+        onClick={() => createMut.mutate()}
+        disabled={createMut.isPending || noPros || noSvcs}
+        className="btn-primary h-12 !px-4 text-sm w-full sm:w-auto"
+      >
+        {createMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Criar agendamento
+      </button>
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!createMut.isPending) onOpenChange(v); }}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Novo agendamento</DialogTitle>
-          <DialogDescription>Crie um atendimento manualmente. Ele já entra como confirmado.</DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(v) => { if (!createMut.isPending) onOpenChange(v); }}
+      title="Novo agendamento"
+      description="Crie um atendimento manualmente. Ele já entra como confirmado."
+      footer={footer}
+    >
+      {noPros || noSvcs ? (
+        <p className="text-sm text-muted-foreground">
+          {noPros ? "Cadastre um profissional" : "Cadastre um serviço"} em Configurações antes de agendar.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div className="space-y-1.5">
+            <Label>Cliente cadastrado</Label>
+            <select
+              value={customerId}
+              onChange={(e) => pickCustomer(e.target.value)}
+              className="w-full h-12 rounded-md border border-input bg-background px-3 text-base sm:text-sm"
+            >
+              <option value="">Novo cliente / avulso…</option>
+              {customersQ.data?.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>
+              ))}
+            </select>
+          </div>
 
-        {noPros || noSvcs ? (
-          <p className="text-sm text-muted-foreground">
-            {noPros ? "Cadastre um profissional" : "Cadastre um serviço"} em Configurações antes de agendar.
-          </p>
-        ) : (
-          <div className="space-y-3">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4 sm:gap-3">
             <div className="space-y-1.5">
-              <Label>Cliente cadastrado</Label>
-              <select
-                value={customerId}
-                onChange={(e) => pickCustomer(e.target.value)}
-                className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Novo cliente / avulso…</option>
-                {customersQ.data?.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>
-                ))}
-              </select>
+              <Label>Nome do cliente</Label>
+              <Input className="h-12 text-base sm:text-sm" value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} />
+              {errors.customer_name && <p className="text-xs text-destructive">{errors.customer_name}</p>}
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Nome do cliente</Label>
-                <Input value={form.customer_name} onChange={(e) => setForm({ ...form, customer_name: e.target.value })} />
-                {errors.customer_name && <p className="text-xs text-destructive">{errors.customer_name}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label>Telefone</Label>
-                <Input value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} />
-                {errors.customer_phone && <p className="text-xs text-destructive">{errors.customer_phone}</p>}
-              </div>
-            </div>
-
             <div className="space-y-1.5">
-              <Label>Serviço</Label>
-              <select
-                value={serviceId}
-                onChange={(e) => setServiceId(e.target.value)}
-                className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="">Selecione…</option>
-                {svcsQ.data?.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name} · {s.duration_minutes} min</option>
-                ))}
-              </select>
-              {errors.service_id && <p className="text-xs text-destructive">{errors.service_id}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Profissional</Label>
-              <select
-                value={proId}
-                onChange={(e) => setProId(e.target.value)}
-                className="w-full h-11 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                {prosQ.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              {errors.professional_id && <p className="text-xs text-destructive">{errors.professional_id}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Data</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Horário</Label>
-                <Input type="time" step={300} value={time} onChange={(e) => setTime(e.target.value)} />
-              </div>
-            </div>
-            {errors.date && <p className="text-xs text-destructive">{errors.date}</p>}
-            {endAt && (
-              <p className="text-xs text-muted-foreground">
-                Término previsto: {formatInTZ(endAt, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-              </p>
-            )}
-
-            <div className="space-y-1.5">
-              <Label>Observações (opcional)</Label>
-              <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+              <Label>Telefone</Label>
+              <Input className="h-12 text-base sm:text-sm" inputMode="tel" value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} />
+              {errors.customer_phone && <p className="text-xs text-destructive">{errors.customer_phone}</p>}
             </div>
           </div>
-        )}
 
-        <DialogFooter>
-          <button onClick={() => onOpenChange(false)} className="btn-ghost h-10 !px-4 text-sm">Cancelar</button>
-          <button
-            onClick={() => createMut.mutate()}
-            disabled={createMut.isPending || noPros || noSvcs}
-            className="btn-primary h-10 !px-4 text-sm"
-          >
-            {createMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Criar agendamento
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <div className="space-y-1.5">
+            <Label>Serviço</Label>
+            <select
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              className="w-full h-12 rounded-md border border-input bg-background px-3 text-base sm:text-sm"
+            >
+              <option value="">Selecione…</option>
+              {svcsQ.data?.map((s) => (
+                <option key={s.id} value={s.id}>{s.name} · {s.duration_minutes} min</option>
+              ))}
+            </select>
+            {errors.service_id && <p className="text-xs text-destructive">{errors.service_id}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Profissional</Label>
+            <select
+              value={proId}
+              onChange={(e) => setProId(e.target.value)}
+              className="w-full h-12 rounded-md border border-input bg-background px-3 text-base sm:text-sm"
+            >
+              {prosQ.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            {errors.professional_id && <p className="text-xs text-destructive">{errors.professional_id}</p>}
+          </div>
+
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4 sm:gap-3">
+            <div className="space-y-1.5">
+              <Label>Data</Label>
+              <Input className="h-12 text-base sm:text-sm" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Horário</Label>
+              <Input className="h-12 text-base sm:text-sm" type="time" step={300} value={time} onChange={(e) => setTime(e.target.value)} />
+            </div>
+          </div>
+          {errors.date && <p className="text-xs text-destructive">{errors.date}</p>}
+          {endAt && (
+            <p className="text-xs text-muted-foreground">
+              Término previsto: {formatInTZ(endAt, tz, { weekday: "short", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+            </p>
+          )}
+
+          <div className="space-y-1.5">
+            <Label>Observações (opcional)</Label>
+            <Textarea rows={3} className="text-base sm:text-sm" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          </div>
+        </div>
+      )}
+    </ResponsiveDialog>
   );
 }
