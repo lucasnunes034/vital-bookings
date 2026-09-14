@@ -264,6 +264,33 @@ function CustomersPage() {
 
   const detail = useMemo(() => customers.find((c) => c.key === detailKey) ?? null, [customers, detailKey]);
 
+  const qc = useQueryClient();
+  const [newOpen, setNewOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", service_notes: "", preferred_payment_method: "" });
+
+  const createCustomer = useMutation({
+    mutationFn: async () => {
+      if (!form.name.trim()) throw new Error("Informe o nome do cliente.");
+      const { error } = await supabase.from("customers").insert({
+        company_id: companyQ.data!.id,
+        name: form.name.trim(),
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        address: form.address.trim() || null,
+        service_notes: form.service_notes.trim() || null,
+        preferred_payment_method: (form.preferred_payment_method || null) as PaymentMethodKind | null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers-saved"] });
+      setNewOpen(false);
+      setForm({ name: "", phone: "", email: "", address: "", service_notes: "", preferred_payment_method: "" });
+      toast.success("Cliente cadastrado");
+    },
+    onError: (e: any) => toast.error(e?.message || "Não foi possível salvar o cliente."),
+  });
+
   const totalCustomers = customers.length;
   const recurring = customers.filter((c) => c.completed + c.confirmed >= 2).length;
   const upcoming = customers.filter((c) => c.nextVisit).length;
