@@ -18,6 +18,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -320,33 +321,45 @@ function ServiceDialog({
     onError: (e: any) => { if (e?.message && e.message !== "Verifique os campos") toast.error(e.message); },
   });
 
+  const footer = (
+    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+      <button className="btn-ghost h-12 text-sm w-full sm:w-auto" onClick={onClose}>Cancelar</button>
+      <button className="btn-primary h-12 text-sm w-full sm:w-auto" onClick={() => save.mutate()} disabled={save.isPending}>
+        {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Salvar
+      </button>
+    </div>
+  );
+
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{initial ? "Editar serviço" : "Novo serviço"}</DialogTitle>
-          <DialogDescription>Nome, duração e preço aparecem no link público.</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <MediaUploader companyId={companyId} kind="service" value={form.photo_url ?? null} onChange={(u) => setForm({ ...form, photo_url: u })} aspect="cover" label="Foto do serviço (opcional)" />
-          <Field label="Nome" error={errors.name}>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Corte + barba" />
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      title={initial ? "Editar serviço" : "Novo serviço"}
+      description="Nome, duração e preço aparecem no link público."
+      footer={footer}
+    >
+      <div className="flex flex-col gap-4">
+        <MediaUploader companyId={companyId} kind="service" value={form.photo_url ?? null} onChange={(u) => setForm({ ...form, photo_url: u })} aspect="cover" label="Foto do serviço (opcional)" />
+        <Field label="Nome" error={errors.name}>
+          <Input className="h-12 text-base sm:text-sm" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Corte + barba" />
+        </Field>
+        <Field label="Descrição (opcional)">
+          <Textarea rows={3} maxLength={500} className="text-base sm:text-sm" value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalhes sobre este serviço" />
+        </Field>
+        <div className="flex flex-col sm:grid sm:grid-cols-2 gap-4 sm:gap-3">
+          <Field label="Duração (min)" error={errors.duration_minutes}>
+            <Input
+              className="h-12 text-base sm:text-sm"
+              type="number" min={5} max={1440} step={5}
+              value={form.duration_minutes}
+              onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) || 0 })}
+            />
           </Field>
-          <Field label="Descrição (opcional)">
-            <Textarea rows={3} maxLength={500} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Detalhes sobre este serviço" />
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Duração (min)" error={errors.duration_minutes}>
-              <Input
-                type="number" min={5} max={1440} step={5}
-                value={form.duration_minutes}
-                onChange={(e) => setForm({ ...form, duration_minutes: Number(e.target.value) || 0 })}
-              />
-            </Field>
-            <Field label="Preço (R$)" error={errors.price_cents}>
-              <Input
-                inputMode="decimal"
-                value={priceStr}
+          <Field label="Preço (R$)" error={errors.price_cents}>
+            <Input
+              className="h-12 text-base sm:text-sm"
+              inputMode="decimal"
+              value={priceStr}
                 onChange={(e) => {
                   const raw = e.target.value.replace(/[^\d,.]/g, "");
                   setPriceStr(raw);
@@ -375,14 +388,7 @@ function ServiceDialog({
             </div>
           </Field>
         </div>
-        <DialogFooter>
-          <button className="btn-ghost h-10 text-sm" onClick={onClose}>Cancelar</button>
-          <button className="btn-primary h-10 text-sm" onClick={() => save.mutate()} disabled={save.isPending}>
-            {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Salvar
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialog>
   );
 }
 
