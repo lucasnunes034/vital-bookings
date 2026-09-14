@@ -216,7 +216,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
           {q.data?.length ?? 0} serviço(s) cadastrados
         </p>
         <button className="btn-primary fixed bottom-6 right-6 z-50 size-14 !p-0 rounded-full shadow-lg md:static md:z-auto md:h-9 md:w-auto md:!px-5 text-sm" onClick={() => setCreating(true)} aria-label="Novo serviço" title="Novo serviço">
-          <Plus className="size-4" /> Novo serviço
+          <Plus className="size-5 md:size-4" /> <span className="hidden md:inline">Novo serviço</span>
         </button>
       </div>
 

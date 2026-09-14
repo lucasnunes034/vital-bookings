@@ -94,16 +94,16 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
-        <div className="container-page flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+        <div className="container-page grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-between">
+          <Link to="/" className="flex min-w-0 items-center gap-2">
             <div className="relative size-7 rounded-lg overflow-hidden" style={{ background: "var(--gradient-brand)" }}>
               <div className="absolute inset-0 flex items-center justify-center">
                 <Calendar className="size-4 text-white" strokeWidth={2.5} />
               </div>
             </div>
-            <span className="font-display text-lg font-semibold">Slotly</span>
+            <span className="truncate font-display text-lg font-semibold">Slotly</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             {isSuperAdmin && (
               <Link
                 to="/super-admin"
@@ -122,8 +122,8 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             >
               <Settings className="size-5" />
             </Link>
-            <button onClick={signOut} className="btn-ghost h-9 !px-3 text-sm">
-              <LogOut className="size-4" /> Sair
+            <button onClick={signOut} className="btn-ghost size-9 !p-0 text-sm sm:h-9 sm:w-auto sm:!px-3" aria-label="Sair" title="Sair">
+              <LogOut className="size-4" /> <span className="hidden sm:inline">Sair</span>
             </button>
           </div>
         </div>

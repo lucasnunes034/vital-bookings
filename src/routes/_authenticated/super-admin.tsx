@@ -142,15 +142,15 @@ function SuperAdminPage() {
   const rows = companies.data ?? [];
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 py-8 sm:px-6 lg:px-10">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground px-4 py-8 sm:px-6 lg:px-10">
       <div className="mx-auto w-full max-w-6xl space-y-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted">
               <ShieldCheck className="size-5 text-muted-foreground" />
             </div>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Torre de Controle</h1>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">Torre de Controle</h1>
               <p className="text-sm text-muted-foreground">Gerencie as assinaturas de todas as empresas cadastradas.</p>
             </div>
           </div>

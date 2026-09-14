@@ -515,7 +515,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
             </div>
 
             <Tabs defaultValue="contato" className="w-full">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap scrollbar-hide [&>*]:flex-1">
                 <TabsTrigger value="contato">Contato</TabsTrigger>
                 <TabsTrigger value="historico">Histórico de Serviços</TabsTrigger>
               </TabsList>
