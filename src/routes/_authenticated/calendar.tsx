@@ -20,6 +20,7 @@ import {
 } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
 import { bookingStatusStyle } from "@/lib/booking-status";
+import { NewBookingDialog } from "@/components/new-booking-dialog";
 
 type ViewMode = "day" | "week";
 
@@ -362,6 +363,7 @@ function CalendarPage() {
 
   // Create booking dialog state
   const [createFor, setCreateFor] = useState<{ start: Date } | null>(null);
+  const [manualBooking, setManualBooking] = useState(false);
 
   // Pending drag-drop move awaiting confirmation
   const [pendingMove, setPendingMove] = useState<
@@ -510,6 +512,9 @@ function CalendarPage() {
               <button onClick={goToday} className="px-3 h-9 text-sm border-x border-border hover:bg-accent">Hoje</button>
               <button onClick={() => shift(1)} className="px-2 h-9 hover:bg-accent" aria-label="Próximo"><ChevronRight className="size-4" /></button>
             </div>
+            <button onClick={() => setManualBooking(true)} className="hidden md:inline-flex btn-primary h-9 text-sm">
+              <Plus className="size-4" /> Novo agendamento
+            </button>
           </div>
         </div>
 
@@ -581,6 +586,22 @@ function CalendarPage() {
           />
         )}
       </main>
+
+      <button
+        onClick={() => setManualBooking(true)}
+        aria-label="Novo agendamento"
+        className="md:hidden fixed bottom-6 right-5 z-50 size-14 rounded-full text-white shadow-lg flex items-center justify-center active:scale-95 transition"
+        style={{ backgroundColor: "#16a34a" }}
+      >
+        <Plus className="size-7" strokeWidth={2.5} />
+      </button>
+
+      <NewBookingDialog
+        open={manualBooking}
+        onOpenChange={setManualBooking}
+        companyId={companyQ.data.id}
+        tz={tz}
+      />
 
       <CreateBookingDialog
         open={!!createFor}

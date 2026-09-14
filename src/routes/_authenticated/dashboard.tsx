@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle, FileText, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Settings, Users, Bell, Repeat, MessageCircle, FileText, Shield, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
+import { NewBookingDialog } from "@/components/new-booking-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { zonedDayRangeUTC, formatInTZ } from "@/lib/timezone";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
@@ -66,6 +67,7 @@ const SUPER_ADMIN_EMAIL = "lucasnunes239@gmail.com";
 
 function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
+  const [newBooking, setNewBooking] = useState(false);
 
   const meQ = useQuery({
     queryKey: ["me-email"],
@@ -152,9 +154,15 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
             <Link to="/reports" className="btn-ghost h-11 text-sm w-full md:w-auto">
               <BarChart3 className="size-4" /> Relatórios
             </Link>
-            <Link to="/bookings" className="btn-primary w-full md:w-auto">
-              <Inbox className="size-4" /> Ver agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
+            <Link to="/settings" search={{ tab: "services" }} className="btn-ghost h-11 text-sm w-full md:w-auto">
+              <Sparkles className="size-4" /> Meus serviços
             </Link>
+            <Link to="/bookings" className="btn-ghost h-11 text-sm w-full md:w-auto">
+              <Inbox className="size-4" /> Agendamentos{statsQ.data?.pending ? ` (${statsQ.data.pending})` : ""}
+            </Link>
+            <button onClick={() => setNewBooking(true)} className="btn-primary h-11 text-sm col-span-2 w-full md:w-auto">
+              <Plus className="size-4" /> Novo agendamento
+            </button>
           </div>
         </div>
 
@@ -185,6 +193,18 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
           <Link to="/onboarding" className="text-xs text-muted-foreground hover:text-foreground">Reabrir onboarding</Link>
         </div>
       </main>
+
+      {/* FAB mobile */}
+      <button
+        onClick={() => setNewBooking(true)}
+        aria-label="Novo agendamento"
+        className="md:hidden fixed bottom-6 right-5 z-50 size-14 rounded-full text-white shadow-lg flex items-center justify-center active:scale-95 transition"
+        style={{ backgroundColor: "#16a34a" }}
+      >
+        <Plus className="size-7" strokeWidth={2.5} />
+      </button>
+
+      <NewBookingDialog open={newBooking} onOpenChange={setNewBooking} companyId={company.id} tz={tz} />
     </div>
   );
 }
