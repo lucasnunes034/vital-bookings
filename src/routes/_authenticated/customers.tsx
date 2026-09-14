@@ -196,7 +196,12 @@ function CustomersPage() {
       }
       c.bookings.push(b);
       c.total += 1;
-      c[b.status] = (c[b.status] as number) + 1;
+      const bucket: "pending" | "confirmed" | "completed" | "cancelled" =
+        b.status === "completed" ? "completed"
+        : b.status === "cancelled" ? "cancelled"
+        : b.status === "pending" ? "pending"
+        : "confirmed"; // confirmado, em andamento e aguardando material = ativos
+      c[bucket] += 1;
       if (!c.phone && b.customer_phone) c.phone = b.customer_phone;
       if (!c.email && b.customer_email) c.email = b.customer_email;
       if (b.customer_name && c.name === "Sem nome") c.name = b.customer_name;
