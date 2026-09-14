@@ -193,12 +193,12 @@ function BookingsPage() {
           </p>
         </div>
 
-        <div className="flex gap-1 border-b border-border">
-          {(Object.keys(STATUS_LABEL) as Status[]).map((s) => (
+        <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide">
+          {BOOKING_STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => setTab(s)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === s ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === s ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
               {STATUS_LABEL[s]}
             </button>
