@@ -37,7 +37,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
 
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+import {
+  BOOKING_STATUSES,
+  BOOKING_STATUS_LABEL,
+  BOOKING_STATUS_LABEL_PLURAL,
+  BOOKING_STATUS_NEXT,
+  
+  type BookingStatus,
+} from "@/lib/booking-status";
+
+type Status = BookingStatus;
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({
@@ -50,12 +59,7 @@ export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
 });
 
-const STATUS_LABEL: Record<Status, string> = {
-  pending: "Pendentes",
-  confirmed: "Confirmados",
-  completed: "Concluídos",
-  cancelled: "Cancelados",
-};
+const STATUS_LABEL = BOOKING_STATUS_LABEL_PLURAL;
 
 function BookingsPage() {
   const navigate = useNavigate();
@@ -154,7 +158,9 @@ function BookingsPage() {
     },
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ["bookings"] });
-      const msg = v.status === "confirmed" ? "Agendamento confirmado" : v.status === "cancelled" ? "Agendamento recusado" : "Marcado como concluído";
+      const msg = v.status === "cancelled"
+        ? "Agendamento cancelado"
+        : `Status alterado para “${BOOKING_STATUS_LABEL[v.status]}”`;
       toast.success(msg);
       setCancelId(null);
       setCancelReason("");
@@ -189,12 +195,12 @@ function BookingsPage() {
           </p>
         </div>
 
-        <div className="flex gap-1 border-b border-border">
-          {(Object.keys(STATUS_LABEL) as Status[]).map((s) => (
+        <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide">
+          {BOOKING_STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => setTab(s)}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === s ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+              className={`shrink-0 whitespace-nowrap px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === s ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
             >
               {STATUS_LABEL[s]}
             </button>
@@ -278,46 +284,31 @@ function BookingsPage() {
                     {companyQ.data && (
                       <WhatsappMenu booking={b} company={companyQ.data} />
                     )}
-                    {(tab === "pending" || tab === "confirmed") && (
+                    {tab !== "completed" && tab !== "cancelled" && (
                       <button onClick={() => setRescheduleId(b.id)} className="btn-ghost h-9 !px-3 text-xs">
                         <RefreshCw className="size-3.5" /> Remarcar
                       </button>
                     )}
-                    {tab === "pending" && (
-                      <>
+                    {BOOKING_STATUS_NEXT[tab].map((next) =>
+                      next === "cancelled" ? (
                         <button
-                          onClick={() => changeStatus.mutate({ id: b.id, status: "confirmed" })}
-                          className="btn-primary h-9 !px-3 text-xs"
-                          disabled={changeStatus.isPending}
-                        >
-                          <Check className="size-3.5" /> Confirmar
-                        </button>
-                        <button
+                          key={next}
                           onClick={() => { setCancelId(b.id); setCancelReason(""); }}
                           className="btn-ghost h-9 !px-3 text-xs"
                           disabled={changeStatus.isPending}
                         >
-                          <X className="size-3.5" /> Recusar
+                          <X className="size-3.5" /> {tab === "pending" ? "Recusar" : "Cancelar"}
                         </button>
-                      </>
-                    )}
-                    {tab === "confirmed" && (
-                      <>
+                      ) : (
                         <button
-                          onClick={() => changeStatus.mutate({ id: b.id, status: "completed" })}
-                          className="btn-ghost h-9 !px-3 text-xs"
+                          key={next}
+                          onClick={() => changeStatus.mutate({ id: b.id, status: next })}
+                          className={`${next === "confirmed" || next === "completed" ? "btn-primary" : "btn-ghost"} h-9 !px-3 text-xs`}
                           disabled={changeStatus.isPending}
                         >
-                          <Check className="size-3.5" /> Concluir
+                          <Check className="size-3.5" /> {BOOKING_STATUS_LABEL[next]}
                         </button>
-                        <button
-                          onClick={() => { setCancelId(b.id); setCancelReason(""); }}
-                          className="btn-ghost h-9 !px-3 text-xs"
-                          disabled={changeStatus.isPending}
-                        >
-                          <X className="size-3.5" /> Cancelar
-                        </button>
-                      </>
+                      )
                     )}
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Link2, MessageCircle, Loader2, Printer, Check } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Link2, MessageCircle, Loader2, Printer, Check, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,20 @@ export const Route = createFileRoute("/_authenticated/quotes/$id")({
 function QuoteViewPage() {
   const { id } = Route.useParams();
   const [copied, setCopied] = useState(false);
+  const qc = useQueryClient();
+
+  const approve = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("quotes").update({ status: "accepted" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["quote", id] });
+      qc.invalidateQueries({ queryKey: ["quotes-list"] });
+      toast.success("Orçamento marcado como aprovado");
+    },
+    onError: (e: any) => toast.error(e?.message || "Não foi possível aprovar o orçamento."),
+  });
 
   const q = useQuery({
     queryKey: ["quote", id],
@@ -101,6 +115,11 @@ function QuoteViewPage() {
             <ArrowLeft className="size-4" /> Orçamentos
           </Link>
           <div className="hidden sm:flex flex-wrap gap-2">
+            {quote.status !== "accepted" && (
+              <button onClick={() => approve.mutate()} disabled={approve.isPending} className="btn-primary h-9 text-sm">
+                {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
+              </button>
+            )}
             <button onClick={() => window.print()} className="btn-ghost h-9 text-sm">
               <Printer className="size-4" /> Imprimir
             </button>
@@ -122,6 +141,11 @@ function QuoteViewPage() {
           style={{ backgroundColor: "#25D366" }}>
           <MessageCircle className="size-5" /> Enviar por WhatsApp
         </button>
+        {quote.status !== "accepted" && (
+          <button onClick={() => approve.mutate()} disabled={approve.isPending} className="btn-primary w-full h-12 text-sm justify-center">
+            {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
+          </button>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
             {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público

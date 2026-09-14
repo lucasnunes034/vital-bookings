@@ -52,7 +52,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { normalizePhone as normalizeWa } from "@/lib/whatsapp";
 
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+import {
+  BOOKING_STATUS_LABEL,
+  bookingStatusStyle,
+  type BookingStatus,
+} from "@/lib/booking-status";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_ORDER, formatPaymentMethod, type PaymentMethodKind } from "@/lib/payment-methods";
+import { Textarea } from "@/components/ui/textarea";
+import { DialogFooter } from "@/components/ui/dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, CreditCard, FileText } from "lucide-react";
+import { toast } from "sonner";
+
+type Status = BookingStatus;
+
+export type SavedCustomer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  service_notes: string | null;
+  preferred_payment_method: PaymentMethodKind | null;
+};
 
 type BookingRow = {
   id: string;
@@ -82,6 +104,7 @@ type Customer = {
   nextVisit: string | null;
   totalSpentCents: number;
   bookings: BookingRow[];
+  saved: SavedCustomer | null;
 };
 
 export const Route = createFileRoute("/_authenticated/customers")({
@@ -107,19 +130,7 @@ function customerKey(b: BookingRow) {
   return `n:${(b.customer_name || "sem-nome").trim().toLowerCase()}`;
 }
 
-const STATUS_LABEL: Record<Status, string> = {
-  pending: "Pendente",
-  confirmed: "Confirmado",
-  completed: "Concluído",
-  cancelled: "Cancelado",
-};
-
-const STATUS_STYLE: Record<Status, string> = {
-  pending: "status-pending",
-  confirmed: "status-confirmed",
-  completed: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
-  cancelled: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
-};
+const STATUS_LABEL = BOOKING_STATUS_LABEL;
 
 function CustomersPage() {
   const navigate = useNavigate();
@@ -159,34 +170,56 @@ function CustomersPage() {
     },
   });
 
+  const savedQ = useQuery({
+    enabled: !!companyQ.data?.id,
+    queryKey: ["customers-saved", companyQ.data?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, phone, email, address, service_notes, preferred_payment_method")
+        .eq("company_id", companyQ.data!.id)
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return (data ?? []) as unknown as SavedCustomer[];
+    },
+  });
+
   const customers = useMemo<Customer[]>(() => {
     const list = bookingsQ.data ?? [];
     const map = new Map<string, Customer>();
     const now = Date.now();
+    const blank = (key: string, name: string, phone: string | null, email: string | null): Customer => ({
+      key,
+      name: name?.trim() || "Sem nome",
+      phone,
+      email,
+      total: 0,
+      completed: 0,
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+      lastVisit: null,
+      nextVisit: null,
+      totalSpentCents: 0,
+      bookings: [],
+      saved: null,
+    });
     for (const b of list) {
       const key = customerKey(b);
       let c = map.get(key);
       if (!c) {
-        c = {
-          key,
-          name: b.customer_name?.trim() || "Sem nome",
-          phone: b.customer_phone,
-          email: b.customer_email,
-          total: 0,
-          completed: 0,
-          confirmed: 0,
-          pending: 0,
-          cancelled: 0,
-          lastVisit: null,
-          nextVisit: null,
-          totalSpentCents: 0,
-          bookings: [],
-        };
+        c = blank(key, b.customer_name ?? "", b.customer_phone, b.customer_email);
         map.set(key, c);
       }
       c.bookings.push(b);
       c.total += 1;
-      c[b.status] = (c[b.status] as number) + 1;
+      const bucket: "pending" | "confirmed" | "completed" | "cancelled" =
+        b.status === "completed" ? "completed"
+        : b.status === "cancelled" ? "cancelled"
+        : b.status === "pending" ? "pending"
+        : "confirmed"; // confirmado, em andamento e aguardando material = ativos
+      c[bucket] += 1;
       if (!c.phone && b.customer_phone) c.phone = b.customer_phone;
       if (!c.email && b.customer_email) c.email = b.customer_email;
       if (b.customer_name && c.name === "Sem nome") c.name = b.customer_name;
@@ -199,6 +232,19 @@ function CustomersPage() {
         if (!c.nextVisit || t < new Date(c.nextVisit).getTime()) c.nextVisit = b.start_at;
       }
     }
+    for (const s of savedQ.data ?? []) {
+      const digits = (s.phone || "").replace(/\D/g, "");
+      const key = digits ? `p:${digits}` : s.email ? `e:${s.email.trim().toLowerCase()}` : `n:${(s.name || "sem-nome").trim().toLowerCase()}`;
+      let c = map.get(key);
+      if (!c) {
+        c = blank(key, s.name, s.phone, s.email);
+        map.set(key, c);
+      }
+      c.saved = s;
+      if (s.name?.trim()) c.name = s.name.trim();
+      if (!c.phone && s.phone) c.phone = s.phone;
+      if (!c.email && s.email) c.email = s.email;
+    }
     return Array.from(map.values()).sort((a, b) => {
       const aT = a.nextVisit ? new Date(a.nextVisit).getTime() : a.lastVisit ? -new Date(a.lastVisit).getTime() : 0;
       const bT = b.nextVisit ? new Date(b.nextVisit).getTime() : b.lastVisit ? -new Date(b.lastVisit).getTime() : 0;
@@ -206,7 +252,7 @@ function CustomersPage() {
       if (!a.nextVisit && b.nextVisit) return 1;
       return aT - bT || b.total - a.total;
     });
-  }, [bookingsQ.data]);
+  }, [bookingsQ.data, savedQ.data]);
 
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
@@ -217,6 +263,33 @@ function CustomersPage() {
   }, [customers, search]);
 
   const detail = useMemo(() => customers.find((c) => c.key === detailKey) ?? null, [customers, detailKey]);
+
+  const qc = useQueryClient();
+  const [newOpen, setNewOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", service_notes: "", preferred_payment_method: "" });
+
+  const createCustomer = useMutation({
+    mutationFn: async () => {
+      if (!form.name.trim()) throw new Error("Informe o nome do cliente.");
+      const { error } = await supabase.from("customers").insert({
+        company_id: companyQ.data!.id,
+        name: form.name.trim(),
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        address: form.address.trim() || null,
+        service_notes: form.service_notes.trim() || null,
+        preferred_payment_method: (form.preferred_payment_method || null) as PaymentMethodKind | null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["customers-saved"] });
+      setNewOpen(false);
+      setForm({ name: "", phone: "", email: "", address: "", service_notes: "", preferred_payment_method: "" });
+      toast.success("Cliente cadastrado");
+    },
+    onError: (e: any) => toast.error(e?.message || "Não foi possível salvar o cliente."),
+  });
 
   const totalCustomers = customers.length;
   const recurring = customers.filter((c) => c.completed + c.confirmed >= 2).length;
@@ -259,13 +332,70 @@ function CustomersPage() {
         </div>
 
         <div className="surface-card p-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground inline-flex items-center gap-1">
-              <Search className="size-3" /> Buscar cliente
-            </Label>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, telefone ou e-mail" />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <div className="space-y-1.5 flex-1">
+              <Label className="text-xs text-muted-foreground inline-flex items-center gap-1">
+                <Search className="size-3" /> Buscar cliente
+              </Label>
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, telefone ou e-mail" />
+            </div>
+            <button onClick={() => setNewOpen(true)} className="btn-primary h-10 text-sm justify-center">
+              <Plus className="size-4" /> Novo cliente
+            </button>
           </div>
         </div>
+
+        <Dialog open={newOpen} onOpenChange={setNewOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Novo cliente</DialogTitle>
+              <DialogDescription>Cadastre os dados e preferências do cliente.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Nome *</Label>
+                <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Nome do cliente" />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">WhatsApp / Telefone</Label>
+                  <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder="(11) 99999-9999" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">E-mail</Label>
+                  <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="cliente@email.com" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Endereço</Label>
+                <Textarea rows={2} value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} placeholder="Rua, número, bairro, cidade" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Detalhes do Equipamento / Preferências</Label>
+                <Textarea rows={3} value={form.service_notes} onChange={(e) => setForm((f) => ({ ...f, service_notes: e.target.value }))} placeholder="Informações úteis para o atendimento" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Forma de pagamento preferida</Label>
+                <select
+                  value={form.preferred_payment_method}
+                  onChange={(e) => setForm((f) => ({ ...f, preferred_payment_method: e.target.value }))}
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">Não informada</option>
+                  {PAYMENT_METHOD_ORDER.map((m) => (
+                    <option key={m} value={m}>{PAYMENT_METHOD_LABEL[m]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <button onClick={() => setNewOpen(false)} className="btn-ghost h-10 text-sm">Cancelar</button>
+              <button onClick={() => createCustomer.mutate()} disabled={createCustomer.isPending} className="btn-primary h-10 text-sm">
+                {createCustomer.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} Salvar cliente
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {bookingsQ.isLoading ? (
           <div className="py-10 flex justify-center">
@@ -426,7 +556,52 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                   </InfoRow>
                 </div>
 
-                {mock && (
+                {customer.saved?.address && (
+                  <div className="rounded-lg border border-border/60 p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
+                          <MapPin className="size-3" /> Endereço
+                        </p>
+                        <p className="font-medium break-words">{customer.saved.address}</p>
+                      </div>
+                      <Button asChild variant="outline" className="shrink-0 h-10 sm:h-9">
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customer.saved.address)}`}
+                          target="_blank" rel="noreferrer" className="inline-flex items-center gap-1"
+                        >
+                          <MapPin className="size-3.5" /> Mapa
+                        </a>
+                      </Button>
+                    </div>
+                    <div className="aspect-[16/8] w-full overflow-hidden rounded-md border border-border/60">
+                      <iframe
+                        title="Mapa do endereço"
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(customer.saved.address)}&output=embed`}
+                        className="w-full h-full"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {(customer.saved?.service_notes || customer.saved?.preferred_payment_method) && (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {customer.saved?.service_notes && (
+                      <InfoRow icon={FileText} label="Detalhes do Equipamento / Preferências">
+                        <span className="whitespace-pre-wrap">{customer.saved.service_notes}</span>
+                      </InfoRow>
+                    )}
+                    {customer.saved?.preferred_payment_method && (
+                      <InfoRow icon={CreditCard} label="Forma de pagamento preferida">
+                        <span>{formatPaymentMethod(customer.saved.preferred_payment_method)}</span>
+                      </InfoRow>
+                    )}
+                  </div>
+                )}
+
+                {!customer.saved?.address && mock && (
                   <div className="rounded-lg border border-border/60 p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1">
@@ -506,7 +681,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                             </TableCell>
                             <TableCell className="text-xs">{h.professional}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={STATUS_STYLE[h.status]}>
+                              <Badge variant="outline" className={bookingStatusStyle(h.status)}>
                                 {STATUS_LABEL[h.status]}
                               </Badge>
                             </TableCell>
@@ -538,7 +713,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-sm font-semibold tabular-nums">{formatBRL(h.priceCents)}</p>
-                            <Badge variant="outline" className={`mt-1 ${STATUS_STYLE[h.status]}`}>
+                            <Badge variant="outline" className={`mt-1 ${bookingStatusStyle(h.status)}`}>
                               {STATUS_LABEL[h.status]}
                             </Badge>
                           </div>
