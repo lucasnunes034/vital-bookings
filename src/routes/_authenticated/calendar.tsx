@@ -730,6 +730,90 @@ function CalendarPage() {
 
 /* ---------------- Grid ---------------- */
 
+function MobileCalendar({
+  tz, days, selectedDay, onSelectDay, bookings, onCreate, onOpenHistory,
+}: {
+  tz: string;
+  days: Date[];
+  selectedDay: string;
+  onSelectDay: (day: string) => void;
+  bookings: any[];
+  onCreate: (day: Date) => void;
+  onOpenHistory: (id: string, customer: string) => void;
+}) {
+  const nowKey = toZonedISODate(new Date(), tz);
+  const selectedDate = days.find((day) => toZonedISODate(day, tz) === selectedDay) ?? days[0];
+  const selectedBookings = bookings
+    .filter((booking) => toZonedISODate(new Date(booking.start_at), tz) === selectedDay)
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+
+  return (
+    <section className="min-w-0 space-y-4 md:hidden" aria-label="Agenda do dia">
+      <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide">
+        {days.map((day) => {
+          const key = toZonedISODate(day, tz);
+          const selected = key === selectedDay;
+          const isToday = key === nowKey;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onSelectDay(key)}
+              className={`flex h-20 w-16 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-lg border transition ${selected ? "border-primary bg-primary text-primary-foreground shadow" : "border-border bg-card text-foreground"}`}
+              aria-pressed={selected}
+              aria-label={formatInTZ(day, tz, { weekday: "long", day: "2-digit", month: "long" })}
+            >
+              <span className="text-[11px] font-medium uppercase">{formatInTZ(day, tz, { weekday: "short" }).replace(".", "")}</span>
+              <span className="text-xl font-semibold leading-none">{formatInTZ(day, tz, { day: "2-digit" })}</span>
+              <span className={`size-1 rounded-full ${isToday ? (selected ? "bg-primary-foreground" : "bg-primary") : "bg-transparent"}`} />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate font-display text-lg font-semibold capitalize">
+            {selectedDate ? formatInTZ(selectedDate, tz, { weekday: "long", day: "2-digit", month: "long" }) : "Agenda"}
+          </h2>
+          <p className="text-xs text-muted-foreground">{selectedBookings.length} agendamento(s)</p>
+        </div>
+        {selectedDate && (
+          <button type="button" onClick={() => onCreate(selectedDate)} className="btn-ghost size-12 !p-0" aria-label="Adicionar neste dia" title="Adicionar neste dia">
+            <Plus className="size-5" />
+          </button>
+        )}
+      </div>
+
+      {selectedBookings.length === 0 ? (
+        <div className="surface-card px-4 py-10 text-center">
+          <CalendarDays className="mx-auto size-7 text-muted-foreground" />
+          <p className="mt-3 text-sm font-medium">Nenhum agendamento neste dia</p>
+          <p className="mt-1 text-xs text-muted-foreground">Use o botão + para adicionar um horário.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {selectedBookings.map((booking) => (
+            <article key={booking.id} className="surface-card grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4">
+              <div className="w-14 shrink-0 border-r border-border pr-3 text-center">
+                <p className="text-sm font-semibold tabular-nums">{formatInTZ(booking.start_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">{formatInTZ(booking.end_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+              <button type="button" onClick={() => onOpenHistory(booking.id, booking.customer_name)} className="min-w-0 text-left">
+                <p className="truncate text-sm font-semibold">{booking.customer_name}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{booking.service?.name ?? "Serviço"}</p>
+                <span className={`mt-2 inline-flex max-w-full items-center rounded-md border px-2 py-1 text-[10px] font-medium ${bookingStatusStyle(booking.status)}`}>
+                  <span className="truncate">{bookingStatusLabel(booking.status)}</span>
+                </span>
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function CalendarGrid({
   tz, days, startHour, rowsCount, timeLabels, avail, breaks, bookings, svcFilter,
   onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory,
