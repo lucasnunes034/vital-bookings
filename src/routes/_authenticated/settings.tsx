@@ -102,7 +102,7 @@ function SettingsPage() {
   const company = companyQ.data;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between">
           <div className="flex items-center gap-4">
@@ -122,7 +122,7 @@ function SettingsPage() {
         </div>
       </header>
 
-      <main className="container-page py-8 space-y-6">
+      <main className="container-page min-w-0 py-8 pb-24 md:pb-8 space-y-6">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">Configurações</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -133,9 +133,9 @@ function SettingsPage() {
         <Tabs
           value={tab}
           onValueChange={(v) => navigate({ to: "/settings", search: { tab: v as TabKey }, replace: true })}
-          className="space-y-6"
+          className="min-w-0 space-y-6"
         >
-          <TabsList className="grid grid-cols-3 sm:grid-cols-9 w-full sm:w-auto">
+          <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap scrollbar-hide sm:w-auto">
             <TabsTrigger value="brand"><Palette className="size-4 mr-1.5" /> Marca</TabsTrigger>
             <TabsTrigger value="appearance"><Paintbrush className="size-4 mr-1.5" /> Aparência</TabsTrigger>
             <TabsTrigger value="gallery"><Images className="size-4 mr-1.5" /> Galeria</TabsTrigger>
@@ -210,13 +210,13 @@ function ServicesTab({ companyId }: { companyId: string }) {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="min-w-0 space-y-4 pb-20 md:pb-0">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
         <p className="text-sm text-muted-foreground">
           {q.data?.length ?? 0} serviço(s) cadastrados
         </p>
-        <button className="btn-primary h-9 text-sm" onClick={() => setCreating(true)}>
-          <Plus className="size-4" /> Novo serviço
+        <button className="btn-primary fixed bottom-6 right-6 z-50 size-14 !p-0 rounded-full shadow-lg md:static md:z-auto md:h-9 md:w-auto md:!px-5 text-sm" onClick={() => setCreating(true)} aria-label="Novo serviço" title="Novo serviço">
+          <Plus className="size-5 md:size-4" /> <span className="hidden md:inline">Novo serviço</span>
         </button>
       </div>
 
@@ -237,7 +237,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
                   {s.duration_minutes} min · {formatBRL(s.price_cents)}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <button className="btn-ghost h-9 !px-3 text-sm" onClick={() => setEditing(s)}>
                   <Pencil className="size-3.5" />
                 </button>

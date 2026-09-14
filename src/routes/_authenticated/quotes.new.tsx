@@ -128,26 +128,26 @@ function NewQuotePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl sticky top-0 z-40">
-        <div className="container-page flex h-16 items-center justify-between">
+        <div className="container-page grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-between">
           <Link to="/quotes" className="btn-ghost h-9 !px-3 text-sm">
             <ArrowLeft className="size-4" /> Orçamentos
           </Link>
-          <button onClick={save} disabled={saving} className="btn-primary h-9 text-sm">
+          <button onClick={save} disabled={saving} className="btn-primary h-9 shrink-0 text-sm">
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-            Salvar orçamento
+            <span className="hidden sm:inline">Salvar orçamento</span>
           </button>
         </div>
       </header>
 
-      <main className="container-page py-10 space-y-6 max-w-5xl">
+      <main className="container-page min-w-0 py-8 md:py-10 space-y-6 max-w-5xl">
         <div>
           <p className="text-xs uppercase tracking-wider text-muted-foreground">Novo</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight mt-1">Novo orçamento</h1>
         </div>
 
-        <section className="surface-card p-6 space-y-4">
+        <section className="surface-card p-4 md:p-6 space-y-4">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Cliente</h2>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="md:col-span-1">
@@ -177,8 +177,8 @@ function NewQuotePage() {
           )}
         </section>
 
-        <section className="surface-card p-6 space-y-4">
-          <div className="flex items-center justify-between">
+        <section className="surface-card p-4 md:p-6 space-y-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Itens do orçamento</h2>
             <button type="button" onClick={() => setItems((a) => [...a, makeItem()])} className="btn-ghost h-8 text-xs">
               <Plus className="size-3.5" /> Adicionar item
@@ -273,7 +273,7 @@ function NewQuotePage() {
           </div>
         </section>
 
-        <section className="surface-card p-6 grid gap-4 md:grid-cols-3">
+        <section className="surface-card p-4 md:p-6 grid gap-4 md:grid-cols-3">
           <div>
             <label className="text-xs text-muted-foreground">Data de validade</label>
             <input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} className="input mt-1 w-full" />

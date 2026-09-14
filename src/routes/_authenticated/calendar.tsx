@@ -19,7 +19,7 @@ import {
   formatInTZ, getZonedParts, toZonedISODate, zonedDayOfWeek, zonedWallToUTC,
 } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
-import { bookingStatusStyle } from "@/lib/booking-status";
+import { bookingStatusLabel, bookingStatusStyle } from "@/lib/booking-status";
 import { NewBookingDialog } from "@/components/new-booking-dialog";
 
 type ViewMode = "day" | "week";
@@ -131,6 +131,15 @@ function CalendarPage() {
     }
     return list;
   }, [anchor, view, tz]);
+  const [selectedMobileDay, setSelectedMobileDay] = useState("");
+
+  useEffect(() => {
+    const keys = days.map((day) => toZonedISODate(day, tz));
+    const today = toZonedISODate(new Date(), tz);
+    if (!keys.includes(selectedMobileDay)) {
+      setSelectedMobileDay(keys.includes(today) ? today : (keys[0] ?? ""));
+    }
+  }, [days, selectedMobileDay, tz]);
 
   const rangeStart = useMemo(() => {
     const p = getZonedParts(days[0], tz);
@@ -480,37 +489,37 @@ function CalendarPage() {
   const canInteract = !!proId;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
-        <div className="container-page flex h-16 items-center justify-between">
-          <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+        <div className="container-page grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
+          <Link to="/dashboard" className="min-w-0 text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
             <ArrowLeft className="size-4" /> Painel
           </Link>
-          <p className="text-sm text-muted-foreground">{companyQ.data.name}</p>
+          <p className="max-w-32 truncate text-sm text-muted-foreground sm:max-w-none">{companyQ.data.name}</p>
         </div>
       </header>
 
-      <main className="container-page py-8 space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+      <main className="container-page min-w-0 py-8 pb-24 md:pb-8 space-y-5">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap md:items-end md:justify-between">
+          <div className="min-w-0">
             <h1 className="font-display text-3xl font-semibold tracking-tight">Calendário</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Arraste um card para remarcar. Clique num horário livre para criar.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="inline-flex rounded-md border border-border overflow-hidden">
-              <button onClick={() => setView("day")} className={`px-3 h-9 text-sm inline-flex items-center gap-1 ${view === "day" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
+          <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:items-center">
+            <div className="inline-flex w-full rounded-md border border-border overflow-hidden md:w-auto">
+               <button onClick={() => setView("day")} className={`h-12 flex-1 px-3 text-sm inline-flex items-center justify-center gap-1 md:h-9 md:flex-none ${view === "day" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
                 <CalendarDays className="size-3.5" /> Dia
               </button>
-              <button onClick={() => setView("week")} className={`px-3 h-9 text-sm inline-flex items-center gap-1 ${view === "week" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
+               <button onClick={() => setView("week")} className={`h-12 flex-1 px-3 text-sm inline-flex items-center justify-center gap-1 md:h-9 md:flex-none ${view === "week" ? "bg-primary text-primary-foreground" : "hover:bg-accent"}`}>
                 <CalendarRange className="size-3.5" /> Semana
               </button>
             </div>
-            <div className="inline-flex rounded-md border border-border overflow-hidden">
-              <button onClick={() => shift(-1)} className="px-2 h-9 hover:bg-accent" aria-label="Anterior"><ChevronLeft className="size-4" /></button>
-              <button onClick={goToday} className="px-3 h-9 text-sm border-x border-border hover:bg-accent">Hoje</button>
-              <button onClick={() => shift(1)} className="px-2 h-9 hover:bg-accent" aria-label="Próximo"><ChevronRight className="size-4" /></button>
+            <div className="inline-flex w-full rounded-md border border-border overflow-hidden md:w-auto">
+              <button onClick={() => shift(-1)} className="h-12 flex-1 px-2 hover:bg-accent md:h-9 md:flex-none" aria-label="Anterior"><ChevronLeft className="size-4" /></button>
+              <button onClick={goToday} className="h-12 flex-1 border-x border-border px-3 text-sm hover:bg-accent md:h-9 md:flex-none">Hoje</button>
+              <button onClick={() => shift(1)} className="h-12 flex-1 px-2 hover:bg-accent md:h-9 md:flex-none" aria-label="Próximo"><ChevronRight className="size-4" /></button>
             </div>
             <button onClick={() => setManualBooking(true)} className="hidden md:inline-flex btn-primary h-9 text-sm">
               <Plus className="size-4" /> Novo agendamento
@@ -518,17 +527,17 @@ function CalendarPage() {
           </div>
         </div>
 
-        <div className="surface-card p-4 grid gap-3 md:grid-cols-[1fr_1fr_auto] items-end">
-          <div className="space-y-1.5">
+        <div className="surface-card flex w-full min-w-0 flex-col gap-4 p-4 md:grid md:grid-cols-[1fr_1fr_auto] md:items-end md:gap-3">
+          <div className="w-full min-w-0 space-y-1.5">
             <Label className="text-xs text-muted-foreground">Profissional</Label>
-            <select value={proId} onChange={(e) => setPro(e.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+            <select value={proId} onChange={(e) => setPro(e.target.value)} className="h-12 w-full rounded-md border border-input bg-background px-3 text-base md:h-10 md:text-sm">
               {prosQ.data?.length === 0 && <option value="">Nenhum profissional</option>}
               {prosQ.data?.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="space-y-1.5">
+          <div className="w-full min-w-0 space-y-1.5">
             <Label className="text-xs text-muted-foreground">Serviço (filtro)</Label>
-            <select value={svcId} onChange={(e) => setSvc(e.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+            <select value={svcId} onChange={(e) => setSvc(e.target.value)} className="h-12 w-full rounded-md border border-input bg-background px-3 text-base md:h-10 md:text-sm">
               <option value="">Todos</option>
               {svcsQ.data?.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
@@ -543,23 +552,34 @@ function CalendarPage() {
         ) : availQ.isLoading || bookingsQ.isLoading ? (
           <div className="py-10 flex justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>
         ) : (
-          <CalendarGrid
-            tz={tz}
-            days={days}
-            startHour={startHour}
-            rowsCount={rowsCount}
-            timeLabels={timeLabels}
-            avail={availQ.data?.avail ?? []}
-            breaks={availQ.data?.breaks ?? []}
-            bookings={visibleBookings}
-            svcFilter={svcId}
-            onClickFreeSlot={(start) => setCreateFor({ start })}
-            onDragStart={(id, durationMin) => { dragRef.current = { id, durationMin }; }}
-            onDragEnd={() => { dragRef.current = null; setDragOverKey(null); }}
-            dragOverKey={dragOverKey}
-            setDragOverKey={setDragOverKey}
-            onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
-            onDrop={(start) => {
+          <>
+            <MobileCalendar
+              tz={tz}
+              days={days}
+              selectedDay={selectedMobileDay}
+              onSelectDay={setSelectedMobileDay}
+              bookings={visibleBookings}
+              onCreate={(day) => setCreateFor({ start: day })}
+              onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
+            />
+            <div className="hidden md:block">
+              <CalendarGrid
+                tz={tz}
+                days={days}
+                startHour={startHour}
+                rowsCount={rowsCount}
+                timeLabels={timeLabels}
+                avail={availQ.data?.avail ?? []}
+                breaks={availQ.data?.breaks ?? []}
+                bookings={visibleBookings}
+                svcFilter={svcId}
+                onClickFreeSlot={(start) => setCreateFor({ start })}
+                onDragStart={(id, durationMin) => { dragRef.current = { id, durationMin }; }}
+                onDragEnd={() => { dragRef.current = null; setDragOverKey(null); }}
+                dragOverKey={dragOverKey}
+                setDragOverKey={setDragOverKey}
+                onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
+                onDrop={(start) => {
               const d = dragRef.current;
               dragRef.current = null;
               setDragOverKey(null);
@@ -582,16 +602,17 @@ function CalendarPage() {
                 customer: booking.customer_name,
                 service: booking.service?.name ?? "",
               });
-            }}
-          />
+                }}
+              />
+            </div>
+          </>
         )}
       </main>
 
       <button
         onClick={() => setManualBooking(true)}
         aria-label="Novo agendamento"
-        className="md:hidden fixed bottom-6 right-5 z-50 size-14 rounded-full text-white shadow-lg flex items-center justify-center active:scale-95 transition"
-        style={{ backgroundColor: "#16a34a" }}
+        className="md:hidden fixed bottom-6 right-6 z-50 size-14 rounded-full bg-success text-success-foreground shadow-lg flex items-center justify-center active:scale-95 transition"
       >
         <Plus className="size-7" strokeWidth={2.5} />
       </button>
@@ -708,6 +729,90 @@ function CalendarPage() {
 }
 
 /* ---------------- Grid ---------------- */
+
+function MobileCalendar({
+  tz, days, selectedDay, onSelectDay, bookings, onCreate, onOpenHistory,
+}: {
+  tz: string;
+  days: Date[];
+  selectedDay: string;
+  onSelectDay: (day: string) => void;
+  bookings: any[];
+  onCreate: (day: Date) => void;
+  onOpenHistory: (id: string, customer: string) => void;
+}) {
+  const nowKey = toZonedISODate(new Date(), tz);
+  const selectedDate = days.find((day) => toZonedISODate(day, tz) === selectedDay) ?? days[0];
+  const selectedBookings = bookings
+    .filter((booking) => toZonedISODate(new Date(booking.start_at), tz) === selectedDay)
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+
+  return (
+    <section className="min-w-0 space-y-4 md:hidden" aria-label="Agenda do dia">
+      <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide">
+        {days.map((day) => {
+          const key = toZonedISODate(day, tz);
+          const selected = key === selectedDay;
+          const isToday = key === nowKey;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onSelectDay(key)}
+              className={`flex h-20 w-16 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-lg border transition ${selected ? "border-primary bg-primary text-primary-foreground shadow" : "border-border bg-card text-foreground"}`}
+              aria-pressed={selected}
+              aria-label={formatInTZ(day, tz, { weekday: "long", day: "2-digit", month: "long" })}
+            >
+              <span className="text-[11px] font-medium uppercase">{formatInTZ(day, tz, { weekday: "short" }).replace(".", "")}</span>
+              <span className="text-xl font-semibold leading-none">{formatInTZ(day, tz, { day: "2-digit" })}</span>
+              <span className={`size-1 rounded-full ${isToday ? (selected ? "bg-primary-foreground" : "bg-primary") : "bg-transparent"}`} />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+        <div className="min-w-0">
+          <h2 className="truncate font-display text-lg font-semibold capitalize">
+            {selectedDate ? formatInTZ(selectedDate, tz, { weekday: "long", day: "2-digit", month: "long" }) : "Agenda"}
+          </h2>
+          <p className="text-xs text-muted-foreground">{selectedBookings.length} agendamento(s)</p>
+        </div>
+        {selectedDate && (
+          <button type="button" onClick={() => onCreate(selectedDate)} className="btn-ghost size-12 !p-0" aria-label="Adicionar neste dia" title="Adicionar neste dia">
+            <Plus className="size-5" />
+          </button>
+        )}
+      </div>
+
+      {selectedBookings.length === 0 ? (
+        <div className="surface-card px-4 py-10 text-center">
+          <CalendarDays className="mx-auto size-7 text-muted-foreground" />
+          <p className="mt-3 text-sm font-medium">Nenhum agendamento neste dia</p>
+          <p className="mt-1 text-xs text-muted-foreground">Use o botão + para adicionar um horário.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {selectedBookings.map((booking) => (
+            <article key={booking.id} className="surface-card grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4">
+              <div className="w-14 shrink-0 border-r border-border pr-3 text-center">
+                <p className="text-sm font-semibold tabular-nums">{formatInTZ(booking.start_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
+                <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">{formatInTZ(booking.end_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+              <button type="button" onClick={() => onOpenHistory(booking.id, booking.customer_name)} className="min-w-0 text-left">
+                <p className="truncate text-sm font-semibold">{booking.customer_name}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{booking.service?.name ?? "Serviço"}</p>
+                <span className={`mt-2 inline-flex max-w-full items-center rounded-md border px-2 py-1 text-[10px] font-medium ${bookingStatusStyle(booking.status)}`}>
+                  <span className="truncate">{bookingStatusLabel(booking.status)}</span>
+                </span>
+              </button>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 function CalendarGrid({
   tz, days, startHour, rowsCount, timeLabels, avail, breaks, bookings, svcFilter,

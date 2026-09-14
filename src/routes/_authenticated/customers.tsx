@@ -307,7 +307,7 @@ function CustomersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between">
           <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -317,7 +317,7 @@ function CustomersPage() {
         </div>
       </header>
 
-      <main className="container-page py-10 space-y-6">
+      <main className="container-page min-w-0 py-10 space-y-6">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Clientes</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -515,7 +515,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
             </div>
 
             <Tabs defaultValue="contato" className="w-full">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap scrollbar-hide [&>*]:flex-1">
                 <TabsTrigger value="contato">Contato</TabsTrigger>
                 <TabsTrigger value="historico">Histórico de Serviços</TabsTrigger>
               </TabsList>

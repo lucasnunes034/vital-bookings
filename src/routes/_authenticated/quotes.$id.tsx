@@ -108,9 +108,9 @@ function QuoteViewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl sticky top-0 z-40 print:hidden">
-        <div className="container-page flex h-16 items-center justify-between gap-2">
+        <div className="container-page grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:justify-between">
           <Link to="/quotes" className="btn-ghost h-9 !px-3 text-sm">
             <ArrowLeft className="size-4" /> Orçamentos
           </Link>
@@ -156,7 +156,7 @@ function QuoteViewPage() {
         </div>
       </div>
 
-      <main className="container-page py-10 max-w-4xl">
+      <main className="container-page min-w-0 py-8 md:py-10 max-w-4xl">
         <QuoteDocument quote={quote} items={items} company={quote.company} />
       </main>
     </div>
@@ -165,8 +165,8 @@ function QuoteViewPage() {
 
 export function QuoteDocument({ quote, items, company }: { quote: any; items: any[]; company: any }) {
   return (
-    <article className="surface-card p-8 md:p-12 print:shadow-none print:border-0 space-y-8">
-      <header className="flex items-start justify-between gap-6 border-b border-border/60 pb-6">
+    <article className="surface-card p-4 sm:p-8 md:p-12 print:shadow-none print:border-0 space-y-8">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-b border-border/60 pb-6 sm:flex sm:justify-between sm:gap-6">
         <div className="flex items-center gap-3 min-w-0">
           {company?.logo_url ? (
             <img src={company.logo_url} alt={company?.name} className="size-14 rounded-md object-cover" />

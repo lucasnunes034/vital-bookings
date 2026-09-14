@@ -177,7 +177,7 @@ function BookingsPage() {
   if (!companyQ.data) { navigate({ to: "/onboarding", replace: true }); return null; }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between">
           <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
@@ -187,7 +187,7 @@ function BookingsPage() {
         </div>
       </header>
 
-      <main className="container-page py-10 space-y-6">
+      <main className="container-page min-w-0 py-10 space-y-6">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Agendamentos</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -207,36 +207,36 @@ function BookingsPage() {
           ))}
         </div>
 
-        <div className="surface-card p-4 grid gap-3 md:grid-cols-[1fr_1fr_1fr_1fr_auto] items-end">
-          <div className="space-y-1.5">
+        <div className="surface-card flex w-full min-w-0 flex-col gap-4 p-4 md:grid md:grid-cols-[1fr_1fr_1fr_1fr_auto] md:items-end md:gap-3">
+          <div className="w-full min-w-0 space-y-1.5">
             <Label className="text-xs text-muted-foreground inline-flex items-center gap-1"><Search className="size-3" /> Cliente</Label>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, telefone ou e-mail" />
+            <Input className="h-12 md:h-10" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, telefone ou e-mail" />
           </div>
-          <div className="space-y-1.5">
+          <div className="w-full min-w-0 space-y-1.5">
             <Label className="text-xs text-muted-foreground">Profissional</Label>
-            <select value={proFilter} onChange={(e) => setProFilter(e.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+            <select value={proFilter} onChange={(e) => setProFilter(e.target.value)} className="h-12 w-full rounded-md border border-input bg-background px-3 text-base md:h-10 md:text-sm">
               <option value="">Todos</option>
               {proQ.data?.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="space-y-1.5">
+          <div className="w-full min-w-0 space-y-1.5">
             <Label className="text-xs text-muted-foreground">Serviço</Label>
-            <select value={svcFilter} onChange={(e) => setSvcFilter(e.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+            <select value={svcFilter} onChange={(e) => setSvcFilter(e.target.value)} className="h-12 w-full rounded-md border border-input bg-background px-3 text-base md:h-10 md:text-sm">
               <option value="">Todos</option>
               {svcQ.data?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex w-full flex-col gap-4 sm:grid sm:grid-cols-2 sm:gap-2">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">De</Label>
-              <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+              <Input className="h-12 md:h-10" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Até</Label>
-              <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+              <Input className="h-12 md:h-10" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
             </div>
           </div>
-          <button onClick={clearFilters} className="btn-ghost h-10 !px-3 text-xs inline-flex items-center gap-1">
+          <button onClick={clearFilters} className="btn-ghost h-12 w-full !px-3 text-sm md:h-10 md:w-auto md:text-xs inline-flex items-center gap-1">
             <Filter className="size-3.5" /> Limpar
           </button>
         </div>

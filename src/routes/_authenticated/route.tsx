@@ -19,10 +19,10 @@ function AuthedShell() {
     },
   });
   return (
-    <>
+    <div className="w-full min-w-0 overflow-x-hidden">
       <CompanyThemeApplier companyId={q.data} />
       <Outlet />
-    </>
+    </div>
   );
 }
 

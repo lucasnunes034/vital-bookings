@@ -73,7 +73,7 @@ function AuthPage() {
             </div>
 
             <Tabs defaultValue="signin">
-              <TabsList className="grid grid-cols-2 w-full">
+              <TabsList className="w-full justify-start overflow-x-auto whitespace-nowrap scrollbar-hide [&>*]:flex-1">
                 <TabsTrigger value="signin">Entrar</TabsTrigger>
                 <TabsTrigger value="signup">Criar conta</TabsTrigger>
               </TabsList>
