@@ -20,6 +20,7 @@ import {
 } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
 import { bookingStatusStyle } from "@/lib/booking-status";
+import { NewBookingDialog } from "@/components/new-booking-dialog";
 
 type ViewMode = "day" | "week";
 
