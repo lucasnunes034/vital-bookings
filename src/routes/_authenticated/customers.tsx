@@ -52,7 +52,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { normalizePhone as normalizeWa } from "@/lib/whatsapp";
 
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+import {
+  BOOKING_STATUS_LABEL,
+  bookingStatusStyle,
+  type BookingStatus,
+} from "@/lib/booking-status";
+import { PAYMENT_METHOD_LABEL, PAYMENT_METHOD_ORDER, formatPaymentMethod, type PaymentMethodKind } from "@/lib/payment-methods";
+import { Textarea } from "@/components/ui/textarea";
+import { DialogFooter } from "@/components/ui/dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, CreditCard, FileText } from "lucide-react";
+import { toast } from "sonner";
+
+type Status = BookingStatus;
+
+export type SavedCustomer = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  service_notes: string | null;
+  preferred_payment_method: PaymentMethodKind | null;
+};
 
 type BookingRow = {
   id: string;
