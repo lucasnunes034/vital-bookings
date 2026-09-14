@@ -387,14 +387,8 @@ function ServiceDialog({
             </div>
           </Field>
         </div>
-        <DialogFooter>
-          <button className="btn-ghost h-10 text-sm" onClick={onClose}>Cancelar</button>
-          <button className="btn-primary h-10 text-sm" onClick={() => save.mutate()} disabled={save.isPending}>
-            {save.isPending ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Salvar
-          </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </ResponsiveDialog>
   );
 }
 
