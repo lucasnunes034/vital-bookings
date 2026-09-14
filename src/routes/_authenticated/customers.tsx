@@ -170,29 +170,46 @@ function CustomersPage() {
     },
   });
 
+  const savedQ = useQuery({
+    enabled: !!companyQ.data?.id,
+    queryKey: ["customers-saved", companyQ.data?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("customers")
+        .select("id, name, phone, email, address, service_notes, preferred_payment_method")
+        .eq("company_id", companyQ.data!.id)
+        .order("created_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return (data ?? []) as unknown as SavedCustomer[];
+    },
+  });
+
   const customers = useMemo<Customer[]>(() => {
     const list = bookingsQ.data ?? [];
     const map = new Map<string, Customer>();
     const now = Date.now();
+    const blank = (key: string, name: string, phone: string | null, email: string | null): Customer => ({
+      key,
+      name: name?.trim() || "Sem nome",
+      phone,
+      email,
+      total: 0,
+      completed: 0,
+      confirmed: 0,
+      pending: 0,
+      cancelled: 0,
+      lastVisit: null,
+      nextVisit: null,
+      totalSpentCents: 0,
+      bookings: [],
+      saved: null,
+    });
     for (const b of list) {
       const key = customerKey(b);
       let c = map.get(key);
       if (!c) {
-        c = {
-          key,
-          name: b.customer_name?.trim() || "Sem nome",
-          phone: b.customer_phone,
-          email: b.customer_email,
-          total: 0,
-          completed: 0,
-          confirmed: 0,
-          pending: 0,
-          cancelled: 0,
-          lastVisit: null,
-          nextVisit: null,
-          totalSpentCents: 0,
-          bookings: [],
-        };
+        c = blank(key, b.customer_name ?? "", b.customer_phone, b.customer_email);
         map.set(key, c);
       }
       c.bookings.push(b);
