@@ -362,6 +362,7 @@ function CalendarPage() {
 
   // Create booking dialog state
   const [createFor, setCreateFor] = useState<{ start: Date } | null>(null);
+  const [manualBooking, setManualBooking] = useState(false);
 
   // Pending drag-drop move awaiting confirmation
   const [pendingMove, setPendingMove] = useState<
