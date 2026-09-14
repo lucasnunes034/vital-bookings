@@ -158,7 +158,9 @@ function BookingsPage() {
     },
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: ["bookings"] });
-      const msg = v.status === "confirmed" ? "Agendamento confirmado" : v.status === "cancelled" ? "Agendamento recusado" : "Marcado como concluído";
+      const msg = v.status === "cancelled"
+        ? "Agendamento cancelado"
+        : `Status alterado para “${BOOKING_STATUS_LABEL[v.status]}”`;
       toast.success(msg);
       setCancelId(null);
       setCancelReason("");
