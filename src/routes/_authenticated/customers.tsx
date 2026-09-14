@@ -232,6 +232,19 @@ function CustomersPage() {
         if (!c.nextVisit || t < new Date(c.nextVisit).getTime()) c.nextVisit = b.start_at;
       }
     }
+    for (const s of savedQ.data ?? []) {
+      const digits = (s.phone || "").replace(/\D/g, "");
+      const key = digits ? `p:${digits}` : s.email ? `e:${s.email.trim().toLowerCase()}` : `n:${(s.name || "sem-nome").trim().toLowerCase()}`;
+      let c = map.get(key);
+      if (!c) {
+        c = blank(key, s.name, s.phone, s.email);
+        map.set(key, c);
+      }
+      c.saved = s;
+      if (s.name?.trim()) c.name = s.name.trim();
+      if (!c.phone && s.phone) c.phone = s.phone;
+      if (!c.email && s.email) c.email = s.email;
+    }
     return Array.from(map.values()).sort((a, b) => {
       const aT = a.nextVisit ? new Date(a.nextVisit).getTime() : a.lastVisit ? -new Date(a.lastVisit).getTime() : 0;
       const bT = b.nextVisit ? new Date(b.nextVisit).getTime() : b.lastVisit ? -new Date(b.lastVisit).getTime() : 0;
