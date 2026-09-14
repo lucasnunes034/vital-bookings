@@ -521,7 +521,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                             </TableCell>
                             <TableCell className="text-xs">{h.professional}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={STATUS_STYLE[h.status]}>
+                              <Badge variant="outline" className={bookingStatusStyle(h.status)}>
                                 {STATUS_LABEL[h.status]}
                               </Badge>
                             </TableCell>
@@ -553,7 +553,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                           </div>
                           <div className="text-right shrink-0">
                             <p className="text-sm font-semibold tabular-nums">{formatBRL(h.priceCents)}</p>
-                            <Badge variant="outline" className={`mt-1 ${STATUS_STYLE[h.status]}`}>
+                            <Badge variant="outline" className={`mt-1 ${bookingStatusStyle(h.status)}`}>
                               {STATUS_LABEL[h.status]}
                             </Badge>
                           </div>
