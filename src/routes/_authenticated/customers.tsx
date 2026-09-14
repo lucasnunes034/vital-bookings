@@ -104,6 +104,7 @@ type Customer = {
   nextVisit: string | null;
   totalSpentCents: number;
   bookings: BookingRow[];
+  saved: SavedCustomer | null;
 };
 
 export const Route = createFileRoute("/_authenticated/customers")({
