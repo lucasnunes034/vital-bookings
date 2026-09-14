@@ -37,7 +37,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
 
-type Status = "pending" | "confirmed" | "cancelled" | "completed";
+import {
+  BOOKING_STATUSES,
+  BOOKING_STATUS_LABEL,
+  BOOKING_STATUS_LABEL_PLURAL,
+  BOOKING_STATUS_NEXT,
+  bookingStatusStyle,
+  type BookingStatus,
+} from "@/lib/booking-status";
+
+type Status = BookingStatus;
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({
