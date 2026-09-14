@@ -141,6 +141,11 @@ function QuoteViewPage() {
           style={{ backgroundColor: "#25D366" }}>
           <MessageCircle className="size-5" /> Enviar por WhatsApp
         </button>
+        {quote.status !== "accepted" && (
+          <button onClick={() => approve.mutate()} disabled={approve.isPending} className="btn-primary w-full h-12 text-sm justify-center">
+            {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
+          </button>
+        )}
         <div className="grid grid-cols-2 gap-2">
           <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
             {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público
