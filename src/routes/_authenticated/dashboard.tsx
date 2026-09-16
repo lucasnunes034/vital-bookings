@@ -5,6 +5,7 @@ import { Calendar, LogOut, Loader2, Clock, BarChart3, ExternalLink, Inbox, Setti
 import { toast } from "sonner";
 
 import { NewBookingDialog } from "@/components/new-booking-dialog";
+import { InstallAppBanner } from "@/components/install-app-banner";
 import { supabase } from "@/integrations/supabase/client";
 import { zonedDayRangeUTC, formatInTZ } from "@/lib/timezone";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
@@ -204,6 +205,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
       </button>
 
       <NewBookingDialog open={newBooking} onOpenChange={setNewBooking} companyId={company.id} tz={tz} />
+      <InstallAppBanner />
     </div>
   );
 }
