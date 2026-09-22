@@ -204,7 +204,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
         <Plus className="size-7" strokeWidth={2.5} />
       </button>
 
-      <NewBookingDialog open={newBooking} onOpenChange={setNewBooking} companyId={company.id} tz={tz} />
+      <NewBookingDialog open={newBooking} onOpenChange={setNewBooking} companyId={company.id} companyName={company.name} tz={tz} />
       <InstallAppBanner />
     </div>
   );
