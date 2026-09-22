@@ -581,6 +581,7 @@ function CalendarPage() {
                 dragOverKey={dragOverKey}
                 setDragOverKey={setDragOverKey}
                 onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
+                companyName={companyQ.data.name}
                 onDrop={(start) => {
               const d = dragRef.current;
               dragRef.current = null;
