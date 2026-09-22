@@ -561,6 +561,7 @@ function CalendarPage() {
               bookings={visibleBookings}
               onCreate={(day) => setCreateFor({ start: day })}
               onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
+              companyName={companyQ.data.name}
             />
             <div className="hidden md:block">
               <CalendarGrid
