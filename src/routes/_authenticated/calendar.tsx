@@ -21,6 +21,7 @@ import {
 import { mapBookingError } from "@/lib/booking-errors";
 import { bookingStatusLabel, bookingStatusStyle } from "@/lib/booking-status";
 import { NewBookingDialog } from "@/components/new-booking-dialog";
+import { BookingWhatsAppButton } from "@/components/booking-whatsapp-button";
 
 type ViewMode = "day" | "week";
 
@@ -561,6 +562,7 @@ function CalendarPage() {
               bookings={visibleBookings}
               onCreate={(day) => setCreateFor({ start: day })}
               onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
+              companyName={companyQ.data.name}
             />
             <div className="hidden md:block">
               <CalendarGrid
@@ -579,6 +581,7 @@ function CalendarPage() {
                 dragOverKey={dragOverKey}
                 setDragOverKey={setDragOverKey}
                 onOpenHistory={(id, customer) => setHistoryFor({ id, customer })}
+                companyName={companyQ.data.name}
                 onDrop={(start) => {
               const d = dragRef.current;
               dragRef.current = null;
@@ -621,6 +624,7 @@ function CalendarPage() {
         open={manualBooking}
         onOpenChange={setManualBooking}
         companyId={companyQ.data.id}
+        companyName={companyQ.data.name}
         tz={tz}
       />
 
@@ -731,7 +735,7 @@ function CalendarPage() {
 /* ---------------- Grid ---------------- */
 
 function MobileCalendar({
-  tz, days, selectedDay, onSelectDay, bookings, onCreate, onOpenHistory,
+  tz, days, selectedDay, onSelectDay, bookings, onCreate, onOpenHistory, companyName,
 }: {
   tz: string;
   days: Date[];
@@ -740,6 +744,7 @@ function MobileCalendar({
   bookings: any[];
   onCreate: (day: Date) => void;
   onOpenHistory: (id: string, customer: string) => void;
+  companyName: string;
 }) {
   const nowKey = toZonedISODate(new Date(), tz);
   const selectedDate = days.find((day) => toZonedISODate(day, tz) === selectedDay) ?? days[0];
@@ -794,7 +799,7 @@ function MobileCalendar({
       ) : (
         <div className="space-y-3">
           {selectedBookings.map((booking) => (
-            <article key={booking.id} className="surface-card grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4">
+            <article key={booking.id} className="surface-card grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3 p-4">
               <div className="w-14 shrink-0 border-r border-border pr-3 text-center">
                 <p className="text-sm font-semibold tabular-nums">{formatInTZ(booking.start_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
                 <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">{formatInTZ(booking.end_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
@@ -806,6 +811,9 @@ function MobileCalendar({
                   <span className="truncate">{bookingStatusLabel(booking.status)}</span>
                 </span>
               </button>
+              <div className="flex items-start">
+                <BookingWhatsAppButton booking={booking} companyName={companyName} tz={tz} size="xs" />
+              </div>
             </article>
           ))}
         </div>
@@ -816,7 +824,7 @@ function MobileCalendar({
 
 function CalendarGrid({
   tz, days, startHour, rowsCount, timeLabels, avail, breaks, bookings, svcFilter,
-  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory,
+  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory, companyName,
 }: {
   tz: string;
   days: Date[];
@@ -834,6 +842,7 @@ function CalendarGrid({
   dragOverKey: string | null;
   setDragOverKey: (k: string | null) => void;
   onOpenHistory: (id: string, customer: string) => void;
+  companyName: string;
 }) {
   const now = new Date();
 
@@ -923,6 +932,7 @@ function CalendarGrid({
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onOpenHistory={onOpenHistory}
+        companyName={companyName}
       />
     </div>
   );
@@ -972,7 +982,7 @@ function RowFragment({
 }
 
 function BookingsOverlay({
-  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd, onOpenHistory,
+  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd, onOpenHistory, companyName,
 }: {
   tz: string;
   days: Date[];
@@ -983,6 +993,7 @@ function BookingsOverlay({
   onDragStart: (id: string, durationMin: number) => void;
   onDragEnd: () => void;
   onOpenHistory: (id: string, customer: string) => void;
+  companyName: string;
 }) {
   // Total grid width uses same template as parent — for overlay we compute
   // percent-based left/top over a mirrored grid below the visible one.
@@ -1049,12 +1060,15 @@ function BookingsOverlay({
                       ev.stopPropagation();
                       onOpenHistory(b.id, b.customer_name);
                     }}
-                    className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm p-0.5 hover:bg-background/40"
+                    className="absolute top-0.5 right-6 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm p-0.5 hover:bg-background/40"
                     aria-label="Ver histórico de remarcações"
                     title="Histórico"
                   >
                     <History className="size-3" />
                   </button>
+                  <div className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <BookingWhatsAppButton booking={b} companyName={companyName} tz={tz} size="xs" label="" />
+                  </div>
                 </div>
               );
             })}

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { zonedWallToUTC, getZonedParts, formatInTZ } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
+import { buildBookingWhatsAppMessage, buildWhatsappUrl } from "@/lib/whatsapp";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   companyId: string;
+  companyName?: string;
   tz: string;
   initialStart?: Date | null;
 };
@@ -23,7 +25,7 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function NewBookingDialog({ open, onOpenChange, companyId, tz, initialStart }: Props) {
+export function NewBookingDialog({ open, onOpenChange, companyId, companyName, tz, initialStart }: Props) {
   const qc = useQueryClient();
 
   const prosQ = useQuery({
@@ -140,14 +142,37 @@ export function NewBookingDialog({ open, onOpenChange, companyId, tz, initialSta
           customer_email: form.customer_email.trim() || null,
           notes: form.notes.trim() || null,
         })
-        .select("id")
+        .select("id, start_at, customer_name, customer_phone, service:services(name)")
         .single();
       if (insert.error) throw insert.error;
       const upd = await supabase.from("bookings").update({ status: "confirmed" }).eq("id", insert.data.id);
       if (upd.error) throw upd.error;
+      return insert.data;
     },
-    onSuccess: () => {
-      toast.success("Agendamento confirmado");
+    onSuccess: (data) => {
+      toast.success("Agendamento salvo com sucesso", {
+        action: {
+          label: "Avisar Cliente",
+          onClick: () => {
+            const message = buildBookingWhatsAppMessage({
+              customerName: data.customer_name,
+              companyName: companyName || "nossa empresa",
+              serviceName: data.service?.name || "Serviço",
+              startAt: data.start_at,
+              tz,
+            });
+            const url = buildWhatsappUrl(data.customer_phone, message);
+            const popup = window.open(url, "_blank", "noopener,noreferrer");
+            const blocked = !popup || popup.closed || typeof popup.closed === "undefined";
+            if (blocked) {
+              void navigator.clipboard.writeText(url).then(
+                () => toast.success("Link do WhatsApp copiado", { description: "O navegador bloqueou o popup. Cole no app." }),
+                () => toast.error("Não foi possível abrir o WhatsApp")
+              );
+            }
+          },
+        },
+      });
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["bookings"] });

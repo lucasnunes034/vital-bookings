@@ -36,6 +36,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WhatsappMenu } from "@/components/whatsapp-actions";
+import { BookingWhatsAppButton } from "@/components/booking-whatsapp-button";
 
 import {
   BOOKING_STATUSES,
@@ -282,7 +283,7 @@ function BookingsPage() {
                       <Eye className="size-3.5" /> Detalhes
                     </button>
                     {companyQ.data && (
-                      <WhatsappMenu booking={b} company={companyQ.data} />
+                      <BookingWhatsAppButton booking={b} companyName={companyQ.data.name} tz={tz} />
                     )}
                     {tab !== "completed" && tab !== "cancelled" && (
                       <button onClick={() => setRescheduleId(b.id)} className="btn-ghost h-9 !px-3 text-xs">
