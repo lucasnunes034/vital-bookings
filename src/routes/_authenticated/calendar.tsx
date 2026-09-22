@@ -732,7 +732,7 @@ function CalendarPage() {
 /* ---------------- Grid ---------------- */
 
 function MobileCalendar({
-  tz, days, selectedDay, onSelectDay, bookings, onCreate, onOpenHistory,
+  tz, days, selectedDay, onSelectDay, bookings, onCreate, onOpenHistory, companyName,
 }: {
   tz: string;
   days: Date[];
@@ -741,6 +741,7 @@ function MobileCalendar({
   bookings: any[];
   onCreate: (day: Date) => void;
   onOpenHistory: (id: string, customer: string) => void;
+  companyName: string;
 }) {
   const nowKey = toZonedISODate(new Date(), tz);
   const selectedDate = days.find((day) => toZonedISODate(day, tz) === selectedDay) ?? days[0];
