@@ -61,7 +61,7 @@ function ReportsPage() {
         <SummaryCard icon={Receipt} label="Ticket Médio" value={brl(avg)} />
       </div>
 
-      <Card>
+      <Card className="print:break-inside-avoid">
         <CardHeader>
           <CardTitle className="text-base">
             {period === "this_year" ? "Faturamento por mês" : "Faturamento por semana"}
@@ -91,7 +91,7 @@ function ReportsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="print:break-inside-avoid">
         <CardHeader>
           <CardTitle className="text-base">Receitas do período</CardTitle>
         </CardHeader>
