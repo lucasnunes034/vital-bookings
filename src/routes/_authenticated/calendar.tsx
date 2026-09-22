@@ -621,6 +621,7 @@ function CalendarPage() {
         open={manualBooking}
         onOpenChange={setManualBooking}
         companyId={companyQ.data.id}
+        companyName={companyQ.data.name}
         tz={tz}
       />
 
