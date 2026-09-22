@@ -930,6 +930,7 @@ function CalendarGrid({
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
         onOpenHistory={onOpenHistory}
+        companyName={companyQ.data.name}
       />
     </div>
   );
