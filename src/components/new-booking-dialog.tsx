@@ -25,7 +25,7 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
-export function NewBookingDialog({ open, onOpenChange, companyId, tz, initialStart }: Props) {
+export function NewBookingDialog({ open, onOpenChange, companyId, companyName, tz, initialStart }: Props) {
   const qc = useQueryClient();
 
   const prosQ = useQuery({
