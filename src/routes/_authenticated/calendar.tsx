@@ -823,7 +823,7 @@ function MobileCalendar({
 
 function CalendarGrid({
   tz, days, startHour, rowsCount, timeLabels, avail, breaks, bookings, svcFilter,
-  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory,
+  onClickFreeSlot, onDragStart, onDragEnd, onDrop, dragOverKey, setDragOverKey, onOpenHistory, companyName,
 }: {
   tz: string;
   days: Date[];
@@ -841,6 +841,7 @@ function CalendarGrid({
   dragOverKey: string | null;
   setDragOverKey: (k: string | null) => void;
   onOpenHistory: (id: string, customer: string) => void;
+  companyName: string;
 }) {
   const now = new Date();
 
