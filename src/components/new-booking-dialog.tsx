@@ -16,6 +16,7 @@ type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   companyId: string;
+  companyName?: string;
   tz: string;
   initialStart?: Date | null;
 };
