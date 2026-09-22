@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Link2, MessageCircle, Loader2, Printer, Check, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Loader2, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,6 @@ export const Route = createFileRoute("/_authenticated/quotes/$id")({
 
 function QuoteViewPage() {
   const { id } = Route.useParams();
-  const [copied, setCopied] = useState(false);
   const qc = useQueryClient();
 
   const approve = useMutation({
@@ -98,13 +96,6 @@ function QuoteViewPage() {
         description: "O link do WhatsApp foi copiado — cole na barra de endereço para abrir.",
       });
     }
-  }
-
-  async function copyLink() {
-    await navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    toast.success("Link público copiado");
-    setTimeout(() => setCopied(false), 2000);
   }
 
   return (
