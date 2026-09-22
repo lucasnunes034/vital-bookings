@@ -97,6 +97,29 @@ export function renderTemplate(body: string, vars: Record<string, string>): stri
   return body.replace(/\{(\w+)\}/g, (_m, key: string) => vars[key] ?? "");
 }
 
+export type BookingWhatsAppInput = {
+  customerName: string;
+  companyName: string;
+  serviceName: string;
+  startAt: string | Date;
+  tz?: string;
+};
+
+/** Monta mensagem de confirmação de agendamento (sem emojis, com \n). */
+export function buildBookingWhatsAppMessage(input: BookingWhatsAppInput): string {
+  const tz = input.tz || "America/Sao_Paulo";
+  const nomeCliente = input.customerName?.trim() || "cliente";
+  const nomeServico = input.serviceName?.trim() || "Serviço";
+  const dataAgendamento = formatInTZ(input.startAt, tz, {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
+  const horarioAgendamento = formatInTZ(input.startAt, tz, { hour: "2-digit", minute: "2-digit" });
+
+  return `Olá, ${nomeCliente}!\n\nSeu agendamento na ${input.companyName} está confirmado.\n\nServiço: ${nomeServico} Data: ${dataAgendamento} Horário: ${horarioAgendamento}\n\nPara qualquer dúvida, é só chamar.`;
+}
+
 /** Digits only, drop leading zeros. Adds "55" (BR) if number has 10-11 digits and no country code. */
 export function normalizePhone(input: string | null | undefined): string {
   const digits = (input || "").replace(/\D/g, "");
