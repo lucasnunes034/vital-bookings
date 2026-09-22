@@ -1060,12 +1060,15 @@ function BookingsOverlay({
                       ev.stopPropagation();
                       onOpenHistory(b.id, b.customer_name);
                     }}
-                    className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm p-0.5 hover:bg-background/40"
+                    className="absolute top-0.5 right-6 opacity-0 group-hover:opacity-100 transition-opacity rounded-sm p-0.5 hover:bg-background/40"
                     aria-label="Ver histórico de remarcações"
                     title="Histórico"
                   >
                     <History className="size-3" />
                   </button>
+                  <div className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <BookingWhatsAppButton booking={b} companyName={companyName} tz={tz} size="xs" label="" />
+                  </div>
                 </div>
               );
             })}
