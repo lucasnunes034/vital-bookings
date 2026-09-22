@@ -142,14 +142,37 @@ export function NewBookingDialog({ open, onOpenChange, companyId, companyName, t
           customer_email: form.customer_email.trim() || null,
           notes: form.notes.trim() || null,
         })
-        .select("id")
+        .select("id, start_at, customer_name, customer_phone, service:services(name)")
         .single();
       if (insert.error) throw insert.error;
       const upd = await supabase.from("bookings").update({ status: "confirmed" }).eq("id", insert.data.id);
       if (upd.error) throw upd.error;
+      return insert.data;
     },
-    onSuccess: () => {
-      toast.success("Agendamento confirmado");
+    onSuccess: (data) => {
+      toast.success("Agendamento salvo com sucesso", {
+        action: {
+          label: "Avisar Cliente",
+          onClick: () => {
+            const message = buildBookingWhatsAppMessage({
+              customerName: data.customer_name,
+              companyName: companyName || "nossa empresa",
+              serviceName: data.service?.name || "Serviço",
+              startAt: data.start_at,
+              tz,
+            });
+            const url = buildWhatsappUrl(data.customer_phone, message);
+            const popup = window.open(url, "_blank", "noopener,noreferrer");
+            const blocked = !popup || popup.closed || typeof popup.closed === "undefined";
+            if (blocked) {
+              void navigator.clipboard.writeText(url).then(
+                () => toast.success("Link do WhatsApp copiado", { description: "O navegador bloqueou o popup. Cole no app." }),
+                () => toast.error("Não foi possível abrir o WhatsApp")
+              );
+            }
+          },
+        },
+      });
       qc.invalidateQueries({ queryKey: ["cal-bookings"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
       qc.invalidateQueries({ queryKey: ["bookings"] });
