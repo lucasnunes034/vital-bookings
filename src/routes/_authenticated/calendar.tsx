@@ -797,7 +797,7 @@ function MobileCalendar({
       ) : (
         <div className="space-y-3">
           {selectedBookings.map((booking) => (
-            <article key={booking.id} className="surface-card grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4">
+            <article key={booking.id} className="surface-card grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3 p-4">
               <div className="w-14 shrink-0 border-r border-border pr-3 text-center">
                 <p className="text-sm font-semibold tabular-nums">{formatInTZ(booking.start_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
                 <p className="mt-1 text-[10px] text-muted-foreground tabular-nums">{formatInTZ(booking.end_at, tz, { hour: "2-digit", minute: "2-digit" })}</p>
@@ -809,6 +809,9 @@ function MobileCalendar({
                   <span className="truncate">{bookingStatusLabel(booking.status)}</span>
                 </span>
               </button>
+              <div className="flex items-start">
+                <BookingWhatsAppButton booking={booking} companyName={companyName} tz={tz} size="xs" />
+              </div>
             </article>
           ))}
         </div>
