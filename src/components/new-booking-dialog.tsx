@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { zonedWallToUTC, getZonedParts, formatInTZ } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
+import { buildBookingWhatsAppMessage, buildWhatsappUrl } from "@/lib/whatsapp";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
