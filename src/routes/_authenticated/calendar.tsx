@@ -979,7 +979,7 @@ function RowFragment({
 }
 
 function BookingsOverlay({
-  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd, onOpenHistory,
+  tz, days, startHour, rowsCount, bookings, svcFilter, onDragStart, onDragEnd, onOpenHistory, companyName,
 }: {
   tz: string;
   days: Date[];
@@ -990,6 +990,7 @@ function BookingsOverlay({
   onDragStart: (id: string, durationMin: number) => void;
   onDragEnd: () => void;
   onOpenHistory: (id: string, customer: string) => void;
+  companyName: string;
 }) {
   // Total grid width uses same template as parent — for overlay we compute
   // percent-based left/top over a mirrored grid below the visible one.
