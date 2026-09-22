@@ -259,3 +259,61 @@ textarea.input { height: auto; padding-block: 0.5rem; }
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+/* ===== Impressão (geração de PDF via window.print) ===== */
+@media print {
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.18 0.01 260);
+    --surface: oklch(1 0 0);
+    --surface-2: oklch(0.98 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.18 0.01 260);
+    --muted: oklch(0.96 0 0);
+    --muted-foreground: oklch(0.42 0.01 260);
+    --border: oklch(0 0 0 / 15%);
+    --shadow-card: none;
+    --shadow-glow: none;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: oklch(0.18 0.01 260) !important;
+    overflow: visible !important;
+  }
+
+  /* Todos os botões e controles somem na impressão */
+  button,
+  [role="button"],
+  .print-hidden {
+    display: none !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .surface-card {
+    background: #fff !important;
+    border: 1px solid oklch(0 0 0 / 12%) !important;
+    border-radius: 0 !important;
+  }
+
+  .container-page {
+    max-width: 100% !important;
+    padding-inline: 0 !important;
+  }
+
+  main {
+    padding-block: 0 !important;
+  }
+
+  /* Não quebrar blocos importantes entre páginas */
+  .surface-card,
+  table,
+  tr,
+  .print-break-avoid {
+    break-inside: avoid;
+  }
+}

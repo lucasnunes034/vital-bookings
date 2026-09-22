@@ -1,7 +1,6 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Link2, MessageCircle, Loader2, Printer, Check, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MessageCircle, Loader2, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +20,6 @@ export const Route = createFileRoute("/_authenticated/quotes/$id")({
 
 function QuoteViewPage() {
   const { id } = Route.useParams();
-  const [copied, setCopied] = useState(false);
   const qc = useQueryClient();
 
   const approve = useMutation({
@@ -100,13 +98,6 @@ function QuoteViewPage() {
     }
   }
 
-  async function copyLink() {
-    await navigator.clipboard.writeText(publicUrl);
-    setCopied(true);
-    toast.success("Link público copiado");
-    setTimeout(() => setCopied(false), 2000);
-  }
-
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl sticky top-0 z-40 print:hidden">
@@ -121,10 +112,7 @@ function QuoteViewPage() {
               </button>
             )}
             <button onClick={() => window.print()} className="btn-ghost h-9 text-sm">
-              <Printer className="size-4" /> Imprimir
-            </button>
-            <button onClick={copyLink} className="btn-ghost h-9 text-sm">
-              {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Gerar link público
+              <Download className="size-4" /> Baixar PDF
             </button>
             <button onClick={handleSendWhatsApp}
               className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium text-white shadow-sm transition hover:opacity-90"
@@ -146,14 +134,9 @@ function QuoteViewPage() {
             {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
           </button>
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
-            {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público
-          </button>
-          <button onClick={() => window.print()} className="btn-ghost w-full h-12 text-sm justify-center">
-            <Printer className="size-4" /> Imprimir
-          </button>
-        </div>
+        <button onClick={() => window.print()} className="btn-ghost w-full h-12 text-sm justify-center">
+          <Download className="size-4" /> Baixar PDF
+        </button>
       </div>
 
       <main className="container-page min-w-0 py-8 md:py-10 max-w-4xl">
