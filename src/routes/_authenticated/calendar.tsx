@@ -21,6 +21,7 @@ import {
 import { mapBookingError } from "@/lib/booking-errors";
 import { bookingStatusLabel, bookingStatusStyle } from "@/lib/booking-status";
 import { NewBookingDialog } from "@/components/new-booking-dialog";
+import { BookingWhatsAppButton } from "@/components/booking-whatsapp-button";
 
 type ViewMode = "day" | "week";
 
