@@ -27,19 +27,19 @@ function ReportsPage() {
     <main className="container-page min-w-0 py-8 space-y-6">
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
         <div className="min-w-0">
-          <Link to="/dashboard" className="text-sm text-muted-foreground inline-flex items-center gap-1 hover:underline">
+          <Link to="/dashboard" className="text-sm text-muted-foreground inline-flex items-center gap-1 hover:underline print:hidden">
             <ArrowLeft className="size-4 shrink-0" /> Voltar
           </Link>
           <h1 className="font-display text-2xl sm:text-3xl font-semibold tracking-tight mt-1 truncate">
             Relatórios e Financeiro
           </h1>
         </div>
-        <Button variant="outline" className="hidden sm:inline-flex">
+        <Button variant="outline" className="hidden sm:inline-flex" onClick={() => window.print()}>
           <Download className="size-4" /> Exportar Relatório (PDF)
         </Button>
       </header>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center print:hidden">
         <Select value={period} onValueChange={(v) => setPeriod(v as PeriodKey)}>
           <SelectTrigger className="h-12 w-full sm:w-56">
             <SelectValue placeholder="Período" />
@@ -50,7 +50,7 @@ function ReportsPage() {
             <SelectItem value="this_year">Este Ano</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" className="h-12 w-full sm:hidden">
+        <Button variant="outline" className="h-12 w-full sm:hidden" onClick={() => window.print()}>
           <Download className="size-4" /> Exportar Relatório (PDF)
         </Button>
       </div>

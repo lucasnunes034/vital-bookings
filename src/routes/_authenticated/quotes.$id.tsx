@@ -112,10 +112,7 @@ function QuoteViewPage() {
               </button>
             )}
             <button onClick={() => window.print()} className="btn-ghost h-9 text-sm">
-              <Printer className="size-4" /> Imprimir
-            </button>
-            <button onClick={copyLink} className="btn-ghost h-9 text-sm">
-              {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Gerar link público
+              <Download className="size-4" /> Baixar PDF
             </button>
             <button onClick={handleSendWhatsApp}
               className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium text-white shadow-sm transition hover:opacity-90"
@@ -137,14 +134,9 @@ function QuoteViewPage() {
             {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
           </button>
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <button onClick={copyLink} className="btn-ghost w-full h-12 text-sm justify-center">
-            {copied ? <Check className="size-4 text-success" /> : <Link2 className="size-4" />} Link público
-          </button>
-          <button onClick={() => window.print()} className="btn-ghost w-full h-12 text-sm justify-center">
-            <Printer className="size-4" /> Imprimir
-          </button>
-        </div>
+        <button onClick={() => window.print()} className="btn-ghost w-full h-12 text-sm justify-center">
+          <Download className="size-4" /> Baixar PDF
+        </button>
       </div>
 
       <main className="container-page min-w-0 py-8 md:py-10 max-w-4xl">
