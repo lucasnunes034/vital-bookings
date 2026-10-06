@@ -43,6 +43,7 @@ import {
   type PaymentMethodKind,
 } from "@/lib/payment-methods";
 import { AppearanceTab } from "./_appearance-tab";
+import { TeamMembersCard } from "@/components/team-members-card";
 
 type TabKey = "brand" | "appearance" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
@@ -151,7 +152,7 @@ function SettingsPage() {
           <TabsContent value="appearance"><AppearanceTab companyId={company.id} /></TabsContent>
           <TabsContent value="gallery"><GalleryTab companyId={company.id} /></TabsContent>
           <TabsContent value="services"><ServicesTab companyId={company.id} /></TabsContent>
-          <TabsContent value="professionals"><ProfessionalsTab companyId={company.id} /></TabsContent>
+          <TabsContent value="professionals" className="space-y-6"><TeamMembersCard companyId={company.id} /><ProfessionalsTab companyId={company.id} /></TabsContent>
           <TabsContent value="availability"><ScheduleTab companyId={company.id} kind="availability" /></TabsContent>
           <TabsContent value="breaks"><ScheduleTab companyId={company.id} kind="breaks" /></TabsContent>
           <TabsContent value="messages"><MessagesTab companyId={company.id} /></TabsContent>

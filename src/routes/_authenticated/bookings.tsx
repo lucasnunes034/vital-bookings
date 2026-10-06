@@ -28,6 +28,7 @@ import {
   zonedWallToUTC,
 } from "@/lib/timezone";
 import { computeSlots } from "@/lib/slots";
+import { RevenuePromptDialog, type RevenueBooking } from "@/components/revenue-prompt-dialog";
 import { mapBookingError } from "@/lib/booking-errors";
 import { formatPaymentMethod } from "@/lib/payment-methods";
 import { Calendar } from "@/components/ui/calendar";
@@ -149,6 +150,7 @@ function BookingsPage() {
     [bookingsQ.data, rescheduleId]
   );
 
+  const [revenueFor, setRevenueFor] = useState<RevenueBooking | null>(null);
   const changeStatus = useMutation({
     mutationFn: async ({ id, status, reason }: { id: string; status: Status; reason?: string }) => {
       const { error } = await supabase
@@ -165,6 +167,10 @@ function BookingsPage() {
       toast.success(msg);
       setCancelId(null);
       setCancelReason("");
+      if (v.status === "completed") {
+        const b = (bookingsQ.data ?? []).find((x: any) => x.id === v.id);
+        if (b) setRevenueFor(b as any);
+      }
     },
     onError: (e: any) => {
       const m = mapBookingError(e, "confirm");
@@ -179,6 +185,7 @@ function BookingsPage() {
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
+      <RevenuePromptDialog booking={revenueFor} onClose={() => setRevenueFor(null)} />
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page flex h-16 items-center justify-between">
           <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">

@@ -34,6 +34,9 @@ export const Route = createFileRoute("/_authenticated")({
       throw redirect({ to: "/auth" });
     }
 
+    // Vincula convites de equipe pendentes ao usuário logado (idempotente).
+    await supabase.rpc("claim_company_invites").then(() => undefined, () => undefined);
+
     // Super admin nunca é bloqueado pela assinatura.
     if ((data.user.email ?? "").toLowerCase() === "lucasnunes239@gmail.com") {
       return { user: data.user };
