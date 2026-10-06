@@ -61,7 +61,6 @@ function buildCss(theme: CompanyTheme): { css: string; scheme: "light" | "dark" 
   const accent = ensureReadable(theme.accent_color, bg, 2.5).color;
 
   const primaryFg = readableOn(primary);
-  const secondaryFg = readableOn(secondary);
   const accentFg = readableOn(accent);
 
   // Semantic status colors: derived from accent (success) + fixed hue (warning)

@@ -10,7 +10,6 @@ import {
   Mail,
   Calendar as CalendarIcon,
   Clock,
-  StickyNote,
   Repeat,
   TrendingUp,
   MapPin,

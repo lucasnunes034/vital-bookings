@@ -546,17 +546,6 @@ function NotFound() {
   );
 }
 
-function mapRpcError(err: any): string {
-  const msg = String(err?.message ?? "");
-  if (msg.includes("not_found")) return "Agendamento não encontrado.";
-  if (msg.includes("not_cancellable")) return "Este agendamento não pode mais ser cancelado.";
-  if (msg.includes("not_reschedulable")) return "Este agendamento não pode mais ser remarcado.";
-  if (msg.includes("past_booking")) return "Agendamentos passados não podem ser alterados.";
-  if (msg.includes("invalid_new_time")) return "O novo horário precisa ser no futuro.";
-  if (msg.includes("wrong_duration")) return "Duração do novo horário está diferente do serviço.";
-  return msg || "Não foi possível concluir a operação.";
-}
-
 function formatBRL(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
