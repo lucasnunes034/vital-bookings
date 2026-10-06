@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, MessageCircle, Loader2, Download, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useRef, useState } from "react";
+import { downloadElementAsPdf } from "@/lib/pdf";
 
 import { supabase } from "@/integrations/supabase/client";
 import { formatCents, QUOTE_STATUS_LABEL, quoteNumberLabel, buildQuoteWhatsAppMessage } from "@/lib/quotes";
@@ -21,6 +23,15 @@ export const Route = createFileRoute("/_authenticated/quotes/$id")({
 function QuoteViewPage() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const docRef = useRef<HTMLDivElement>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  async function handlePdf() {
+    if (!docRef.current) return;
+    setPdfBusy(true);
+    try { await downloadElementAsPdf(docRef.current, `orcamento-${id}.pdf`); }
+    catch (e) { console.error(e); toast.error("Não foi possível gerar o PDF."); }
+    finally { setPdfBusy(false); }
+  }
 
   const approve = useMutation({
     mutationFn: async () => {
@@ -111,8 +122,8 @@ function QuoteViewPage() {
                 {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
               </button>
             )}
-            <button onClick={() => window.print()} className="btn-ghost h-9 text-sm">
-              <Download className="size-4" /> Baixar PDF
+            <button onClick={handlePdf} disabled={pdfBusy} className="btn-ghost h-9 text-sm">
+              {pdfBusy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Baixar PDF
             </button>
             <button onClick={handleSendWhatsApp}
               className="inline-flex items-center gap-1.5 h-9 px-3 rounded-md text-sm font-medium text-white shadow-sm transition hover:opacity-90"
@@ -134,13 +145,13 @@ function QuoteViewPage() {
             {approve.isPending ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />} Marcar como Aprovado
           </button>
         )}
-        <button onClick={() => window.print()} className="btn-ghost w-full h-12 text-sm justify-center">
-          <Download className="size-4" /> Baixar PDF
+        <button onClick={handlePdf} disabled={pdfBusy} className="btn-ghost w-full h-12 text-sm justify-center">
+          {pdfBusy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} Baixar PDF
         </button>
       </div>
 
       <main className="container-page min-w-0 py-8 md:py-10 max-w-4xl">
-        <QuoteDocument quote={quote} items={items} company={quote.company} />
+        <div ref={docRef}><QuoteDocument quote={quote} items={items} company={quote.company} /></div>
       </main>
     </div>
   );

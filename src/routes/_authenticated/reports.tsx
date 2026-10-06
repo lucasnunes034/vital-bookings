@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { downloadElementAsPdf } from "@/lib/pdf";
 import { ArrowLeft, Download, BarChart3, CheckCircle2, Receipt } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,15 @@ function brl(cents: number) {
 
 function ReportsPage() {
   const [period, setPeriod] = useState<PeriodKey>("current_month");
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  async function handlePdf() {
+    if (!reportRef.current) return;
+    setPdfBusy(true);
+    try { await downloadElementAsPdf(reportRef.current, "relatorio-financeiro.pdf"); }
+    catch (e) { console.error(e); toast.error("Não foi possível gerar o PDF."); }
+    finally { setPdfBusy(false); }
+  }
 
   const rows = useMemo(() => REVENUE_MOCK.filter((r) => r.period === period), [period]);
   const total = rows.reduce((s, r) => s + r.amount_cents, 0);
@@ -34,7 +45,7 @@ function ReportsPage() {
             Relatórios e Financeiro
           </h1>
         </div>
-        <Button variant="outline" className="hidden sm:inline-flex" onClick={() => window.print()}>
+        <Button variant="outline" className="hidden sm:inline-flex" onClick={handlePdf} disabled={pdfBusy}>
           <Download className="size-4" /> Exportar Relatório (PDF)
         </Button>
       </header>
@@ -50,11 +61,12 @@ function ReportsPage() {
             <SelectItem value="this_year">Este Ano</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" className="h-12 w-full sm:hidden" onClick={() => window.print()}>
+        <Button variant="outline" className="h-12 w-full sm:hidden" onClick={handlePdf} disabled={pdfBusy}>
           <Download className="size-4" /> Exportar Relatório (PDF)
         </Button>
       </div>
 
+      <div ref={reportRef} className="space-y-6 bg-background">
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <SummaryCard icon={BarChart3} label="Faturamento Total" value={brl(total)} />
         <SummaryCard icon={CheckCircle2} label="Serviços Concluídos" value={String(count)} />
@@ -147,6 +159,7 @@ function ReportsPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </main>
   );
 }
