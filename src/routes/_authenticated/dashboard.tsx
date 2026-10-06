@@ -253,7 +253,7 @@ function RemindersCard({ company }: { company: { id: string; name: string; timez
     // 1h window: 30–90 min antes; 24h window: 22–26h antes
     const due1h = diffMin > 30 && diffMin < 90 && !b.reminder_1h_sent_at;
     const due24h = diffMin > 22 * 60 && diffMin < 26 * 60 && !b.reminder_24h_sent_at;
-    return { b, due1h };
+    return { b, due1h, due24h };
   }).filter((r) => r.due1h || r.due24h);
 
   return (
@@ -274,7 +274,7 @@ function RemindersCard({ company }: { company: { id: string; name: string; timez
         <p className="text-sm text-muted-foreground">Nenhum lembrete pendente agora. Vamos avisar você quando um agendamento se aproximar.</p>
       ) : (
         <div className="divide-y divide-border/60">
-          {rows.map(({ b, due1h, due24h }) => (
+          {rows.map(({ b, due1h }) => (
             <div key={b.id} className="py-3 flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">
