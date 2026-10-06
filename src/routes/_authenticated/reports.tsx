@@ -10,7 +10,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { REVENUE_MOCK, buildChartData, type PeriodKey } from "@/lib/reports-mock";
+import { buildChartData, type PeriodKey, type RevenueRow } from "@/lib/reports-mock";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+function periodOf(d: Date): PeriodKey[] {
+  const now = new Date();
+  const out: PeriodKey[] = [];
+  if (d.getFullYear() === now.getFullYear()) out.push("this_year");
+  if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) out.push("current_month");
+  const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  if (d.getFullYear() === lm.getFullYear() && d.getMonth() === lm.getMonth()) out.push("last_month");
+  return out;
+}
 
 function brl(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -28,7 +40,32 @@ function ReportsPage() {
     finally { setPdfBusy(false); }
   }
 
-  const rows = useMemo(() => REVENUE_MOCK.filter((r) => r.period === period), [period]);
+  const revQ = useQuery({
+    queryKey: ["revenues"],
+    queryFn: async () => {
+      const start = new Date(new Date().getFullYear() - 1, 11, 1).toLocaleDateString("en-CA");
+      const { data, error } = await supabase
+        .from("revenues")
+        .select("id, title, customer_name, amount_cents, received_at")
+        .gte("received_at", start)
+        .order("received_at", { ascending: false })
+        .limit(2000);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const rows = useMemo<RevenueRow[]>(() => {
+    const out: RevenueRow[] = [];
+    for (const r of revQ.data ?? []) {
+      const d = new Date(`${r.received_at}T12:00:00`);
+      if (!periodOf(d).includes(period)) continue;
+      out.push({
+        id: r.id, period, date: d.toISOString(), customer: r.customer_name ?? "—", service: r.title,
+        amount_cents: r.amount_cents, week: Math.min(4, Math.ceil(d.getDate() / 7)), month: d.getMonth(),
+      });
+    }
+    return out;
+  }, [revQ.data, period]);
   const total = rows.reduce((s, r) => s + r.amount_cents, 0);
   const count = rows.length;
   const avg = count ? Math.round(total / count) : 0;
@@ -108,6 +145,11 @@ function ReportsPage() {
           <CardTitle className="text-base">Receitas do período</CardTitle>
         </CardHeader>
         <CardContent>
+          {rows.length === 0 && (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhuma receita neste período. Conclua um agendamento e lance o valor no Financeiro.
+            </p>
+          )}
           {/* Mobile: cards empilhados */}
           <ul className="space-y-3 md:hidden">
             {rows.map((r) => (
