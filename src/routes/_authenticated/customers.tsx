@@ -491,10 +491,8 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Users; label: string;
 function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | null; tz: string; onClose: () => void }) {
   const isMobile = useIsMobile();
   const open = !!customer;
-  const mock = customer ? mockProfileFor(customer.key) : null;
   const history = customer ? enrichHistory(customer) : [];
   const waPhone = customer?.phone ? normalizeWa(customer.phone) : "";
-  const mapsUrl = mock ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mock.address)}` : "";
 
   const title = (
     <span className="flex items-center gap-2">
@@ -511,7 +509,7 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
               <MiniStat label="Total" value={String(customer.total)} />
               <MiniStat label="Concluídos" value={String(customer.completed)} />
               <MiniStat label="Cancelados" value={String(customer.cancelled)} />
-              <MiniStat label="Gasto total" value={formatBRL(customer.totalSpentCents || mockRevenueCents(history))} />
+              <MiniStat label="Gasto total" value={formatBRL(customer.totalSpentCents || completedRevenueCents(history))} />
             </div>
 
             <Tabs defaultValue="contato" className="w-full">
@@ -598,36 +596,6 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
                         <span>{formatPaymentMethod(customer.saved.preferred_payment_method)}</span>
                       </InfoRow>
                     )}
-                  </div>
-                )}
-
-                {!customer.saved?.address && mock && (
-                  <div className="rounded-lg border border-border/60 p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <p className="text-xs uppercase tracking-wider text-muted-foreground inline-flex items-center gap-1">
-                          <MapPin className="size-3" /> Endereço
-                        </p>
-                        <p className="font-medium">{mock.address}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {mock.neighborhood} · {mock.city} — {mock.state}, {mock.zip}
-                        </p>
-                      </div>
-                      <Button asChild variant="outline" className="shrink-0 h-10 sm:h-9">
-                        <a href={mapsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
-                          <MapPin className="size-3.5" /> Mapa
-                        </a>
-                      </Button>
-                    </div>
-                    <div className="aspect-[16/8] w-full overflow-hidden rounded-md border border-border/60">
-                      <iframe
-                        title="Mapa do endereço"
-                        src={`https://www.google.com/maps?q=${encodeURIComponent(mock.address + ", " + mock.city)}&output=embed`}
-                        className="w-full h-full"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                      />
-                    </div>
                   </div>
                 )}
 
@@ -770,40 +738,6 @@ function InfoRow({ icon: Icon, label, children }: { icon: typeof Users; label: s
   );
 }
 
-// --- Mock enrichment (dados de exemplo p/ contexto HVAC/residencial) ---
-
-const MOCK_ADDRESSES = [
-  { address: "Rua das Palmeiras, 145 — Apto 42", neighborhood: "Vila Madalena", city: "São Paulo", state: "SP", zip: "05435-020" },
-  { address: "Av. Beira-Mar, 2.100 — Casa 3", neighborhood: "Meireles", city: "Fortaleza", state: "CE", zip: "60165-121" },
-  { address: "Rua Coronel Andrade, 87", neighborhood: "Batel", city: "Curitiba", state: "PR", zip: "80420-160" },
-  { address: "Alameda Santos, 950 — Cj. 1204", neighborhood: "Jardim Paulista", city: "São Paulo", state: "SP", zip: "01418-100" },
-  { address: "Rua Voluntários da Pátria, 322", neighborhood: "Botafogo", city: "Rio de Janeiro", state: "RJ", zip: "22270-000" },
-  { address: "Av. do Contorno, 4.500", neighborhood: "Funcionários", city: "Belo Horizonte", state: "MG", zip: "30110-090" },
-];
-
-const MOCK_HVAC_SERVICES = [
-  { name: "Higienização de Split 12.000 BTUs", price: 22000 },
-  { name: "Instalação de Ar-Condicionado Split", price: 65000 },
-  { name: "Manutenção Preventiva — 2 aparelhos", price: 38000 },
-  { name: "Recarga de Gás R-410A", price: 45000 },
-  { name: "Troca de Placa Eletrônica", price: 58000 },
-  { name: "Limpeza de Filtros e Serpentina", price: 18000 },
-  { name: "Vistoria Técnica Residencial", price: 15000 },
-];
-
-const MOCK_TECHS = ["Carlos Andrade", "Ricardo Menezes", "Bruno Tavares", "Lucas Oliveira"];
-
-function hashKey(key: string): number {
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-function mockProfileFor(key: string) {
-  const h = hashKey(key);
-  return MOCK_ADDRESSES[h % MOCK_ADDRESSES.length];
-}
-
 type HistoryEntry = {
   id: string;
   date: string;
@@ -815,39 +749,18 @@ type HistoryEntry = {
 };
 
 function enrichHistory(customer: Customer): HistoryEntry[] {
-  if (customer.bookings.length > 0) {
-    const h = hashKey(customer.key);
-    return customer.bookings.map((b, i) => {
-      const fallback = MOCK_HVAC_SERVICES[(h + i) % MOCK_HVAC_SERVICES.length];
-      return {
-        id: b.id,
-        date: b.start_at,
-        service: b.service?.name || fallback.name,
-        professional: b.professional?.name || MOCK_TECHS[(h + i) % MOCK_TECHS.length],
-        status: b.status,
-        priceCents: b.service?.price_cents ?? fallback.price,
-        notes: b.notes,
-      };
-    });
-  }
-  // No real bookings — return mock AC service history
-  const h = hashKey(customer.key);
-  const now = Date.now();
-  return Array.from({ length: 4 }).map((_, i) => {
-    const svc = MOCK_HVAC_SERVICES[(h + i) % MOCK_HVAC_SERVICES.length];
-    return {
-      id: `mock-${customer.key}-${i}`,
-      date: new Date(now - (i + 1) * 1000 * 60 * 60 * 24 * 45).toISOString(),
-      service: svc.name,
-      professional: MOCK_TECHS[(h + i) % MOCK_TECHS.length],
-      status: (i === 0 ? "confirmed" : "completed") as Status,
-      priceCents: svc.price,
-      notes: i % 2 === 0 ? "Cliente relatou baixo rendimento do aparelho da sala." : null,
-    };
-  });
+  return customer.bookings.map((b) => ({
+    id: b.id,
+    date: b.start_at,
+    service: b.service?.name || "Serviço",
+    professional: b.professional?.name || "—",
+    status: b.status,
+    priceCents: b.service?.price_cents ?? 0,
+    notes: b.notes,
+  }));
 }
 
-function mockRevenueCents(history: HistoryEntry[]): number {
+function completedRevenueCents(history: HistoryEntry[]): number {
   return history.filter((h) => h.status === "completed").reduce((s, h) => s + h.priceCents, 0);
 }
 
