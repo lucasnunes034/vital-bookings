@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  formatInTZ, getZonedParts, toZonedISODate, zonedDayOfWeek, zonedWallToUTC,
+  formatInTZ, getZonedParts, toZonedISODate, zonedWallToUTC,
 } from "@/lib/timezone";
 import { mapBookingError } from "@/lib/booking-errors";
 import { bookingStatusLabel, bookingStatusStyle } from "@/lib/booking-status";
