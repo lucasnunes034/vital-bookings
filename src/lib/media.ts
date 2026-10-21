@@ -13,7 +13,7 @@ export async function uploadCompanyMedia(
   if (file.size > 8 * 1024 * 1024) throw new Error("Arquivo maior que 8 MB.");
   if (!/^image\//.test(file.type)) throw new Error("Envie uma imagem (jpg, png, webp).");
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-  const path = `${companyId}/${kind}/${crypto.randomUUID()}.${ext || "jpg"}`;
+  const path = `${companyId}/${kind}/${uuidv4()}.${ext || "jpg"}`;
   const up = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: "31536000",
     upsert: false,

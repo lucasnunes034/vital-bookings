@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, LogOut, MessageCircle, RefreshCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ export const Route = createFileRoute("/billing/pending")({
 });
 
 function BillingPendingPage() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
   const q = useQuery({
     queryKey: ["my-company-subscription"],
     queryFn: async () => {
@@ -35,6 +38,13 @@ function BillingPendingPage() {
       return (data?.[0] ?? null) as (CompanySubscription & { name: string }) | null;
     },
   });
+
+  const handleSignOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
 
   const message = `Olá! Sou responsável pela empresa ${q.data?.name ?? ""} no Slotly e quero renovar minha assinatura.`;
 
@@ -65,10 +75,7 @@ function BillingPendingPage() {
           <Button
             variant="ghost"
             className="w-full h-11"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              window.location.href = "/auth";
-            }}
+            onClick={handleSignOut}
           >
             <LogOut className="size-4" /> Sair da conta
           </Button>

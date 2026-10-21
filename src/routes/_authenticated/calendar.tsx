@@ -479,7 +479,7 @@ function CalendarPage() {
   }
 
   if (companyQ.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
+    return <div className="min-h-[100dvh] flex items-center justify-center"><Loader2 className="size-5 animate-spin text-muted-foreground" /></div>;
   }
   if (!companyQ.data) { navigate({ to: "/onboarding", replace: true }); return null; }
 
@@ -490,7 +490,7 @@ function CalendarPage() {
   const canInteract = !!proId;
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground">
+    <div className="min-h-[100dvh] w-full overflow-x-hidden bg-background text-foreground">
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/70 sticky top-0 z-40">
         <div className="container-page grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:flex sm:justify-between">
           <Link to="/dashboard" className="min-w-0 text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Trash2, Loader2, Save } from "lucide-react";
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/quotes/new")({
 type Item = { key: string; description: string; quantity: string; unit: string };
 
 function makeItem(): Item {
-  return { key: crypto.randomUUID(), description: "", quantity: "1", unit: "0,00" };
+  return { key: uuidv4(), description: "", quantity: "1", unit: "0,00" };
 }
 
 function NewQuotePage() {

@@ -452,7 +452,7 @@ function BookingDialog({
       // com o INSERT tendo sido aceito).
       const manageToken =
         typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
+          ? uuidv4()
           : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
       const { error } = await supabase.from("bookings").insert({
         company_id: company.id,

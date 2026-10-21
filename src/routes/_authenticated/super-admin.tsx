@@ -23,14 +23,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const SUPER_ADMIN_EMAIL = "lucasnunes239@gmail.com";
-
 export const Route = createFileRoute("/_authenticated/super-admin")({
   ssr: false,
   beforeLoad: async () => {
+    const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || "";
     const { data } = await supabase.auth.getUser();
     const email = data.user?.email?.toLowerCase() ?? "";
-    if (email !== SUPER_ADMIN_EMAIL) {
+    if (email !== SUPER_ADMIN_EMAIL.toLowerCase()) {
       throw redirect({ to: "/dashboard" });
     }
   },

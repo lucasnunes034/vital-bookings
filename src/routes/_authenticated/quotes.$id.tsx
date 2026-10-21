@@ -25,6 +25,7 @@ function QuoteViewPage() {
   const qc = useQueryClient();
   const docRef = useRef<HTMLDivElement>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  
   async function handlePdf() {
     if (!docRef.current) return;
     setPdfBusy(true);
@@ -96,10 +97,6 @@ function QuoteViewPage() {
       return;
     }
     const url = buildWhatsappUrl(phone, waMessage);
-    // Try a true top-level popup first. In sandboxed preview iframes the popup
-    // may be blocked and the browser would otherwise fall back to navigating
-    // this frame to api.whatsapp.com (X-Frame-Options -> ERR_BLOCKED_BY_RESPONSE).
-    // When that happens, copy the link instead of leaving the iframe broken.
     const win = window.open(url, "_blank", "noopener,noreferrer");
     if (!win) {
       navigator.clipboard?.writeText(url).catch(() => {});
@@ -159,8 +156,8 @@ function QuoteViewPage() {
 
 export function QuoteDocument({ quote, items, company }: { quote: any; items: any[]; company: any }) {
   return (
-    <article className="surface-card p-4 sm:p-8 md:p-12 print:shadow-none print:border-0 space-y-8">
-      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-b border-border/60 pb-6 sm:flex sm:justify-between sm:gap-6">
+    <article className="bg-white text-slate-900 p-4 sm:p-8 md:p-12 shadow-sm border border-gray-200 min-h-[1056px] print:shadow-none print:border-0 space-y-8">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 border-b border-gray-200 pb-6 sm:flex sm:justify-between sm:gap-6">
         <div className="flex items-center gap-3 min-w-0">
           {company?.logo_url ? (
             <img src={company.logo_url} alt={company?.name} className="size-14 rounded-md object-cover" />
@@ -171,14 +168,14 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
           )}
           <div className="min-w-0">
             <h1 className="font-display text-xl font-semibold truncate">{company?.name}</h1>
-            {company?.phone && <p className="text-xs text-muted-foreground truncate">{company.phone}</p>}
-            {company?.address && <p className="text-xs text-muted-foreground truncate">{company.address}</p>}
+            {company?.phone && <p className="text-xs text-gray-500 truncate">{company.phone}</p>}
+            {company?.address && <p className="text-xs text-gray-500 truncate">{company.address}</p>}
           </div>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Orçamento</p>
+          <p className="text-[11px] uppercase tracking-wider text-gray-500">Orçamento</p>
           <p className="font-display text-2xl font-semibold tabular-nums">{quoteNumberLabel(quote.quote_number)}</p>
-          <span className="mt-1 inline-flex text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border bg-muted text-muted-foreground border-border">
+          <span className="mt-1 inline-flex text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border bg-gray-100 text-gray-500 border-gray-200">
             {QUOTE_STATUS_LABEL[quote.status] ?? quote.status}
           </span>
         </div>
@@ -186,15 +183,15 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
 
       <section className="grid gap-6 md:grid-cols-2">
         <div>
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Cliente</p>
+          <p className="text-[11px] uppercase tracking-wider text-gray-500">Cliente</p>
           <p className="mt-1 font-medium">{quote.customer_name}</p>
-          {quote.customer_phone && <p className="text-sm text-muted-foreground">{quote.customer_phone}</p>}
-          {quote.customer_email && <p className="text-sm text-muted-foreground">{quote.customer_email}</p>}
+          {quote.customer_phone && <p className="text-sm text-gray-500">{quote.customer_phone}</p>}
+          {quote.customer_email && <p className="text-sm text-gray-500">{quote.customer_email}</p>}
         </div>
         <div className="md:text-right space-y-1 text-sm">
-          <p><span className="text-muted-foreground">Emitido em: </span>{new Date(quote.created_at).toLocaleDateString("pt-BR")}</p>
+          <p><span className="text-gray-500">Emitido em: </span>{new Date(quote.created_at).toLocaleDateString("pt-BR")}</p>
           {quote.valid_until && (
-            <p><span className="text-muted-foreground">Válido até: </span>{new Date(quote.valid_until).toLocaleDateString("pt-BR")}</p>
+            <p><span className="text-gray-500">Válido até: </span>{new Date(quote.valid_until).toLocaleDateString("pt-BR")}</p>
           )}
         </div>
       </section>
@@ -203,20 +200,20 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
         {/* Mobile: card list */}
         <div className="md:hidden space-y-3">
           {items.map((i: any) => (
-            <div key={i.id} className="rounded-lg border border-border/60 p-3 space-y-2">
+            <div key={i.id} className="rounded-lg border border-gray-200 p-3 space-y-2">
               <p className="text-sm font-medium break-words">{i.description}</p>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Qtd: <span className="text-foreground tabular-nums">{Number(i.quantity)}</span></span>
-                <span>Unit: <span className="text-foreground tabular-nums">{formatCents(i.unit_price_cents)}</span></span>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>Qtd: <span className="text-slate-900 tabular-nums">{Number(i.quantity)}</span></span>
+                <span>Unit: <span className="text-slate-900 tabular-nums">{formatCents(i.unit_price_cents)}</span></span>
               </div>
-              <div className="flex items-center justify-between border-t border-border/60 pt-2 text-sm">
-                <span className="text-muted-foreground">Total</span>
+              <div className="flex items-center justify-between border-t border-gray-200 pt-2 text-sm">
+                <span className="text-gray-500">Total</span>
                 <span className="font-semibold tabular-nums">{formatCents(i.total_cents)}</span>
               </div>
             </div>
           ))}
-          <div className="flex items-center justify-between border-t-2 border-border pt-3">
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">Total geral</span>
+          <div className="flex items-center justify-between border-t-2 border-gray-300 pt-3">
+            <span className="text-xs uppercase tracking-wider text-gray-500">Total geral</span>
             <span className="font-display text-xl font-semibold tabular-nums">{formatCents(quote.total_cents)}</span>
           </div>
         </div>
@@ -224,14 +221,14 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
         {/* Desktop: table */}
         <table className="hidden md:table w-full text-sm">
           <thead>
-            <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
+            <tr className="text-left text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
               <th className="py-2 pr-2 font-medium">Descrição</th>
               <th className="py-2 pr-2 font-medium text-right w-20">Qtd.</th>
               <th className="py-2 pr-2 font-medium text-right w-32">Unitário</th>
               <th className="py-2 pr-2 font-medium text-right w-32">Total</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/60">
+          <tbody className="divide-y divide-gray-200">
             {items.map((i: any) => (
               <tr key={i.id}>
                 <td className="py-3 pr-2">{i.description}</td>
@@ -242,8 +239,8 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
             ))}
           </tbody>
           <tfoot>
-            <tr className="border-t-2 border-border">
-              <td colSpan={3} className="py-4 text-right text-sm uppercase tracking-wider text-muted-foreground">Total geral</td>
+            <tr className="border-t-2 border-gray-300">
+              <td colSpan={3} className="py-4 text-right text-sm uppercase tracking-wider text-gray-500">Total geral</td>
               <td className="py-4 text-right font-display text-2xl font-semibold tabular-nums">{formatCents(quote.total_cents)}</td>
             </tr>
           </tfoot>
@@ -252,12 +249,12 @@ export function QuoteDocument({ quote, items, company }: { quote: any; items: an
 
       {quote.notes && (
         <section>
-          <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Observações</p>
+          <p className="text-[11px] uppercase tracking-wider text-gray-500">Observações</p>
           <p className="mt-2 text-sm whitespace-pre-wrap leading-relaxed">{quote.notes}</p>
         </section>
       )}
 
-      <footer className="pt-6 border-t border-border/60 text-xs text-muted-foreground text-center">
+      <footer className="pt-6 border-t border-gray-200 text-xs text-gray-500 text-center">
         Documento gerado eletronicamente por {company?.name}. Valores em Reais (BRL).
       </footer>
     </article>

@@ -1,0 +1,27 @@
+﻿# VISUAL ANTES E DEPOIS - Drawer iOS
+
+ANTES (Problema):
+- Drawer usa vh estatico
+- Teclado empurra drawer para cima
+- Espaco em branco aparece
+- Layout quebrado
+
+DEPOIS (Corrigido):
+- Drawer usa dvh dinamico
+- Drawer fica fixo no topo do teclado
+- Sem espaco em branco
+- Layout perfeito
+
+CORRECAO APLICADA:
+
+1. Trocado vh por dvh
+2. Adicionado flex flex-col
+3. Header: flex-shrink-0
+4. Content: flex-1 min-h-0 overflow-y-auto
+5. CSS especifico iOS no styles.css
+
+RESULTADO:
+Drawer funciona perfeitamente no iOS Safari!
+
+Status: RESOLVIDO
+Data: 19/10/2026

@@ -21,6 +21,22 @@ export function MediaUploader({ companyId, kind, value, onChange, aspect = "squa
     aspect === "cover" ? "aspect-[16/6]" : aspect === "portrait" ? "aspect-[3/4]" : "aspect-square";
 
   async function handleFile(file: File) {
+    // Validação de segurança: tipo e tamanho
+    const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Formato inválido. Use apenas JPEG, PNG ou WebP.");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    if (file.size > MAX_SIZE) {
+      toast.error("Arquivo muito grande. O tamanho máximo é 5MB.");
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
     setBusy(true);
     try {
       const prev = value;

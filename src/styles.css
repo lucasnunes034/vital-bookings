@@ -317,3 +317,59 @@ textarea.input { height: auto; padding-block: 0.5rem; }
     break-inside: avoid;
   }
 }
+/* ===== Correções para iOS Safari - Teclado Virtual ===== */
+@supports (-webkit-touch-callout: none) {
+  /* Força elementos flutuantes a respeitarem o teclado no iOS */
+  [data-radix-popper-content-wrapper], 
+  [vaul-drawer],
+  [role="dialog"] {
+    max-height: -webkit-fill-available !important;
+  }
+
+  /* Drawer específico - fixa na posição correta quando teclado aparece */
+  [vaul-drawer] {
+    position: fixed !important;
+    bottom: 0 !important;
+    /* Usa dvh (dynamic viewport height) que se ajusta ao teclado */
+    max-height: 92dvh !important;
+  }
+
+  /* Previne o scroll do body quando drawer está aberto */
+  body:has([vaul-drawer][data-state="open"]) {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Container interno do drawer */
+  [vaul-drawer] > div {
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: inherit !important;
+  }
+
+  /* Área de conteúdo scrollável dentro do drawer */
+  [vaul-drawer] .overflow-y-auto {
+    /* Garante que o scroll funciona corretamente */
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+/* Classe auxiliar para componentes que precisam se ajustar ao teclado iOS */
+.ios-keyboard-fix {
+  /* Previne que o elemento seja empurrado para fora da viewport */
+  position: fixed !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
+  will-change: transform !important;
+}
+
+/* Correção adicional usando visualViewport API (via CSS) */
+@supports (height: 100dvh) {
+  [vaul-drawer] {
+    /* dvh = dynamic viewport height - se ajusta automaticamente ao teclado */
+    max-height: 92dvh !important;
+  }
+}

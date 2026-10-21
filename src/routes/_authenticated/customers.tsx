@@ -702,12 +702,12 @@ function CustomerDetailsPanel({ customer, tz, onClose }: { customer: Customer | 
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-        <DrawerContent className="max-h-[92vh]">
-          <DrawerHeader className="text-left">
+        <DrawerContent className="max-h-[92dvh] flex flex-col">
+          <DrawerHeader className="text-left flex-shrink-0">
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription>Detalhes do cliente, contato e histórico de atendimentos.</DrawerDescription>
           </DrawerHeader>
-          <div className="px-4 pb-6 overflow-y-auto">{body}</div>
+          <div className="px-4 pb-6 overflow-y-auto flex-1 min-h-0">{body}</div>
         </DrawerContent>
       </Drawer>
     );

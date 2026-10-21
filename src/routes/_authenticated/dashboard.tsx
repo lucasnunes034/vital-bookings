@@ -64,12 +64,11 @@ function DashboardPage() {
   return <DashboardContent company={company} signOut={signOut} />;
 }
 
-const SUPER_ADMIN_EMAIL = "lucasnunes239@gmail.com";
-
 function DashboardContent({ company, signOut }: { company: { id: string; name: string; slug: string; segment: string; timezone?: string | null; address?: string | null }; signOut: () => void }) {
   const tz = company.timezone || "America/Sao_Paulo";
   const [newBooking, setNewBooking] = useState(false);
 
+  const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || "";
   const meQ = useQuery({
     queryKey: ["me-email"],
     queryFn: async () => {
@@ -78,7 +77,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
     },
     staleTime: Infinity,
   });
-  const isSuperAdmin = meQ.data === SUPER_ADMIN_EMAIL;
+  const isSuperAdmin = meQ.data === SUPER_ADMIN_EMAIL.toLowerCase();
   const { start: startOfDay, end: endOfDay } = zonedDayRangeUTC(new Date(), tz);
 
   const statsQ = useQuery({

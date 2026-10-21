@@ -38,7 +38,8 @@ export const Route = createFileRoute("/_authenticated")({
     await supabase.rpc("claim_company_invites").then(() => undefined, () => undefined);
 
     // Super admin nunca é bloqueado pela assinatura.
-    if ((data.user.email ?? "").toLowerCase() === "lucasnunes239@gmail.com") {
+    const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || "";
+    if ((data.user.email ?? "").toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
       return { user: data.user };
     }
 

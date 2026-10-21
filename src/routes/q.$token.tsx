@@ -28,11 +28,11 @@ function PublicQuotePage() {
   });
 
   if (q.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50"><Loader2 className="size-6 animate-spin text-gray-400" /></div>;
   }
   if (!q.data) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+      <div className="min-h-screen flex items-center justify-center text-gray-500 bg-gray-50">
         Orçamento não encontrado ou link inválido.
       </div>
     );
@@ -41,10 +41,10 @@ function PublicQuotePage() {
   const { quote, items, company } = q.data;
 
   return (
-    <div className="min-h-screen bg-background text-foreground py-8 md:py-14">
-      <main className="container-page max-w-3xl">
-        <article className="surface-card p-8 md:p-12 space-y-8">
-          <header className="flex items-start justify-between gap-6 border-b border-border/60 pb-6">
+    <div className="min-h-screen bg-gray-50 text-slate-900 py-8 md:py-14">
+      <main className="container-page max-w-3xl mx-auto">
+        <article className="bg-white p-8 md:p-12 space-y-8 shadow-sm border border-gray-200 min-h-[1056px]">
+          <header className="flex items-start justify-between gap-6 border-b border-gray-200 pb-6">
             <div className="flex items-center gap-3 min-w-0">
               {company?.logo_url ? (
                 <img src={company.logo_url} alt={company?.name} className="size-14 rounded-md object-cover" />
@@ -55,14 +55,14 @@ function PublicQuotePage() {
               )}
               <div className="min-w-0">
                 <h1 className="font-display text-xl font-semibold truncate">{company?.name}</h1>
-                {company?.phone && <p className="text-xs text-muted-foreground truncate">{company.phone}</p>}
-                {company?.address && <p className="text-xs text-muted-foreground truncate">{company.address}</p>}
+                {company?.phone && <p className="text-xs text-gray-500 truncate">{company.phone}</p>}
+                {company?.address && <p className="text-xs text-gray-500 truncate">{company.address}</p>}
               </div>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Orçamento</p>
+              <p className="text-[11px] uppercase tracking-wider text-gray-500">Orçamento</p>
               <p className="font-display text-2xl font-semibold tabular-nums">{quoteNumberLabel(quote.quote_number)}</p>
-              <span className="mt-1 inline-flex text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border bg-muted text-muted-foreground border-border">
+              <span className="mt-1 inline-flex text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-md border bg-gray-100 text-gray-500 border-gray-200">
                 {QUOTE_STATUS_LABEL[quote.status] ?? quote.status}
               </span>
             </div>
@@ -70,15 +70,15 @@ function PublicQuotePage() {
 
           <section className="grid gap-6 md:grid-cols-2">
             <div>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Cliente</p>
+              <p className="text-[11px] uppercase tracking-wider text-gray-500">Cliente</p>
               <p className="mt-1 font-medium">{quote.customer_name}</p>
-              {quote.customer_phone && <p className="text-sm text-muted-foreground">{quote.customer_phone}</p>}
-              {quote.customer_email && <p className="text-sm text-muted-foreground">{quote.customer_email}</p>}
+              {quote.customer_phone && <p className="text-sm text-gray-500">{quote.customer_phone}</p>}
+              {quote.customer_email && <p className="text-sm text-gray-500">{quote.customer_email}</p>}
             </div>
             <div className="md:text-right space-y-1 text-sm">
-              <p><span className="text-muted-foreground">Emitido em: </span>{new Date(quote.created_at).toLocaleDateString("pt-BR")}</p>
+              <p><span className="text-gray-500">Emitido em: </span>{new Date(quote.created_at).toLocaleDateString("pt-BR")}</p>
               {quote.valid_until && (
-                <p><span className="text-muted-foreground">Válido até: </span>{new Date(quote.valid_until).toLocaleDateString("pt-BR")}</p>
+                <p><span className="text-gray-500">Válido até: </span>{new Date(quote.valid_until).toLocaleDateString("pt-BR")}</p>
               )}
             </div>
           </section>
@@ -86,14 +86,14 @@ function PublicQuotePage() {
           <section>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground border-b border-border/60">
+                <tr className="text-left text-[11px] uppercase tracking-wider text-gray-500 border-b border-gray-200">
                   <th className="py-2 pr-2 font-medium">Descrição</th>
                   <th className="py-2 pr-2 font-medium text-right w-20">Qtd.</th>
                   <th className="py-2 pr-2 font-medium text-right w-32">Unitário</th>
                   <th className="py-2 pr-2 font-medium text-right w-32">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/60">
+              <tbody className="divide-y divide-gray-200">
                 {(items ?? []).map((i: any) => (
                   <tr key={i.id}>
                     <td className="py-3 pr-2">{i.description}</td>
@@ -104,8 +104,8 @@ function PublicQuotePage() {
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-border">
-                  <td colSpan={3} className="py-4 text-right text-sm uppercase tracking-wider text-muted-foreground">Total geral</td>
+                <tr className="border-t-2 border-gray-300">
+                  <td colSpan={3} className="py-4 text-right text-sm uppercase tracking-wider text-gray-500">Total geral</td>
                   <td className="py-4 text-right font-display text-2xl font-semibold tabular-nums">{formatCents(quote.total_cents)}</td>
                 </tr>
               </tfoot>
@@ -114,12 +114,12 @@ function PublicQuotePage() {
 
           {quote.notes && (
             <section>
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Observações</p>
+              <p className="text-[11px] uppercase tracking-wider text-gray-500">Observações</p>
               <p className="mt-2 text-sm whitespace-pre-wrap leading-relaxed">{quote.notes}</p>
             </section>
           )}
 
-          <footer className="pt-6 border-t border-border/60 text-xs text-muted-foreground text-center">
+          <footer className="pt-6 border-t border-gray-200 text-xs text-gray-500 text-center">
             Documento gerado eletronicamente por {company?.name}. Valores em Reais (BRL).
           </footer>
         </article>
