@@ -109,8 +109,14 @@ export const Route = createFileRoute("/$slug")({
   }),
   loader: async ({ params }) => {
     const { data, error } = await supabase.rpc("get_public_company_by_slug", { _slug: params.slug });
-    if (error) throw error;
-    if (!data) throw notFound();
+    if (error) {
+      console.error("Erro ao buscar empresa:", error);
+      throw error;
+    }
+    if (!data) {
+      console.warn(`Empresa não encontrada para slug: ${params.slug}`);
+      throw notFound();
+    }
     return { company: data as unknown as PublicCompany };
   },
   errorComponent: () => <NotAvailable />,
@@ -707,12 +713,21 @@ function ManageLink({ token }: { token: string }) {
 }
 
 function NotAvailable() {
+  const params = Route.useParams();
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-      <div className="text-center">
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground px-4">
+      <div className="text-center max-w-md">
         <h1 className="font-display text-2xl font-semibold">Página não encontrada</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Esse link de agendamento não existe ou está inativo.</p>
-        <Link to="/" className="btn-ghost mt-6 inline-flex">Ir para o Slotly</Link>
+        <p className="mt-2 text-sm text-muted-foreground">
+          O link de agendamento <span className="font-mono text-foreground">/{params.slug}</span> não existe ou está incorreto.
+        </p>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Se você é o dono desta empresa, verifique se o link está correto no painel de administração.
+        </p>
+        <div className="mt-6 flex justify-center gap-2">
+          <Link to="/" className="btn-ghost inline-flex h-9 text-sm">Ir para o Slotly</Link>
+          <Link to="/auth" className="btn-primary inline-flex h-9 text-sm">Fazer login</Link>
+        </div>
       </div>
     </div>
   );

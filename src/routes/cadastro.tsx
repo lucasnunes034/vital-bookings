@@ -74,6 +74,8 @@ function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [cpf, setCpf] = useState("");
+  const [segment, setSegment] = useState("");
+  const [customSegment, setCustomSegment] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState(false);
 
@@ -144,12 +146,17 @@ function SignupPage() {
       let attempt = 0;
       let companyError: { message: string; code?: string } | null = null;
 
+      // Determina o segmento final
+      const finalSegment = segment === "Outros" 
+        ? (customSegment.trim() || "Outro")
+        : (segment || "Outro");
+
       while (attempt < 5) {
         const { error } = await supabase.from("companies").insert({
           owner_id: userId,
           name: parsed.data.companyName,
           slug,
-          segment: "Outro",
+          segment: finalSegment,
           cpf: cpfDigits,
           subscription_status: "trial",
           subscription_ends_at: endsAt.toISOString(),
@@ -312,6 +319,48 @@ function SignupPage() {
                       required
                     />
                   </Field>
+
+                  <Field label="Qual a sua profissão?" htmlFor="segment">
+                    <select
+                      id="segment"
+                      value={segment}
+                      onChange={(e) => {
+                        setSegment(e.target.value);
+                        if (e.target.value !== "Outros") {
+                          setCustomSegment("");
+                        }
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      required
+                    >
+                      <option value="">Selecione uma opção</option>
+                      <option value="Barbearia">Barbearia</option>
+                      <option value="Salão de Beleza">Salão de Beleza</option>
+                      <option value="Estética e Spa">Estética e Spa</option>
+                      <option value="Clínica Médica">Clínica Médica</option>
+                      <option value="Clínica Odontológica">Clínica Odontológica</option>
+                      <option value="Fisioterapia">Fisioterapia</option>
+                      <option value="Psicologia">Psicologia</option>
+                      <option value="Nutrição">Nutrição</option>
+                      <option value="Personal Trainer">Personal Trainer</option>
+                      <option value="Estúdio de Tatuagem">Estúdio de Tatuagem</option>
+                      <option value="Pet Shop">Pet Shop</option>
+                      <option value="Consultoria">Consultoria</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </Field>
+
+                  {segment === "Outros" && (
+                    <Field label="Qual a sua profissão?" htmlFor="customSegment">
+                      <Input
+                        id="customSegment"
+                        value={customSegment}
+                        onChange={(e) => setCustomSegment(e.target.value)}
+                        placeholder="Digite sua profissão"
+                        required
+                      />
+                    </Field>
+                  )}
 
                   <button
                     type="submit"

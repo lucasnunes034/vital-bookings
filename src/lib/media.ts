@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
 
 const BUCKET = "company-media";
 const LONG_TTL = 60 * 60 * 24 * 365 * 10; // 10 anos

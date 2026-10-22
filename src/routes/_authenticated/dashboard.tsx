@@ -180,10 +180,39 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
           <Clock className="size-8 mx-auto text-muted-foreground" />
           <h2 className="mt-4 font-display text-xl font-semibold">Compartilhe seu link e receba agendamentos</h2>
           <p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">
-            Envie o link <span className="text-foreground">/{company.slug}</span> para seus clientes. Cada solicitação aparece em <strong>Agendamentos</strong> para você aprovar.
+            {company.slug ? (
+              <>
+                Envie o link <span className="text-foreground">/{company.slug}</span> para seus clientes. Cada solicitação aparece em <strong>Agendamentos</strong> para você aprovar.
+              </>
+            ) : (
+              <span className="text-warning">Configure o link da sua empresa nas configurações primeiro.</span>
+            )}
           </p>
           <div className="mt-5 flex justify-center gap-2">
-            <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/${company.slug}`); toast.success("Link copiado"); }} className="btn-ghost h-9 text-sm">Copiar link</button>
+            {company.slug ? (
+              <>
+                <button 
+                  onClick={() => { 
+                    const publicUrl = `${window.location.origin}/${company.slug}`;
+                    navigator.clipboard.writeText(publicUrl); 
+                    toast.success("Link copiado", { description: publicUrl }); 
+                  }} 
+                  className="btn-ghost h-9 text-sm"
+                >
+                  Copiar link
+                </button>
+                <a 
+                  href={`/${company.slug}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="btn-outline h-9 text-sm inline-flex items-center gap-1.5"
+                >
+                  Ver página pública
+                </a>
+              </>
+            ) : (
+              <Link to="/settings" className="btn-primary h-9 text-sm">Ir para configurações</Link>
+            )}
             <Link to="/bookings" className="btn-primary h-9 text-sm">Abrir agendamentos</Link>
           </div>
         </div>
