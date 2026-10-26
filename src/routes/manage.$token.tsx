@@ -64,7 +64,7 @@ type Booking = {
 export const Route = createFileRoute("/manage/$token")({
   head: () => ({
     meta: [
-      { title: "Gerenciar agendamento · Slotly" },
+      { title: "Gerenciar agendamento · AgendaJa" },
       { name: "description", content: "Cancele ou remarque seu agendamento em poucos cliques." },
       { name: "robots", content: "noindex" },
     ],
@@ -539,7 +539,7 @@ function NotFound() {
           Este link de gerenciamento não existe ou expirou. Confira se copiou o endereço completo.
         </p>
         <Link to="/" className="btn-ghost mt-6 inline-flex">
-          Ir para o Slotly
+          Ir para o AgendaJa
         </Link>
       </div>
     </div>

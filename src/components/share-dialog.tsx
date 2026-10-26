@@ -45,7 +45,7 @@ export function ShareDialog({ open, onClose, url, title }: Props) {
   }
 
   const enc = encodeURIComponent(url);
-  const msg = encodeURIComponent(`Agende comigo pelo Slotly: ${url}`);
+  const msg = encodeURIComponent(`Agende comigo pelo AgendaJa: ${url}`);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

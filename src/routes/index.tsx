@@ -4,13 +4,13 @@ import { Calendar } from "lucide-react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Slotly — Agendamento online para qualquer negócio" },
+      { title: "AgendaJa — Agendamento online para qualquer negócio" },
       {
         name: "description",
         content:
-          "Slotly é o SaaS de agendamento para barbearias, clínicas, salões, estúdios, pet shops e mais. Agenda, clientes e financeiro em um só painel.",
+          "AgendaJa é o SaaS de agendamento para barbearias, clínicas, salões, estúdios, pet shops e mais. Agenda, clientes e financeiro em um só painel.",
       },
-      { property: "og:title", content: "Slotly — Agendamento online para qualquer negócio" },
+      { property: "og:title", content: "AgendaJa — Agendamento online para qualquer negócio" },
       {
         property: "og:description",
         content:
@@ -34,7 +34,7 @@ function Splash() {
           <Calendar className="size-10 text-primary-foreground" strokeWidth={2} />
         </div>
         <h1 className="font-display text-3xl font-semibold tracking-tight mb-2">
-          Slotly
+          AgendaJa
         </h1>
         <p className="text-sm text-muted-foreground mb-10">
           A agenda inteligente do seu negócio.

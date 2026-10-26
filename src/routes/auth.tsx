@@ -13,8 +13,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar · Slotly" },
-      { name: "description", content: "Acesse sua conta Slotly ou crie uma grátis em segundos." },
+      { title: "Entrar · AgendaJa" },
+      { name: "description", content: "Acesse sua conta AgendaJa ou crie uma grátis em segundos." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -47,7 +47,7 @@ function AuthPage() {
               <Calendar className="size-4 text-white" strokeWidth={2.5} />
             </div>
           </div>
-          <span className="font-display text-lg font-semibold">Slotly</span>
+          <span className="font-display text-lg font-semibold">AgendaJa</span>
         </Link>
       </header>
 
@@ -60,7 +60,7 @@ function AuthPage() {
         <div className="relative w-full max-w-md">
           <div className="surface-card p-8">
             <div className="text-center mb-6">
-              <h1 className="font-display text-2xl font-semibold tracking-tight">Bem-vindo ao Slotly</h1>
+              <h1 className="font-display text-2xl font-semibold tracking-tight">Bem-vindo ao AgendaJa</h1>
               <p className="mt-1 text-sm text-muted-foreground">Entre ou crie sua conta grátis</p>
             </div>
 

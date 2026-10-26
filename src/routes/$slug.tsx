@@ -99,7 +99,7 @@ type PublicCompany = {
 export const Route = createFileRoute("/$slug")({
   head: ({ params }) => ({
     meta: [
-      { title: `Agende online · ${params.slug} · Slotly` },
+      { title: `Agende online · ${params.slug} · AgendaJa` },
       { name: "description", content: `Escolha um horário e agende online com ${params.slug}.` },
       { property: "og:title", content: `Agende com ${params.slug}` },
       { property: "og:description", content: "Escolha o serviço, o profissional e o melhor horário. Confirmação em instantes." },
@@ -358,7 +358,7 @@ function PublicLandingPage() {
         </section>
 
         <footer className="pt-4 text-center">
-          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">Powered by Slotly</Link>
+          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">Powered by AgendaJa</Link>
         </footer>
       </main>
 
@@ -725,7 +725,7 @@ function NotAvailable() {
           Se você é o dono desta empresa, verifique se o link está correto no painel de administração.
         </p>
         <div className="mt-6 flex justify-center gap-2">
-          <Link to="/" className="btn-ghost inline-flex h-9 text-sm">Ir para o Slotly</Link>
+          <Link to="/" className="btn-ghost inline-flex h-9 text-sm">Ir para o AgendaJa</Link>
           <Link to="/auth" className="btn-primary inline-flex h-9 text-sm">Fazer login</Link>
         </div>
       </div>

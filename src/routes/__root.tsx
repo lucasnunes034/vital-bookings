@@ -78,14 +78,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" },
-      { title: "Slotly — Agendamento online para qualquer negócio" },
+      { title: "AgendaJa — Agendamento online para qualquer negócio" },
       {
         name: "description",
         content:
           "SaaS de agendamento online para barbearias, clínicas, salões, estúdios e mais. Agenda, clientes, profissionais e financeiro em um só lugar.",
       },
-      { name: "author", content: "Slotly" },
-      { property: "og:title", content: "Slotly — Agendamento online para qualquer negócio" },
+      { name: "author", content: "AgendaJa" },
+      { property: "og:title", content: "AgendaJa — Agendamento online para qualquer negócio" },
       {
         property: "og:description",
         content:
@@ -97,8 +97,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Slotly" },
-      { name: "application-name", content: "Slotly" },
+      { name: "apple-mobile-web-app-title", content: "AgendaJa" },
+      { name: "application-name", content: "AgendaJa" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

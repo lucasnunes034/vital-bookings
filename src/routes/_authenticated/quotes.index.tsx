@@ -8,7 +8,7 @@ import { formatCents, QUOTE_STATUS_LABEL, quoteNumberLabel } from "@/lib/quotes"
 export const Route = createFileRoute("/_authenticated/quotes/")({
   head: () => ({
     meta: [
-      { title: "Orçamentos · Slotly" },
+      { title: "Orçamentos · AgendaJa" },
       { name: "description", content: "Crie, envie e acompanhe orçamentos dos seus clientes." },
       { name: "robots", content: "noindex" },
     ],

@@ -233,9 +233,9 @@ function SummaryCard({
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
     meta: [
-      { title: "Relatórios e Financeiro — Slotly" },
+      { title: "Relatórios e Financeiro — AgendaJa" },
       { name: "description", content: "Acompanhe faturamento, serviços concluídos e ticket médio da sua empresa." },
-      { property: "og:title", content: "Relatórios e Financeiro — Slotly" },
+      { property: "og:title", content: "Relatórios e Financeiro — AgendaJa" },
       { property: "og:description", content: "Faturamento, serviços concluídos e ticket médio por período." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

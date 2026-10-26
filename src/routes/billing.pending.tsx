@@ -11,10 +11,10 @@ export const Route = createFileRoute("/billing/pending")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Assinatura pendente · Slotly" },
-      { name: "description", content: "Renove sua assinatura do Slotly para voltar a acessar sua agenda, clientes e orçamentos." },
-      { property: "og:title", content: "Assinatura pendente · Slotly" },
-      { property: "og:description", content: "Renove sua assinatura para reativar o acesso ao painel Slotly." },
+      { title: "Assinatura pendente · AgendaJa" },
+      { name: "description", content: "Renove sua assinatura do AgendaJa para voltar a acessar sua agenda, clientes e orçamentos." },
+      { property: "og:title", content: "Assinatura pendente · AgendaJa" },
+      { property: "og:description", content: "Renove sua assinatura para reativar o acesso ao painel AgendaJa." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -46,7 +46,7 @@ function BillingPendingPage() {
     navigate({ to: "/auth", replace: true });
   };
 
-  const message = `Olá! Sou responsável pela empresa ${q.data?.name ?? ""} no Slotly e quero renovar minha assinatura.`;
+  const message = `Olá! Sou responsável pela empresa ${q.data?.name ?? ""} no AgendaJa e quero renovar minha assinatura.`;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-4 py-10">

@@ -11,7 +11,7 @@ import { formatCents, parseMoneyToCents, centsToInput } from "@/lib/quotes";
 export const Route = createFileRoute("/_authenticated/quotes/new")({
   head: () => ({
     meta: [
-      { title: "Novo orçamento · Slotly" },
+      { title: "Novo orçamento · AgendaJa" },
       { name: "description", content: "Monte um orçamento profissional em minutos." },
       { name: "robots", content: "noindex" },
     ],

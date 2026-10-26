@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth/reset-password")({
   head: () => ({
     meta: [
-      { title: "Nova senha · Slotly" },
-      { name: "description", content: "Defina uma nova senha para sua conta Slotly." },
+      { title: "Nova senha · AgendaJa" },
+      { name: "description", content: "Defina uma nova senha para sua conta AgendaJa." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -47,7 +47,7 @@ function ResetPasswordPage() {
               <Calendar className="size-4 text-white" strokeWidth={2.5} />
             </div>
           </div>
-          <span className="font-display text-lg font-semibold">Slotly</span>
+          <span className="font-display text-lg font-semibold">AgendaJa</span>
         </Link>
       </header>
       <div className="flex-1 flex items-center justify-center px-4 pb-16">

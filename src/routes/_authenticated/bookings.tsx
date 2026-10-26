@@ -53,7 +53,7 @@ type Status = BookingStatus;
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({
     meta: [
-      { title: "Agendamentos · Slotly" },
+      { title: "Agendamentos · AgendaJa" },
       { name: "description", content: "Aprove, confirme e gerencie os agendamentos da sua empresa." },
       { name: "robots", content: "noindex" },
     ],

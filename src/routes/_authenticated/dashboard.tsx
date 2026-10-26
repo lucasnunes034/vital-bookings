@@ -14,8 +14,8 @@ import { buildWhatsappUrl } from "@/lib/whatsapp";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Painel · Slotly" },
-      { name: "description", content: "Gerencie sua agenda, clientes e financeiro no Slotly." },
+      { title: "Painel · AgendaJa" },
+      { name: "description", content: "Gerencie sua agenda, clientes e financeiro no AgendaJa." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -101,7 +101,7 @@ function DashboardContent({ company, signOut }: { company: { id: string; name: s
                 <Calendar className="size-4 text-white" strokeWidth={2.5} />
               </div>
             </div>
-            <span className="truncate font-display text-lg font-semibold">Slotly</span>
+            <span className="truncate font-display text-lg font-semibold">AgendaJa</span>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
             {isSuperAdmin && (

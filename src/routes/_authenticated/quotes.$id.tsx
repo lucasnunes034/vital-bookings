@@ -12,7 +12,7 @@ import { buildWhatsappUrl } from "@/lib/whatsapp";
 export const Route = createFileRoute("/_authenticated/quotes/$id")({
   head: () => ({
     meta: [
-      { title: "Orçamento · Slotly" },
+      { title: "Orçamento · AgendaJa" },
       { name: "description", content: "Visualização do orçamento pronto para envio." },
       { name: "robots", content: "noindex" },
     ],

@@ -35,9 +35,9 @@ export const Route = createFileRoute("/_authenticated/super-admin")({
   },
   head: () => ({
     meta: [
-      { title: "Torre de Controle · Slotly" },
-      { name: "description", content: "Painel interno para gerenciar assinaturas das empresas cadastradas no Slotly." },
-      { property: "og:title", content: "Torre de Controle · Slotly" },
+      { title: "Torre de Controle · AgendaJa" },
+      { name: "description", content: "Painel interno para gerenciar assinaturas das empresas cadastradas no AgendaJa." },
+      { property: "og:title", content: "Torre de Controle · AgendaJa" },
       { property: "og:description", content: "Gerencie assinaturas, status e vencimentos das empresas." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -56,7 +56,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   },
   head: () => ({
     meta: [
-      { title: "Configurações · Slotly" },
+      { title: "Configurações · AgendaJa" },
       { name: "description", content: "Gerencie serviços, profissionais, disponibilidade e pausas." },
       { name: "robots", content: "noindex" },
     ],
@@ -116,7 +116,7 @@ function SettingsPage() {
                   <Calendar className="size-4 text-white" strokeWidth={2.5} />
                 </div>
               </div>
-              <span className="font-display text-lg font-semibold">Slotly</span>
+              <span className="font-display text-lg font-semibold">AgendaJa</span>
             </Link>
           </div>
           <p className="text-sm text-muted-foreground truncate max-w-[50%]">{company.name}</p>

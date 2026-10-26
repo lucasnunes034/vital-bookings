@@ -109,7 +109,7 @@ type Customer = {
 export const Route = createFileRoute("/_authenticated/customers")({
   head: () => ({
     meta: [
-      { title: "Clientes · Slotly" },
+      { title: "Clientes · AgendaJa" },
       { name: "description", content: "Histórico completo dos seus clientes, com recorrência e última visita." },
       { name: "robots", content: "noindex" },
     ],

@@ -1,8 +1,8 @@
 import { ensureReadable, readableOn } from "./contrast";
 import { DEFAULT_THEME, type CompanyTheme, type ThemeFont, type ThemeMode } from "./types";
 
-const FONT_LINK_ID = "slotly-theme-font";
-const STYLE_ID = "slotly-theme-style";
+const FONT_LINK_ID = "agendaja-theme-font";
+const STYLE_ID = "agendaja-theme-style";
 
 const FONT_GOOGLE: Record<ThemeFont, string> = {
   Inter: "Inter:wght@400;500;600;700",

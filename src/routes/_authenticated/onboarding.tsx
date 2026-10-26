@@ -21,8 +21,8 @@ import { Switch } from "@/components/ui/switch";
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({
     meta: [
-      { title: "Configurar empresa · Slotly" },
-      { name: "description", content: "Configure sua empresa e serviços no Slotly em minutos." },
+      { title: "Configurar empresa · AgendaJa" },
+      { name: "description", content: "Configure sua empresa e serviços no AgendaJa em minutos." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -94,7 +94,7 @@ function OnboardingPage() {
               <Calendar className="size-4 text-white" strokeWidth={2.5} />
             </div>
           </div>
-          <span className="font-display text-lg font-semibold">Slotly</span>
+          <span className="font-display text-lg font-semibold">AgendaJa</span>
         </Link>
         <Stepper step={step} />
       </header>
@@ -246,7 +246,7 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
 
       <FormField label="Link público">
         <div className="flex items-center rounded-lg border border-input bg-transparent focus-within:ring-2 focus-within:ring-ring">
-          <span className="pl-3 pr-1 text-sm text-muted-foreground">slotly.app/</span>
+          <span className="pl-3 pr-1 text-sm text-muted-foreground">agendaja.app/</span>
           <input
             value={slug}
             onChange={(e) => {
@@ -259,7 +259,7 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Seus clientes agendarão em <span className="text-foreground">slotly.app/{preview}</span>
+          Seus clientes agendarão em <span className="text-foreground">agendaja.app/{preview}</span>
         </p>
       </FormField>
 

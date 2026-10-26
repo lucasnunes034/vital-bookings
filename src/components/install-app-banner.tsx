@@ -6,7 +6,7 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "slotly-install-banner-dismissed";
+const DISMISS_KEY = "agendaja-install-banner-dismissed";
 
 function isStandalone() {
   if (typeof window === "undefined") return false;
@@ -53,11 +53,11 @@ export function InstallAppBanner() {
   return (
     <div className="fixed inset-x-4 bottom-24 z-50 md:left-auto md:right-6 md:bottom-6 md:w-80 surface-card border border-border/70 shadow-xl p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4">
       <div className="relative size-10 shrink-0 rounded-xl overflow-hidden" style={{ background: "var(--gradient-brand, #0A0A0A)" }}>
-        <img src="/icons/icon-192.png" alt="Slotly" className="size-10 object-cover" />
+        <img src="/icons/icon-192.png" alt="AgendaJa" className="size-10 object-cover" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">Instalar aplicativo</p>
-        <p className="text-xs text-muted-foreground truncate">Acesse o Slotly direto da sua tela inicial.</p>
+        <p className="text-xs text-muted-foreground truncate">Acesse o AgendaJa direto da sua tela inicial.</p>
       </div>
       <button
         onClick={install}

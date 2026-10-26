@@ -11,16 +11,16 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/cadastro")({
   head: () => ({
     meta: [
-      { title: "Criar conta grátis · Slotly" },
+      { title: "Criar conta grátis · AgendaJa" },
       {
         name: "description",
         content:
-          "Cadastre sua empresa no Slotly e teste grátis por 7 dias: agenda online, clientes, orçamentos e financeiro.",
+          "Cadastre sua empresa no AgendaJa e teste grátis por 7 dias: agenda online, clientes, orçamentos e financeiro.",
       },
-      { property: "og:title", content: "Criar conta grátis · Slotly" },
+      { property: "og:title", content: "Criar conta grátis · AgendaJa" },
       {
         property: "og:description",
-        content: "Cadastro em 1 minuto e 7 dias grátis para testar o Slotly na sua empresa.",
+        content: "Cadastro em 1 minuto e 7 dias grátis para testar o AgendaJa na sua empresa.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -183,7 +183,7 @@ function SignupPage() {
         return;
       }
 
-      toast.success("Bem-vindo ao Slotly! Seus 7 dias grátis começaram agora.", {
+      toast.success("Bem-vindo ao AgendaJa! Seus 7 dias grátis começaram agora.", {
         description: "Aproveite todos os recursos sem compromisso.",
         duration: 6000,
       });
@@ -214,7 +214,7 @@ function SignupPage() {
               <Calendar className="size-4 text-primary-foreground" strokeWidth={2.5} />
             </div>
           </div>
-          <span className="font-display text-lg font-semibold">Slotly</span>
+          <span className="font-display text-lg font-semibold">AgendaJa</span>
         </Link>
       </header>
 

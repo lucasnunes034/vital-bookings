@@ -35,7 +35,7 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({
     meta: [
-      { title: "Calendário · Slotly" },
+      { title: "Calendário · AgendaJa" },
       { name: "description", content: "Visualize e organize sua agenda com arrastar e soltar." },
       { name: "robots", content: "noindex" },
     ],
