@@ -195,12 +195,37 @@ function BookingsPage() {
         </div>
       </header>
 
-      <main className="container-page min-w-0 py-10 space-y-6">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">Agendamentos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Aprove ou recuse solicitações e acompanhe a agenda.
-          </p>
+     <main className="container-page min-w-0 py-10 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">Agendamentos</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Aprove ou recuse solicitações e acompanhe a agenda.
+            </p>
+          </div>
+          {companyQ.data?.slug && (
+            <button 
+              onClick={() => { 
+                const publicUrl = `${window.location.origin}/${companyQ.data?.slug}`;
+                
+                if (navigator.clipboard && window.isSecureContext) {
+                  navigator.clipboard.writeText(publicUrl); 
+                  toast.success("Link copiado!", { description: publicUrl }); 
+                } else {
+                  const textArea = document.createElement("textarea");
+                  textArea.value = publicUrl;
+                  document.body.appendChild(textArea);
+                  textArea.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(textArea);
+                  toast.success("Link copiado!", { description: publicUrl });
+                }
+              }} 
+              className="btn-outline h-9 text-sm inline-flex items-center"
+            >
+              Copiar link
+            </button>
+          )}
         </div>
 
         <div className="flex gap-1 border-b border-border overflow-x-auto scrollbar-hide">

@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -446,6 +447,7 @@ function BookingDialog({
       const p = getZonedParts(date!, tz);
       const start = zonedWallToUTC(p.year, p.month, p.day, h, m, tz);
       const end = new Date(start.getTime() + service!.duration_minutes * 60000);
+
       // Pré-checagem client-side para mensagens mais precisas antes do RLS bloquear.
       if (start.getTime() <= Date.now()) {
         throw new Error("client_past_time");
@@ -453,13 +455,10 @@ function BookingDialog({
       if (!service || !professional) {
         throw new Error("client_missing_resource");
       }
-      // Gera o token no cliente para evitar depender do RETURNING (anon não
-      // tem policy de SELECT em bookings — PostgREST devolveria 42501 mesmo
-      // com o INSERT tendo sido aceito).
-      const manageToken =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? uuidv4()
-          : `${Date.now().toString(16)}-${Math.random().toString(16).slice(2)}`;
+
+      // Gera o token no cliente usando a função importada corretamente
+      const manageToken = uuidv4();
+
       const { error } = await supabase.from("bookings").insert({
         company_id: company.id,
         professional_id: professionalId!,
@@ -471,9 +470,10 @@ function BookingDialog({
         start_at: start.toISOString(),
         end_at: end.toISOString(),
         status: "pending",
-        manage_token: manageToken,
+        manage_token: manageToken, // Usa a variável criada acima
         payment_method: acceptedMethods.length > 0 ? paymentMethod : null,
       } as any);
+
       if (error) throw error;
       return manageToken;
     },
