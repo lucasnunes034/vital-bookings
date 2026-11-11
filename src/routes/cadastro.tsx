@@ -156,7 +156,7 @@ function SignupPage() {
           owner_id: userId,
           name: parsed.data.companyName,
           slug,
-          segment: finalSegment,
+          segment: segment === "Outros" ? customSegment : segment, // <-- A MÁGICA ACONTECE AQUI
           cpf: cpfDigits,
           subscription_status: "trial",
           subscription_ends_at: endsAt.toISOString(),

@@ -171,6 +171,7 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
   const [segment, setSegment] = useState("");
+  const [customSegment, setCustomSegment] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -182,7 +183,11 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const parsed = companySchema.safeParse({ name, slug, segment, phone });
+    
+    // Se escolheu "Outro", usamos o que ele digitou no customSegment
+    const finalSegment = segment === "Outro" ? customSegment : segment;
+    
+    const parsed = companySchema.safeParse({ name, slug, segment: finalSegment, phone });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
 
     setLoading(true);
@@ -191,7 +196,11 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
       setLoading(false);
       return;
     }
-    const { data, error } = await supabase
+
+    // ==========================================
+    // PASSO 1: Criar a Empresa
+    // ==========================================
+    const { data: newCompany, error: companyError } = await supabase
       .from("companies")
       .insert({
         name: parsed.data.name,
@@ -202,15 +211,44 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
       })
       .select("id")
       .single();
-    setLoading(false);
-    if (error) {
-      if (error.code === "23505") toast.error("Esse link já está em uso. Escolha outro.");
-      else toast.error(error.message);
+      
+    if (companyError) {
+      setLoading(false);
+      if (companyError.code === "23505") toast.error("Esse link já está em uso. Escolha outro.");
+      else toast.error(companyError.message);
       return;
     }
+
+    // ==========================================
+    // PASSO 2: Registar o Dono na tabela company_members
+    // ==========================================
+    const { error: memberError } = await supabase
+      .from("company_members")
+      .insert({
+        company_id: newCompany.id,
+        user_id: userData.user.id,
+        email: userData.user.email!, 
+        full_name: userData.user.user_metadata?.full_name || parsed.data.name,
+        role: "member"
+      });
+
+    if (memberError) console.error("Erro ao adicionar membro:", memberError);
+
+    // ==========================================
+    // PASSO 3: Injetar o Tema Padrão
+    // ==========================================
+    const { error: themeError } = await supabase
+      .from("company_theme_settings")
+      .insert({
+        company_id: newCompany.id
+      });
+
+    if (themeError) console.error("Erro ao criar tema padrão:", themeError);
+
+    setLoading(false);
     await queryClient.invalidateQueries({ queryKey: ["my-companies"] });
     toast.success("Empresa criada! 🎉");
-    onDone(data.id);
+    onDone(newCompany.id);
   };
 
   return (
@@ -230,7 +268,7 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
       </FormField>
 
       <FormField label="Segmento">
-        <Select value={segment} onValueChange={setSegment}>
+        <Select value={segment} onValueChange={setSegment} required>
           <SelectTrigger>
             <SelectValue placeholder="Escolha um segmento" />
           </SelectTrigger>
@@ -242,6 +280,18 @@ function CompanyStep({ onDone }: { onDone: (companyId: string) => void }) {
             ))}
           </SelectContent>
         </Select>
+        
+        {/* Campo extra que só aparece se ele escolher "Outro" */}
+        {segment === "Outro" && (
+          <div className="mt-3 animate-in fade-in slide-in-from-top-2">
+            <Input 
+              value={customSegment} 
+              onChange={(e) => setCustomSegment(e.target.value)} 
+              placeholder="Digite sua profissão (ex: Manicure, Fotografia...)" 
+              required 
+            />
+          </div>
+        )}
       </FormField>
 
       <FormField label="Link público">
@@ -307,6 +357,7 @@ function ServicesStep({ companyId, onNext }: { companyId: string; onNext: () => 
     },
   });
 
+  
   const [name, setName] = useState("");
   const [duration, setDuration] = useState("30");
   const [price, setPrice] = useState("");

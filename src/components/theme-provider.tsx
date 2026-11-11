@@ -5,21 +5,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { applyTheme, resetTheme } from "@/lib/theme/apply";
 import type { CompanyTheme, ThemeFont, ThemeMode, ThemeTemplateId } from "@/lib/theme/types";
 
-function normalize(row: any): CompanyTheme | null {
-  if (!row) return null;
+function normalize(row: any): CompanyTheme {
+  // Se não vier linha nenhuma do banco, cria um objeto vazio para forçar as cores padrão
+  const safeRow = row || {};
+
   return {
-    company_id: row.company_id,
-    template_id: (row.template_id ?? "default") as ThemeTemplateId,
-    primary_color: row.primary_color,
-    secondary_color: row.secondary_color,
-    accent_color: row.accent_color,
-    theme_mode: (row.theme_mode ?? "dark") as ThemeMode,
-    font_family: (row.font_family ?? "Inter") as ThemeFont,
-    logo_url: row.logo_url ?? null,
-    favicon_url: row.favicon_url ?? null,
-    banner_url: row.banner_url ?? null,
-    display_name: row.display_name ?? null,
-    tagline: row.tagline ?? null,
+    company_id: safeRow.company_id ?? "default",
+    template_id: (safeRow.template_id ?? "default") as ThemeTemplateId,
+    // Cores de fallback: se a cor for null, assume o padrão automaticamente
+    primary_color: safeRow.primary_color ?? "#6366f1",
+    secondary_color: safeRow.secondary_color ?? "#4f46e5",
+    accent_color: safeRow.accent_color ?? "#818cf8",
+    theme_mode: (safeRow.theme_mode ?? "dark") as ThemeMode,
+    font_family: (safeRow.font_family ?? "Inter") as ThemeFont,
+    logo_url: safeRow.logo_url ?? null,
+    favicon_url: safeRow.favicon_url ?? null,
+    banner_url: safeRow.banner_url ?? null,
+    display_name: safeRow.display_name ?? null,
+    tagline: safeRow.tagline ?? null,
   };
 }
 
@@ -75,6 +78,7 @@ export function usePublicTheme(slug: string) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    // Como o normalize agora sempre retorna um objeto válido (nunca null), q.data sempre vai acionar o ready
     if (q.data) {
       applyTheme(q.data);
       setReady(true);
