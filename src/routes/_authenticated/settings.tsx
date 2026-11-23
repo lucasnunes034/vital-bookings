@@ -44,6 +44,7 @@ import {
 } from "@/lib/payment-methods";
 import { AppearanceTab } from "./_appearance-tab";
 import { TeamMembersCard } from "@/components/team-members-card";
+import { formatDuration } from "@/lib/utils";
 
 type TabKey = "brand" | "appearance" | "gallery" | "services" | "professionals" | "availability" | "breaks" | "messages" | "payments";
 
@@ -235,7 +236,7 @@ function ServicesTab({ companyId }: { companyId: string }) {
                   <StatusBadge status={s.status} />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {s.duration_minutes} min · {formatBRL(s.price_cents)}
+                  {formatDuration(s.duration_minutes)} · {formatBRL(s.price_cents)}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">

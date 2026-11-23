@@ -43,6 +43,7 @@ import {
   sortPaymentMethods,
   type PaymentMethodKind,
 } from "@/lib/payment-methods";
+import { formatDuration } from "@/lib/utils";
 
 type PublicCompany = {
   id: string;
@@ -256,7 +257,7 @@ function PublicLandingPage() {
                       <div className="min-w-0">
                         <p className="font-medium truncate">{s.name}</p>
                         <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1">
-                          <Clock className="size-3" /> {s.duration_minutes} min
+                          <Clock className="size-3"/> {formatDuration(s.duration_minutes)}
                         </p>
                       </div>
                       <p className="font-display text-lg shrink-0">{formatBRL(s.price_cents)}</p>
@@ -523,7 +524,7 @@ function BookingDialog({
                   <div className="flex justify-between gap-3">
                     <div>
                       <p className="font-medium">{s.name}</p>
-                      <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="size-3" /> {s.duration_minutes} min</p>
+                      <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1"><Clock className="size-3"/> {formatDuration(s.duration_minutes)}</p>
                     </div>
                     <p className="font-display text-lg">{formatBRL(s.price_cents)}</p>
                   </div>
@@ -590,7 +591,7 @@ function BookingDialog({
             <h2 className="font-display text-lg font-semibold mt-2">Seus dados</h2>
             <div className="mt-3 surface-card p-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
               <span><CalendarIcon className="size-4 inline mr-1 text-muted-foreground" />{formatDate(date, tz)} às {slot}</span>
-              <span>{service.name} · {service.duration_minutes} min · {formatBRL(service.price_cents)}</span>
+              <span>{service.name} · {formatDuration(service.duration_minutes)} · {formatBRL(service.price_cents)}</span>
               <span>com {professional.name}</span>
             </div>
             <form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); createBooking.mutate(); }}>
